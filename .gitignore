@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+env/
+ENV/
+build/
+dist/
+*.egg-info/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Environment (secret hygiene: .env is never committed)
+.env
+.env.local
+.env.*.local
+
+# Project runtime data (ADR-008: sqlite checkpointer is a runtime artifact)
+data/*.sqlite
+data/*.sqlite-journal
+logs/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test artifacts
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+.pytest_cache/
+.tox/
+.mypy_cache/
+*.cover
+test_results/

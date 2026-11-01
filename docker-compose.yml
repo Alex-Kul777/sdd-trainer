@@ -1,0 +1,12 @@
+services:
+  sdd-trainer:
+    build: .
+    image: sdd-trainer:latest
+    container_name: sdd-trainer-app
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env          # create from .env.example (never committed)
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
