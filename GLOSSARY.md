@@ -16,7 +16,7 @@
 `openspec/changes/<kebab-case>/` — proposal.md (зачем) + design.md (как) + tasks.md (чек-лист) + specs/ (дельта ADDED/MODIFIED). Единица работы мета-процесса: 1 фаза = 1 change (ADR-003).
 
 ## Домен (lesson domain)
-Учебная тема тренера. 6 доменов: SDD-основы, структура OpenSpec, написание требований, change proposals, workflow, brownfield SDD. Прогресс — в training-state.json.
+Учебная тема тренера. 6 доменов: SDD-основы, OpenSpec-основы (openspec-basics), написание требований, change proposals, workflow, brownfield SDD. Прогресс — в training-state.json.
 
 ## Lesson skeleton (скелет урока)
 Заготовка урока домена с фиксированными секциями (Goal / Key concepts / Socratic questions / Examples / Quiz ref). GigaChat разворачивает скелет в полный урок под уровень ученика. Формат и расположение файлов — ADR-009.
