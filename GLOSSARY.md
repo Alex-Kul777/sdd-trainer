@@ -1,7 +1,7 @@
-# SDD Trainer — Domain Model (CONTEXT.md)
+# SDD Trainer — Domain Model (GLOSSARY.md)
 
 Глоссарий домена проекта «SDD Trainer». Обновляется в ходе grilling-сессий.
-Конвенция — как в drone_interception: CONTEXT.md + DECISIONS.md, при Фазе 0 переезжают в корень репо.
+Конвенция mattpocock/skills: GLOSSARY.md (глоссарий) + DECISIONS.md (ADRs) в корне репо. Переименован из CONTEXT.md 2026-11-01 (setup-matt-pocock-skills).
 
 ## SDD (Spec-Driven Development)
 Методология: спецификация — источник истины, план до кода. Fluid/итеративный, built for brownfield. Тренер обучает ей.

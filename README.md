@@ -34,4 +34,4 @@ make test        # or: pytest -v
 
 - Full documentation (Russian): [README_RU.md](README_RU.md)
 - Architecture decisions: [DECISIONS.md](DECISIONS.md)
-- Domain glossary: [CONTEXT.md](CONTEXT.md)
+- Domain glossary: [GLOSSARY.md](GLOSSARY.md)

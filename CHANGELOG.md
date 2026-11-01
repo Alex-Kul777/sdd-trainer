@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Changed
+- Renamed `CONTEXT.md` → `GLOSSARY.md` (mattpocock skills convention) and added
+  the engineering-skills config: `AGENTS.md` + `docs/agents/` (issue tracker,
+  triage labels, domain docs)
+
 ## [0.1.0] - 2026-11-01
 
 ### Added

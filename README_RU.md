@@ -102,7 +102,7 @@ CI (GitHub Actions) запускает тесты с покрытием на к�
 
 ## 📚 Документация
 
-- [CONTEXT.md](CONTEXT.md) — глоссарий домена
+- [GLOSSARY.md](GLOSSARY.md) — глоссарий домена
 - [DECISIONS.md](DECISIONS.md) — архитектурные решения (ADR-001..008)
 - [CHANGELOG.md](CHANGELOG.md) — история изменений
 - [backlog/README.md](backlog/README.md) — конвенция задач BKL
