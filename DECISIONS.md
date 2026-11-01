@@ -84,3 +84,14 @@ Consequences:
   - ✚ Знакомый проверяющим API-паттерн; прогресс переживает рестарт сервера
   - ✚ HITL-квизы работают через /quiz/resume с тем же thread_id
   - − Ещё одна зависимость (langgraph-checkpoint-sqlite); sqlite-файл в .gitignore
+
+### ADR-009: Lesson content — markdown skeletons + JSON quizzes
+Date: 2026-11-01
+Status: accepted
+Context: Q10 (раунд 2 grilling): гибридное авторство — скелеты уроков и квизы с эталонами пишутся заранее, GigaChat разворачивает скелет под уровень ученика. Мини-раунд 3 зафиксировал первый срез: домен «OpenSpec основы». Нужен формат контент-файлов.
+Decision: Скелеты уроков — markdown в prompts/lessons/<domain>.md с фиксированными секциями (Goal / Key concepts / Socratic questions / Examples / Quiz ref). Квизы — JSON в data/quizzes/<domain>.json: вопросы, эталонные ответы, веса для F1.
+Consequences:
+  - ✚ Markdown читается и агенту, и человеку: грепается, диффается, правится без кода
+  - ✚ Фиксированные секции = стабильный контракт развёртки для llm_manager
+  - ✚ Эталоны в JSON = воспроизводимый F1 + structured output через tools/tool_choice (ADR-005)
+  - − Два формата (md + json) вместо одного; контракт секций нужно валидировать

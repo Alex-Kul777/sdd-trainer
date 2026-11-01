@@ -18,6 +18,12 @@
 ## Домен (lesson domain)
 Учебная тема тренера. 6 доменов: SDD-основы, структура OpenSpec, написание требований, change proposals, workflow, brownfield SDD. Прогресс — в training-state.json.
 
+## Lesson skeleton (скелет урока)
+Заготовка урока домена с фиксированными секциями (Goal / Key concepts / Socratic questions / Examples / Quiz ref). GigaChat разворачивает скелет в полный урок под уровень ученика. Формат и расположение файлов — ADR-009.
+
+## Quiz reference answers (эталоны)
+Эталонные ответы квиза домена: база воспроизводимого F1-скоринга и structured output при проверке ответа ученика. Формат и расположение — ADR-009.
+
 ## Training-state
 `data/training-state.json` — прогресс ученика: domain, score, streak (паттерн openclaw-tutor).
 
