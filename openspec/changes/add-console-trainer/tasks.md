@@ -8,12 +8,12 @@
 ## 2. Schemas & tools
 - [x] 2.1 Pydantic schemas: Assessment, RouteDecision, QuizResult (course pattern AIA_02)
 - [ ] 2.2 Tool analyze_student_repo: scan the student repository for openspec/ usage
-- [ ] 2.3 Tool search_sdd_docs: Tavily client (ADR-006)
+- [x] 2.3 Tool search_sdd_docs: Tavily client (ADR-006)
 
 ## 3. Graph
 - [ ] 3.1 assess node: passive assessment via analyze_student_repo + calibration question
 - [x] 3.2 route node: knows_it / partial / new_topic (+ clarification)
-- [ ] 3.3 teach node: expand the lesson skeleton per level; search_sdd_docs on demand
+- [x] 3.3 teach node: expand the lesson skeleton per level; search_sdd_docs on demand
 - [ ] 3.4 quiz node: questions from the JSON quiz, F1 vs reference answers
 
 ## 4. Persistence
@@ -21,7 +21,7 @@
 - [ ] 4.2 training-state.json updates: domain, score, streak
 
 ## 5. Content
-- [ ] 5.1 Lesson skeleton openspec-basics.md (sections per ADR-009)
+- [x] 5.1 Lesson skeleton openspec-basics.md (sections per ADR-009)
 - [ ] 5.2 Quiz openspec-basics.json: questions, reference answers, weights
 
 ## 6. Console

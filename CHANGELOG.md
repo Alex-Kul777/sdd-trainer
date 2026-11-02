@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- **Teach node T4 (issue #5)**: the lesson skeleton
+  `prompts/lessons/openspec-basics.md` (ADR-009 sections: Goal / Key
+  concepts / Socratic questions / Examples / Quiz ref) with a validating
+  loader (a skeleton missing sections fails loudly); `search_sdd_docs` —
+  the Tavily client tool (ADR-006, task 2.3): POST `/search` with the
+  bearer key, results as `{title, url, content}`; the teach node (task 3.3)
+  unfolds the skeleton into a real lesson under the assessed level
+  (`state["assessment"]["level"]` from T3; new_topic / partial / knows_it
+  directives), asking through a structured `DocsDecision` whether the
+  skeleton suffices and pulling fresh docs via `search_sdd_docs` on demand
+  — the tool call and its results land in the session log; a search outage
+  degrades to a skeleton-only lesson (exception type only in the log), and
+  a DocsDecision without a query falls back to a deterministic domain
+  default (live-model defect found by the demo, fixed test-first);
+  `LLMManager.complete()` — plain prose completion for the lesson (no
+  tools, no history, same reasoning-model fallback); unit tests at the
+  graph seam (fake LLM + fake docs search, no network) and live
+  integration tests (real GigaChat lesson + real Tavily search; Tavily is
+  geo-blocked from this host's IP — 403 at the WAF level even without
+  credentials — so live runs go through the host's existing local proxy
+  via the standard `HTTPS_PROXY` env var, no code changes)
 - **Trainer graph T3 (issue #4)**: LangGraph graph assess → route →
   teach/quiz (AIA_06 routing-agent template, criterion 2) with routing over
   at least three paths — knows_it / partial / new_topic plus clarification
