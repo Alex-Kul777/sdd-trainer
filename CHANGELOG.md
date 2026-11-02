@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+- **Console trainer T1 «прокол» (issue #2)**: `python -m sdd_trainer` — live
+  GigaChat dialogue via the OpenAI-compatible cloud.ru API (ADR-005):
+  `LLMManager.chat()` with an in-memory history, polite exit
+  (q/quit/exit/Ctrl-D), friendly message when `GIGACHAT_KEY` is missing;
+  unit tests for the config and the client seam (FakeOpenAI, no network)
+
+### Fixed
+- Fallback model ID corrected per live `models.list`:
+  `ai-sage/GigaChat3.5-432B-A28B-Reasoning` (add-console-trainer task 1.1)
+
 ### Changed
 - Renamed `CONTEXT.md` → `GLOSSARY.md` (mattpocock skills convention) and added
   the engineering-skills config: `AGENTS.md` + `docs/agents/` (issue tracker,
