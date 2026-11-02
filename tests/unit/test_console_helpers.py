@@ -39,6 +39,10 @@ class _FakeOpenAI:
         if not self._replies:
             raise AssertionError("unexpected LLM call: no scripted reply left")
         reply = self._replies.pop(0)
+        if "text" in reply:
+            # plain prose completion (the teach lesson, LLMManager.complete)
+            message = SimpleNamespace(content=reply["text"], tool_calls=None)
+            return SimpleNamespace(choices=[SimpleNamespace(message=message)])
         function = SimpleNamespace(name=reply["tool"], arguments=reply["arguments"])
         tool_call = SimpleNamespace(id="call_1", type="function", function=function)
         message = SimpleNamespace(content=None, tool_calls=[tool_call])
@@ -63,6 +67,15 @@ def _route_arguments() -> str:
     import json
 
     return json.dumps({"path": "partial", "reason": "Нужен разбор."}, ensure_ascii=False)
+
+
+def _docs_arguments() -> str:
+    import json
+
+    return json.dumps(
+        {"needs_docs": False, "query": "", "reason": "Скелета достаточно."},
+        ensure_ascii=False,
+    )
 
 
 def _graph(replies: list | None = None):
@@ -110,6 +123,9 @@ class TestFindPendingQuestion:
             [
                 {"tool": "Assessment", "arguments": _assessment_arguments()},
                 {"tool": "RouteDecision", "arguments": _route_arguments()},
+                # partial -> teach (T4): docs decision + lesson text
+                {"tool": "DocsDecision", "arguments": _docs_arguments()},
+                {"text": "# Урок OpenSpec-основы"},
             ]
         )
         done = {"configurable": {"thread_id": "student:glue-done"}}

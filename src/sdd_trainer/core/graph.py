@@ -16,8 +16,14 @@ with a clarification loop:
   level so the loop stays bounded;
 - ``clarify`` — ask a follow-up question (``interrupt``) and re-assess with
   all answers so far, then return to ``route``;
-- ``teach`` — stub in T3: the lesson content (skeleton unfolding, ADR-009)
-  is ticket T4;
+- ``teach`` — unfolds the lesson skeleton into a full lesson under the
+  assessed level (T4, issue #5, ADR-009): loads the skeleton (fixed
+  sections, validated), asks through a structured ``DocsDecision`` whether
+  the skeleton alone is enough, pulls fresh documentation via
+  ``search_sdd_docs`` (Tavily, ADR-006) when it is not — the tool call and
+  its results land in the session log (spec scenario) — and unfolds
+  skeleton + docs into the lesson text (plain completion: prose, not a
+  structured decision);
 - ``quiz`` — stub in T3: the knowledge check (questions + F1 against
   reference answers, HITL) is ticket T5.
 
@@ -30,7 +36,7 @@ graph is transport-agnostic: console (phase 1), FastAPI (phase 2), MCP
 from __future__ import annotations
 
 import operator
-from typing import Annotated, Optional, TypedDict
+from typing import Annotated, Callable, Optional, TypedDict
 
 from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.graph import END, START, StateGraph
@@ -41,10 +47,14 @@ from sdd_trainer.core.prompts import (
     CALIBRATION_QUESTION,
     build_assessment_messages,
     build_clarifying_question,
+    build_docs_decision_messages,
     build_reassessment_messages,
     build_route_messages,
+    build_teach_messages,
 )
-from sdd_trainer.models import Assessment, RouteDecision
+from sdd_trainer.core.tools import search_sdd_docs
+from sdd_trainer.lessons import load_lesson_skeleton
+from sdd_trainer.models import Assessment, DocsDecision, RouteDecision
 
 #: Confidence below this routes to ``clarification`` (spec: inconclusive
 #: assessment). Assessments at or above it are routed by the LLM call.
@@ -82,12 +92,14 @@ def build_graph(
     checkpointer: Optional[BaseCheckpointSaver] = None,
     clarification_threshold: float = CLARIFICATION_THRESHOLD,
     max_clarification_rounds: int = MAX_CLARIFICATION_ROUNDS,
+    docs_search: Optional[Callable[[str], list[dict]]] = None,
 ):
     """Assemble and compile the trainer StateGraph (criterion 2).
 
     Args:
-        llm: the LLM client used by the assess / route / clarify nodes
-            (the single test seam — unit tests inject a fake client, design.md).
+        llm: the LLM client used by the assess / route / clarify / teach
+            nodes (the single test seam — unit tests inject a fake client,
+            design.md).
         checkpointer: persistence for criterion 4 (ADR-008). The console
             wires a ``SqliteSaver`` via ``MemoryManager``; unit tests use
             ``InMemorySaver`` or a temporary ``SqliteSaver``. A session with
@@ -96,12 +108,19 @@ def build_graph(
             the clarification path.
         max_clarification_rounds: after this many clarification rounds the
             graph follows the assessed level even at low confidence.
+        docs_search: the fresh-docs tool the teach node pulls documentation
+            through on demand (task 3.3) — the real ``search_sdd_docs``
+            (Tavily, ADR-006) by default; unit tests inject a fake callable
+            (same seam discipline: external collaborators are faked at the
+            graph boundary, never internal ones mocked).
 
     Returns:
         The compiled graph: invoke it with ``{"domain": ...}`` and a
         ``{"configurable": {"thread_id": ...}}`` config, then answer the
         interrupts with ``Command(resume=...)``.
     """
+    if docs_search is None:
+        docs_search = search_sdd_docs
 
     def assess_node(state: TrainerState) -> dict:
         """Ask the calibration question, then assess the level (task 3.1, T3 part).
@@ -204,13 +223,81 @@ def build_graph(
         }
 
     def teach_node(state: TrainerState) -> dict:
-        """Stub of the lesson node — the content lands in T4 (issue #5, ADR-009)."""
-        message = (
-            "[teach/stub] Урок домена {} под уровень «{}» — "
-            "наполнение в T4 (issue #5): развёртка скелета prompts/lessons/ "
-            "через GigaChat.".format(state["domain"], state["assessment"]["level"])
+        """Unfold the lesson skeleton into a lesson under the assessed level.
+
+        Task 3.3 (T4, issue #5, ADR-009). The level reaches the node from the
+        assessment — ``state["assessment"]["level"]`` (set by assess/clarify
+        in T3) — and selects the unfolding strategy (new_topic / partial /
+        knows_it directives in ``core.prompts``); the justification carries
+        the gaps to close. Flow:
+
+        1. load the domain skeleton (fixed ADR-009 sections, validated);
+        2. ask through the structured seam whether the skeleton suffices
+           (``DocsDecision``, ADR-005); when it does not, pull fresh
+           documentation via ``search_sdd_docs`` (Tavily, ADR-006) — the
+           tool call and its results land in the session log (spec
+           scenario). A search failure degrades to a skeleton-only lesson:
+           the exception *type* is logged, never the payload;
+        3. unfold skeleton + (optional) fresh docs into the lesson text —
+           a plain completion, because the lesson is prose, not a decision.
+        """
+        domain = state["domain"]
+        level = state["assessment"]["level"]
+        justification = state["assessment"]["justification"]
+        skeleton = load_lesson_skeleton(domain)
+
+        decision = llm.llm_call(
+            build_docs_decision_messages(skeleton, level, justification),
+            DocsDecision,
         )
-        return {"teach_output": message, "log": [message]}
+        log = [
+            "Материалы: {} — {}".format(
+                "нужен свежий поиск"
+                if decision.needs_docs
+                else "скелета достаточно",
+                decision.reason,
+            )
+        ]
+
+        search_results: list[dict] = []
+        if decision.needs_docs:
+            try:
+                search_results = docs_search(decision.query)
+            except Exception as exc:
+                # Resilience boundary: a search outage must not kill the
+                # lesson — the skeleton is the primary material. Only the
+                # exception type is logged (secret hygiene convention).
+                log.append(
+                    "Инструмент search_sdd_docs(\"{}\") не смог выполнить "
+                    "поиск ({}) — урок строится по скелету".format(
+                        decision.query, type(exc).__name__
+                    )
+                )
+            else:
+                if search_results:
+                    found = "; ".join(
+                        "{} — {}".format(result["title"], result["url"])
+                        for result in search_results
+                    )
+                    log.append(
+                        "Инструмент search_sdd_docs(\"{}\"): {} "
+                        "результат(ов) — {}".format(
+                            decision.query, len(search_results), found
+                        )
+                    )
+                else:
+                    log.append(
+                        "Инструмент search_sdd_docs(\"{}\"): ничего не "
+                        "найдено".format(decision.query)
+                    )
+
+        lesson = llm.complete(
+            build_teach_messages(skeleton, level, justification, search_results)
+        )
+        log.append(
+            "Урок готов: скелет {} развёрнут под уровень {}".format(domain, level)
+        )
+        return {"teach_output": lesson, "log": log}
 
     def quiz_node(state: TrainerState) -> dict:
         """Stub of the quiz node — questions + F1 land in T5 (issue #6)."""
