@@ -47,11 +47,32 @@ DOCS_SYSTEM_PROMPT = (
     "свежую внешнюю документацию через поиск. Скелет компактен по замыслу: "
     "если для полного урока не хватает свежих примеров, практики или "
     "актуальных сведений об OpenSpec — запрашивай поиск. Обязательно вызови "
-    "функцию DocsDecision: needs_docs — true/false; query — поисковый "
-    "запрос на английском (обязателен при needs_docs=true, например "
-    "\"OpenSpec change proposal workflow\"); reason — краткое обоснование "
-    "(оно попадёт в лог сеанса)."
+    "функцию DocsDecision и заполни все поля: needs_docs — true/false; "
+    "query — поисковый запрос на английском для поиска документации — "
+    "всегда заполняй его, когда needs_docs=true: без запроса поиск "
+    "невозможен (пример: \"OpenSpec change proposal workflow\"); reason — "
+    "краткое обоснование (оно попадёт в лог сеанса)."
 )
+
+#: Deterministic fallback search queries per domain. The teach node uses
+#: them when the model asks for docs but omits the query — live models skip
+#: fields occasionally (seen in the live demo 02.11), and the lesson must
+#: not die on that: the intent (needs_docs) is the model's, the mechanics
+#: (the query) can be derived.
+DEFAULT_DOCS_QUERIES: dict[str, str] = {
+    "openspec-basics": "OpenSpec spec-driven development",
+}
+
+
+def default_docs_query(domain: str) -> str:
+    """Return the fallback search query for a domain (unknown -> generic).
+
+    Pure function: the deterministic query the teach node searches with
+    when the DocsDecision came back without one.
+    """
+    return DEFAULT_DOCS_QUERIES.get(
+        domain, f"{domain} spec-driven development documentation"
+    )
 
 TEACH_SYSTEM_PROMPT = (
     "Ты — SDD Trainer, преподаватель Spec-Driven Development. Тебе дан "

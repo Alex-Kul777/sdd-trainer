@@ -64,10 +64,15 @@ class TestDocsDecision:
         assert decision.needs_docs is True
         assert decision.query == "OpenSpec change proposal workflow"
 
-    def test_needs_docs_without_query_rejected(self) -> None:
-        """A docs request without a search query cannot be executed."""
-        with pytest.raises(ValidationError):
-            DocsDecision(needs_docs=True, query="", reason="Нужно больше примеров.")
+    def test_needs_docs_without_query_is_valid(self) -> None:
+        """The query may be empty: live models omit fields (demo 02.11), and
+        the teach node falls back to a domain default instead of dying."""
+        decision = DocsDecision(
+            needs_docs=True, query="", reason="Нужно больше примеров."
+        )
+
+        assert decision.needs_docs is True
+        assert decision.query == ""
 
     def test_no_docs_allows_empty_query(self) -> None:
         decision = DocsDecision(

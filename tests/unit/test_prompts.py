@@ -15,6 +15,7 @@ from sdd_trainer.core.prompts import (
     build_reassessment_messages,
     build_route_messages,
     build_teach_messages,
+    default_docs_query,
 )
 from sdd_trainer.models import Assessment
 
@@ -64,6 +65,28 @@ class TestDocsDecisionMessages:
 
     def test_docs_prompt_requires_the_docsdecision_call(self) -> None:
         assert "DocsDecision" in DOCS_SYSTEM_PROMPT
+
+    def test_docs_prompt_demands_the_query_when_docs_needed(self) -> None:
+        """Live defect (demo 02.11): the model omitted the query — the prompt
+        must make the requirement unmissable."""
+        lowered = DOCS_SYSTEM_PROMPT.lower()
+        assert "всегда" in lowered or "обязательн" in lowered
+        assert "без запроса поиск невозможен" in DOCS_SYSTEM_PROMPT
+
+
+class TestDefaultDocsQuery:
+    """default_docs_query: deterministic fallback when the model omits the query."""
+
+    def test_known_domain(self) -> None:
+        assert (
+            default_docs_query("openspec-basics")
+            == "OpenSpec spec-driven development"
+        )
+
+    def test_unknown_domain_is_generic_but_mentions_the_domain(self) -> None:
+        query = default_docs_query("sdd-fundamentals")
+
+        assert "sdd-fundamentals" in query
 
 
 class TestTeachMessages:

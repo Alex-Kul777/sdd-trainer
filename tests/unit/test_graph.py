@@ -514,6 +514,38 @@ class TestTeachNode:
         assert "RuntimeError" in failure_entry  # type only, no payload
         assert "по скелету" in failure_entry
 
+    def test_missing_query_falls_back_to_domain_default_search(self) -> None:
+        """Live defect (demo 02.11): the model asked for docs but omitted the
+        query — the node searches with the domain default instead of dying,
+        and the fallback query is visible in the log."""
+        searches: list[str] = []
+
+        def fake_docs_search(query: str) -> list[dict]:
+            searches.append(query)
+            return [
+                {
+                    "title": "OpenSpec — workflow",
+                    "url": "https://example.org/openspec-workflow",
+                    "content": "explore → propose → apply → archive",
+                }
+            ]
+
+        replies = _teach_replies(
+            "new_topic",
+            docs=_docs_payload(
+                needs_docs=True, query="", reason="Нужны свежие примеры."
+            ),
+        )
+        graph, _ = _graph(replies, docs_search=fake_docs_search)
+
+        _start(graph)
+        result = _resume(graph, "ответ ученика")
+
+        assert searches == ["OpenSpec spec-driven development"]
+        assert result["teach_output"] == LESSON_TEXT
+        (tool_entry,) = [e for e in result["log"] if "search_sdd_docs" in e]
+        assert "OpenSpec spec-driven development" in tool_entry
+
     def test_docs_decision_schema_is_the_structured_contract(self) -> None:
         schema = DocsDecision.model_json_schema()
         assert set(schema["properties"]) == {"needs_docs", "query", "reason"}

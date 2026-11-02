@@ -51,6 +51,7 @@ from sdd_trainer.core.prompts import (
     build_reassessment_messages,
     build_route_messages,
     build_teach_messages,
+    default_docs_query,
 )
 from sdd_trainer.core.tools import search_sdd_docs
 from sdd_trainer.lessons import load_lesson_skeleton
@@ -261,8 +262,12 @@ def build_graph(
 
         search_results: list[dict] = []
         if decision.needs_docs:
+            # Live models occasionally ask for docs but omit the query
+            # (seen in the live demo 02.11) — the intent is the model's, the
+            # mechanics are deterministic: fall back to the domain default.
+            query = decision.query.strip() or default_docs_query(domain)
             try:
-                search_results = docs_search(decision.query)
+                search_results = docs_search(query)
             except Exception as exc:
                 # Resilience boundary: a search outage must not kill the
                 # lesson — the skeleton is the primary material. Only the
@@ -270,7 +275,7 @@ def build_graph(
                 log.append(
                     "Инструмент search_sdd_docs(\"{}\") не смог выполнить "
                     "поиск ({}) — урок строится по скелету".format(
-                        decision.query, type(exc).__name__
+                        query, type(exc).__name__
                     )
                 )
             else:
@@ -282,13 +287,13 @@ def build_graph(
                     log.append(
                         "Инструмент search_sdd_docs(\"{}\"): {} "
                         "результат(ов) — {}".format(
-                            decision.query, len(search_results), found
+                            query, len(search_results), found
                         )
                     )
                 else:
                     log.append(
                         "Инструмент search_sdd_docs(\"{}\"): ничего не "
-                        "найдено".format(decision.query)
+                        "найдено".format(query)
                     )
 
         lesson = llm.complete(

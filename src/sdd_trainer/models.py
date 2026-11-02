@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field
 
 
 class DomainProgress(BaseModel):
@@ -92,6 +92,11 @@ class DocsDecision(BaseModel):
     documentation through ``search_sdd_docs`` (Tavily, ADR-006) and feeds
     it into the unfolding prompt. The decision goes through the same
     structured-output seam as Assessment / RouteDecision (ADR-005).
+
+    ``query`` is deliberately optional: live models occasionally ask for
+    docs but omit the query (seen in the live demo 02.11) — the teach node
+    then falls back to a deterministic domain default
+    (``core.prompts.default_docs_query``) instead of failing the lesson.
     """
 
     needs_docs: bool = Field(
@@ -104,19 +109,12 @@ class DocsDecision(BaseModel):
         default="",
         description=(
             "Поисковый запрос на английском для search_sdd_docs — "
-            "обязателен, когда needs_docs=true"
+            "всегда заполняй его, когда needs_docs=true"
         ),
     )
     reason: str = Field(
         description="Краткое обоснование решения — попадает в лог сеанса",
     )
-
-    @model_validator(mode="after")
-    def _query_required_when_docs_needed(self) -> "DocsDecision":
-        """A docs request without a search query cannot be executed."""
-        if self.needs_docs and not self.query.strip():
-            raise ValueError("query обязателен, когда needs_docs=true")
-        return self
 
 
 class QuizQuestion(BaseModel):
