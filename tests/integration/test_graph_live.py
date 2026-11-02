@@ -71,6 +71,31 @@ def test_newcomer_full_session_routes_to_new_topic_live() -> None:
 
 
 @requires_key
+def test_newcomer_lesson_is_real_not_stub_live() -> None:
+    """WHEN a newcomer session reaches teach THEN the lesson is a real unfolded
+    lesson (T4, task 3.3) — not the T3 stub — with the docs decision visible
+    in the session log."""
+    graph = _live_graph(InMemorySaver())
+    thread = {"configurable": {"thread_id": "student:live-lesson"}}
+
+    graph.invoke({"domain": "openspec-basics"}, thread)
+    result = graph.invoke(Command(resume=NEWCOMER_ANSWER), thread)
+
+    assert result["route"]["path"] == "new_topic"
+    lesson = result["teach_output"]
+    assert "[teach/stub]" not in lesson  # the T3 stub marker is gone
+    assert len(lesson) > 400  # a real unfolded lesson, not a one-liner
+    lowered = lesson.lower()
+    # the lesson unfolds the skeleton's key concepts (OpenSpec structure)
+    assert "openspec" in lowered or "спецификац" in lowered
+    assert "specs" in lowered or "changes" in lowered
+    # the docs decision and the finished lesson are visible in the log
+    assert any(entry.startswith("Материалы:") for entry in result["log"])
+    assert any("Урок готов" in entry for entry in result["log"])
+    assert graph.get_state(thread).next == ()
+
+
+@requires_key
 def test_knowledgeable_student_skips_to_quiz_or_targeted_lesson_live() -> None:
     """WHEN a knowledgeable student is assessed THEN the route skips the full lecture."""
     graph = _live_graph(InMemorySaver())
