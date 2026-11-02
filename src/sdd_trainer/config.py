@@ -10,7 +10,7 @@ the ``openai`` package with a custom ``base_url`` — no ``langchain_gigachat``.
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -27,19 +27,21 @@ class GigaChatConfig:
     """GigaChat access via the OpenAI-compatible cloud.ru API (ADR-005).
 
     Attributes:
-        api_key: API key from the ``GIGACHAT_KEY`` environment variable.
+        api_key: API key from the ``GIGACHAT_KEY`` environment variable,
+            read at instantiation (never hardcoded).
         base_url: OpenAI-compatible endpoint of cloud.ru foundation models.
         model: primary chat model for lessons and dialogue.
-        fallback_model: fallback model for when the primary one is unavailable
-            (exact ID to be confirmed via ``models.list`` in phase 1).
+        fallback_model: fallback reasoning model for when the primary one is
+            unavailable (exact ID confirmed via live ``models.list``,
+            add-console-trainer task 1.1).
         timeout: request timeout in seconds.
         max_retries: retry count for transient failures.
     """
 
-    api_key: str = os.getenv("GIGACHAT_KEY", "")
+    api_key: str = field(default_factory=lambda: os.getenv("GIGACHAT_KEY", ""))
     base_url: str = "https://foundation-models.api.cloud.ru/v1"
     model: str = "GigaChat/GigaChat-3-Pro"
-    fallback_model: str = "GigaChat/GigaChat-3.5-Reasoning"
+    fallback_model: str = "ai-sage/GigaChat3.5-432B-A28B-Reasoning"
     timeout: int = 90
     max_retries: int = 3
 

@@ -1,7 +1,7 @@
 # Tasks: Add Console Trainer (Phase 1)
 
 ## 1. LLM client
-- [ ] 1.1 Verify exact model IDs via models.list (primary + fallback)
+- [x] 1.1 Verify exact model IDs via models.list (primary + fallback)
 - [ ] 1.2 Implement llm_manager: OpenAI-compatible client, structured output via tools + tool_choice (ADR-005)
 - [ ] 1.3 Fallback to the reasoning model on primary model failure
 

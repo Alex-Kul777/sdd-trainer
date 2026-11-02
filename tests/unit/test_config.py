@@ -19,11 +19,19 @@ class TestGigaChatConfig:
         assert GigaChatConfig().model == "GigaChat/GigaChat-3-Pro"
 
     def test_fallback_model(self) -> None:
-        assert GigaChatConfig().fallback_model == "GigaChat/GigaChat-3.5-Reasoning"
+        # Exact ID confirmed via live models.list (add-console-trainer task 1.1)
+        assert GigaChatConfig().fallback_model == "ai-sage/GigaChat3.5-432B-A28B-Reasoning"
 
     def test_is_configured(self) -> None:
         assert GigaChatConfig(api_key="").is_configured() is False
         assert GigaChatConfig(api_key="test-key").is_configured() is True
+
+    def test_api_key_comes_from_env_not_hardcoded(self, monkeypatch) -> None:
+        """The key is read from GIGACHAT_KEY at instantiation — never hardcoded."""
+        monkeypatch.delenv("GIGACHAT_KEY", raising=False)
+        assert GigaChatConfig().api_key == ""
+        monkeypatch.setenv("GIGACHAT_KEY", "env-provided-key")
+        assert GigaChatConfig().api_key == "env-provided-key"
 
 
 class TestTrainerConfig:

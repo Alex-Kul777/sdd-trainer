@@ -43,7 +43,7 @@ Human-in-the-loop: квизы через `interrupt` + `Command` (AIA_03/07). В
 LangGraph-персистентность состояния графа (SqliteSaver) — критерий №4.
 
 ## GigaChat
-LLM курса. Модели: **GigaChat/GigaChat-3-Pro** (приоритет) → **GigaChat/GigaChat-3.5-Reasoning** (fallback; точный ID проверить models.list) — подтверждено PDF + ноутбуком курса. Интеграция: **OpenAI-совместимый API** `https://foundation-models.api.cloud.ru/v1` (python `openai`), паттерн `llm_call(structure=...)` — structured output через tools + tool_choice (AIA_01/02). Не langchain_gigachat (ADR-005).
+LLM курса. Модели: **GigaChat/GigaChat-3-Pro** (приоритет) → **ai-sage/GigaChat3.5-432B-A28B-Reasoning** (fallback; точные ID подтверждены живым models.list 02.11.2026, add-console-trainer 1.1) — подтверждено PDF + ноутбуком курса. Интеграция: **OpenAI-совместимый API** `https://foundation-models.api.cloud.ru/v1` (python `openai`), паттерн `llm_call(structure=...)` — structured output через tools + tool_choice (AIA_01/02). Не langchain_gigachat (ADR-005).
 
 ## GIGACHAT_KEY
 Курсовой OpenAI-подобный ключ cloud.ru. ✅ Заведён в секреты OpenClaw 01.11 (protected store, kind secret; egress — только foundation-models.api.cloud.ru; SecretRef id `GIGACHAT_KEY`). Для репо — `.env` (+ `.env.example`). Значение из store недоступно модели/чату; смоук-тесты агента — через .env репо. Также в секретах: CLOUD_RU_API_KEY (тот же хост — проверить GigaChat-доступ на Фазе 1), TAVILY_API_KEY (для search_sdd_docs, ADR-006).
