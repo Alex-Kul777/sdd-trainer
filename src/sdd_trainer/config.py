@@ -51,6 +51,32 @@ class GigaChatConfig:
 
 
 @dataclass
+class TavilyConfig:
+    """Tavily search API settings (ADR-006).
+
+    The trainer's ``search_sdd_docs`` tool fetches fresh SDD/OpenSpec
+    documentation through Tavily; the key is the existing
+    ``TAVILY_API_KEY`` secret (no new registration, ADR-006).
+
+    Attributes:
+        api_key: API key from the ``TAVILY_API_KEY`` environment variable,
+            read at instantiation (never hardcoded).
+        base_url: Tavily search API endpoint.
+        max_results: number of results requested per search.
+        timeout: request timeout in seconds.
+    """
+
+    api_key: str = field(default_factory=lambda: os.getenv("TAVILY_API_KEY", ""))
+    base_url: str = "https://api.tavily.com"
+    max_results: int = 5
+    timeout: int = 30
+
+    def is_configured(self) -> bool:
+        """Return True when an API key is present (no key validation)."""
+        return bool(self.api_key)
+
+
+@dataclass
 class TrainerConfig:
     """Trainer-wide paths and settings (ADR-008).
 
@@ -73,4 +99,5 @@ class TrainerConfig:
 
 # Module-level singletons (rag_GigaChat convention)
 gigachat_config = GigaChatConfig()
+tavily_config = TavilyConfig()
 trainer_config = TrainerConfig()

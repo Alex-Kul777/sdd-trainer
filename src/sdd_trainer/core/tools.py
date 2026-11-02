@@ -3,24 +3,89 @@
 Registered as LangGraph tools (AIA_02/AIA_05 patterns):
 
 - ``search_sdd_docs(query)`` — fresh SDD/OpenSpec documentation via Tavily
-  (ADR-006; GigaSearch fallback);
+  (ADR-006; implemented in T4, issue #5 / task 2.3). The teach node calls
+  it when the lesson skeleton alone is not enough (task 3.3);
 - ``read_openspec_examples(repo)`` — live spec examples via the GitHub API
-  (guaranteed second external API, grilling Q3);
+  (guaranteed second external API, grilling Q3) — later in phase 1;
 - ``get_student_history(query)`` — the student's OpenSpec dialogue history via
-  the ``openclaw sessions`` CLI subprocess (ADR-007, pull model);
+  the ``openclaw sessions`` CLI subprocess (ADR-007, pull model) — phase 3;
 - ``analyze_student_repo(repo_path)`` — passive assessment of the student's
-  repository (specs/changes quality, SHALL and WHEN/THEN usage).
+  repository (specs/changes quality, SHALL and WHEN/THEN usage) — T6.
 
-Phase 0: stubs only — no network calls. ``search_sdd_docs`` and
-``read_openspec_examples`` land in phase 1 (``add-console-trainer``);
-the OpenClaw-facing tools in phase 3 (``add-mcp-integration``).
+The seam for tests is the ``client`` parameter of ``search_sdd_docs``: unit
+tests inject a fake httpx client (no network), integration tests use the
+real Tavily endpoint and are skipped without ``TAVILY_API_KEY``.
 """
 from __future__ import annotations
 
+from typing import Optional
 
-def search_sdd_docs(query: str) -> list[dict]:
-    """Search fresh SDD/OpenSpec documentation via Tavily (phase 1)."""
-    pass
+import httpx
+
+from sdd_trainer.config import TavilyConfig
+
+
+def search_sdd_docs(
+    query: str,
+    *,
+    config: Optional[TavilyConfig] = None,
+    client: Optional[httpx.Client] = None,
+) -> list[dict]:
+    """Search fresh SDD/OpenSpec documentation via Tavily (ADR-006, task 2.3).
+
+    POSTs to the Tavily ``/search`` endpoint with the ``TAVILY_API_KEY``
+    bearer key and returns ``max_results`` results as ``[{title, url,
+    content}, ...]`` — the shape the teach prompt and the session log
+    consume (task 3.3). Transport errors propagate: the caller (the teach
+    node) decides how resilient the lesson must be; the tool stays honest.
+
+    Args:
+        query: the search query (fresh docs for the lesson being unfolded).
+        config: Tavily settings; defaults to a fresh ``TavilyConfig()``
+            (reads ``TAVILY_API_KEY`` from the environment / ``.env``).
+        client: test seam — unit tests inject a fake ``httpx.Client``
+            instead of the real one (no network). An injected client stays
+            caller-owned (never closed here); without one a short-lived
+            client is created and closed per call.
+
+    Returns:
+        A list of ``{"title": ..., "url": ..., "content": ...}`` dicts.
+
+    Raises:
+        RuntimeError: ``TAVILY_API_KEY`` is not configured — raised before
+            any request is made.
+        httpx.HTTPError: the Tavily endpoint failed.
+    """
+    cfg = config if config is not None else TavilyConfig()
+    if not cfg.is_configured():
+        raise RuntimeError(
+            "TAVILY_API_KEY не задан — search_sdd_docs недоступен "
+            "(ADR-006: ключ в .env, см. .env.example)"
+        )
+    if client is not None:
+        return _search_via(client, cfg, query)
+    with httpx.Client(timeout=cfg.timeout) as own:
+        return _search_via(own, cfg, query)
+
+
+def _search_via(http: httpx.Client, cfg: TavilyConfig, query: str) -> list[dict]:
+    """Run one Tavily search over an existing client and normalize results."""
+    response = http.post(
+        f"{cfg.base_url}/search",
+        json={"query": query, "max_results": cfg.max_results},
+        headers={"Authorization": f"Bearer {cfg.api_key}"},
+        timeout=cfg.timeout,
+    )
+    response.raise_for_status()
+    results = response.json().get("results", [])
+    return [
+        {
+            "title": item.get("title", ""),
+            "url": item.get("url", ""),
+            "content": item.get("content", ""),
+        }
+        for item in results
+    ]
 
 
 def read_openspec_examples(repo: str) -> list[dict]:
@@ -34,5 +99,5 @@ def get_student_history(query: str = "") -> list[dict]:
 
 
 def analyze_student_repo(repo_path: str) -> dict:
-    """Passively assess the student's repository (phase 3)."""
+    """Passively assess the student's repository (T6, issue #7)."""
     pass

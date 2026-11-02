@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import pytest
 
-from sdd_trainer.config import GigaChatConfig, TrainerConfig
+from sdd_trainer.config import GigaChatConfig, TavilyConfig, TrainerConfig
 
 pytestmark = pytest.mark.unit
 
@@ -32,6 +32,27 @@ class TestGigaChatConfig:
         assert GigaChatConfig().api_key == ""
         monkeypatch.setenv("GIGACHAT_KEY", "env-provided-key")
         assert GigaChatConfig().api_key == "env-provided-key"
+
+
+class TestTavilyConfig:
+    """ADR-006: Tavily search with the existing TAVILY_API_KEY secret."""
+
+    def test_base_url(self) -> None:
+        assert TavilyConfig().base_url == "https://api.tavily.com"
+
+    def test_max_results_default(self) -> None:
+        assert TavilyConfig().max_results == 5
+
+    def test_is_configured(self) -> None:
+        assert TavilyConfig(api_key="").is_configured() is False
+        assert TavilyConfig(api_key="tvly-test").is_configured() is True
+
+    def test_api_key_comes_from_env_not_hardcoded(self, monkeypatch) -> None:
+        """The key is read from TAVILY_API_KEY at instantiation (ADR-006)."""
+        monkeypatch.delenv("TAVILY_API_KEY", raising=False)
+        assert TavilyConfig().api_key == ""
+        monkeypatch.setenv("TAVILY_API_KEY", "env-tavily-key")
+        assert TavilyConfig().api_key == "env-tavily-key"
 
 
 class TestTrainerConfig:
