@@ -74,8 +74,17 @@ cp .env.example .env        # заполнить GIGACHAT_KEY (и TAVILY_API_KEY
 ## ▶️ Запуск
 
 ```bash
-python app.py               # фаза 0: каркас; консольный тренер — фаза 1
+python -m sdd_trainer                                # T1: живой диалог с GigaChat
+python -m sdd_trainer --assess                       # T2: демо структурированной оценки уровня
+python -m sdd_trainer --session [--student ИМЯ]      # T3: сеанс на графе — оценка → маршрут
+                                                     # (knows_it/partial/new_topic/+clarification)
+                                                     # → урок/квиз; память — чекпоинт SqliteSaver
+                                                     # (thread_id student:<ИМЯ>, ADR-008)
 ```
+
+Прерванный сеанс (`--session`, Ctrl-D/Ctrl-C) сохраняется в чекпоинт
+`data/checkpoints.sqlite` и возобновляется с того же места при следующем
+запуске с тем же `--student` (критерий курса 4).
 
 ## 🧪 Тесты
 

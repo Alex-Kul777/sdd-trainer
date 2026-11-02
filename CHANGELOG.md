@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- **Trainer graph T3 (issue #4)**: LangGraph graph assess → route →
+  teach/quiz (AIA_06 routing-agent template, criterion 2) with routing over
+  at least three paths — knows_it / partial / new_topic plus clarification
+  on low assessment confidence (criterion 5) — the selected route is
+  visible in the session log; SqliteSaver checkpointer under the per-student
+  thread id `student:<name>` (ADR-008, criterion 4) — an interrupted session
+  resumes from the checkpoint on the next run; console session mode
+  `python -m sdd_trainer --session [--student NAME]` (task 6.1): thin
+  input/print glue over the graph (interrupt → Command(resume)) with a
+  session summary at exit; assessment prompts moved to `core/prompts.py`
+  (re-exported from `__main__`, T2 imports keep working); unit tests at the
+  graph seam with a fake LLM — routing paths, deterministic clarification
+  with a bounded loop, checkpoint resume across a simulated restart — and
+  live GigaChat integration tests on the same seam (tasks 3.2/4.1/6.1/7.2;
+  teach/quiz are stubs pending T4/T5)
 - **Structured output T2 (issue #3)**: `Assessment` schema — level
   (`new_topic`/`partial`/`knows_it`), justification, confidence, domain — and
   the generic `LLMManager.llm_call(messages, structure)`: GigaChat structured
