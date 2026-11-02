@@ -2,11 +2,11 @@
 
 ## 1. LLM client
 - [x] 1.1 Verify exact model IDs via models.list (primary + fallback)
-- [ ] 1.2 Implement llm_manager: OpenAI-compatible client, structured output via tools + tool_choice (ADR-005)
-- [ ] 1.3 Fallback to the reasoning model on primary model failure
+- [x] 1.2 Implement llm_manager: OpenAI-compatible client, structured output via tools + tool_choice (ADR-005)
+- [x] 1.3 Fallback to the reasoning model on primary model failure
 
 ## 2. Schemas & tools
-- [ ] 2.1 Pydantic schemas: Assessment, RouteDecision, QuizResult (course pattern AIA_02)
+- [x] 2.1 Pydantic schemas: Assessment, RouteDecision, QuizResult (course pattern AIA_02)
 - [ ] 2.2 Tool analyze_student_repo: scan the student repository for openspec/ usage
 - [ ] 2.3 Tool search_sdd_docs: Tavily client (ADR-006)
 
