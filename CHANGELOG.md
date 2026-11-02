@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- **Structured output T2 (issue #3)**: `Assessment` schema — level
+  (`new_topic`/`partial`/`knows_it`), justification, confidence, domain — and
+  the generic `LLMManager.llm_call(messages, structure)`: GigaChat structured
+  output via `tools` + `tool_choice` with validation back into the Pydantic
+  schema, no free-text parsing (AIA_02, ADR-005); fallback to the reasoning
+  model when the primary one fails (tasks 1.2/1.3); `RouteDecision` schema
+  (paths fixed by the spec, routing logic is T3, task 2.1); console demo
+  `python -m sdd_trainer --assess`; unit tests (FakeOpenAI, no network) and
+  live integration tests (skipped without `GIGACHAT_KEY`)
 - **Console trainer T1 «прокол» (issue #2)**: `python -m sdd_trainer` — live
   GigaChat dialogue via the OpenAI-compatible cloud.ru API (ADR-005):
   `LLMManager.chat()` with an in-memory history, polite exit
