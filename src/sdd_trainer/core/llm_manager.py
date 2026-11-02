@@ -97,6 +97,19 @@ class LLMManager:
         self.history.append({"role": "assistant", "content": reply})
         return reply
 
+    def complete(self, messages: list[dict]) -> str:
+        """Run a plain completion and return the text (no tools, no history).
+
+        The teach node uses this to unfold the lesson skeleton into a
+        lesson (task 3.3): the lesson is prose, so there is no structured
+        output (ADR-005 governs decisions, not text), and the in-memory
+        :attr:`history` is not touched — graph nodes own their state.
+        Falls back to the reasoning model on failure, like every other
+        completion (task 1.3).
+        """
+        completion = self._complete(messages=messages)
+        return completion.choices[0].message.content or ""
+
     def llm_call(self, messages: list[dict], structure: Type[T]) -> T:
         """Run a completion with structured output: tools + tool_choice (AIA_02).
 

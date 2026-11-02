@@ -199,6 +199,44 @@ class TestLLMCall:
         assert manager.history == []
 
 
+class TestComplete:
+    """complete(): plain text completion for the teach node (T4, task 3.3)."""
+
+    def test_returns_text_without_tools_and_without_history(self) -> None:
+        fake = FakeOpenAI(replies=["Текст урока."])
+        manager = _manager(fake)
+        messages = [
+            {"role": "system", "content": "Ты — тренер."},
+            {"role": "user", "content": "скелет урока"},
+        ]
+
+        reply = manager.complete(messages)
+
+        assert reply == "Текст урока."
+        (call,) = fake.calls
+        assert call["model"] == "GigaChat/GigaChat-3-Pro"
+        assert call["messages"] == messages
+        assert "tools" not in call  # prose, not a structured decision
+        assert "tool_choice" not in call
+        assert manager.history == []  # graph nodes own their state
+
+    def test_empty_content_comes_back_as_empty_string(self) -> None:
+        fake = FakeOpenAI(replies=[""])
+
+        assert _manager(fake).complete([{"role": "user", "content": "x"}]) == ""
+
+    def test_falls_back_to_reasoning_model(self) -> None:
+        fake = FakeOpenAI(replies=[OpenAIError("primary down"), "Fallback-урок."])
+
+        reply = _manager(fake).complete([{"role": "user", "content": "скелет"}])
+
+        assert reply == "Fallback-урок."
+        assert [call["model"] for call in fake.calls] == [
+            "GigaChat/GigaChat-3-Pro",
+            FALLBACK_MODEL,
+        ]
+
+
 class TestFallback:
     """Task 1.3: the reasoning model answers when the primary one fails."""
 

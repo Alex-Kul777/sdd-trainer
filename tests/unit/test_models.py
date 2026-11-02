@@ -1,10 +1,10 @@
-"""Unit tests for the Pydantic schemas (AIA_02): Assessment + RouteDecision."""
+"""Unit tests for the Pydantic schemas (AIA_02): Assessment + RouteDecision + DocsDecision."""
 from __future__ import annotations
 
 import pytest
 from pydantic import ValidationError
 
-from sdd_trainer.models import Assessment, RouteDecision
+from sdd_trainer.models import Assessment, DocsDecision, RouteDecision
 
 pytestmark = pytest.mark.unit
 
@@ -49,6 +49,36 @@ class TestAssessment:
 
         with pytest.raises(ValidationError):
             Assessment(**payload)
+
+
+class TestDocsDecision:
+    """Teach-node docs decision (T4, task 3.3): skeleton sufficiency."""
+
+    def test_needs_docs_with_query(self) -> None:
+        decision = DocsDecision(
+            needs_docs=True,
+            query="OpenSpec change proposal workflow",
+            reason="В скелете нет свежих примеров workflow.",
+        )
+
+        assert decision.needs_docs is True
+        assert decision.query == "OpenSpec change proposal workflow"
+
+    def test_needs_docs_without_query_rejected(self) -> None:
+        """A docs request without a search query cannot be executed."""
+        with pytest.raises(ValidationError):
+            DocsDecision(needs_docs=True, query="", reason="Нужно больше примеров.")
+
+    def test_no_docs_allows_empty_query(self) -> None:
+        decision = DocsDecision(
+            needs_docs=False, query="", reason="Скелета достаточно."
+        )
+
+        assert decision.needs_docs is False
+
+    def test_reason_required(self) -> None:
+        with pytest.raises(ValidationError):
+            DocsDecision(needs_docs=False)
 
 
 class TestRouteDecision:

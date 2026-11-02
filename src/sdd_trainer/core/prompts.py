@@ -14,7 +14,6 @@ from __future__ import annotations
 from sdd_trainer.models import Assessment
 
 ASSESSMENT_DOMAIN = "openspec-basics"
-
 CALIBRATION_QUESTION = (
     "Опиши своими словами, что такое OpenSpec: зачем в репозитории папки "
     "specs/ и changes/ и чем change proposal отличается от стабильной "
@@ -41,6 +40,50 @@ ROUTE_SYSTEM_PROMPT = (
     "path — выбранный путь, reason — краткая причина выбора (она попадает "
     "в лог сеанса). Путь должен соответствовать уровню из Assessment."
 )
+
+DOCS_SYSTEM_PROMPT = (
+    "Ты — SDD Trainer. Реши, достаточно ли материала скелета урока, чтобы "
+    "развернуть полноценный урок под уровень ученика, или нужно подтянуть "
+    "свежую внешнюю документацию через поиск. Скелет компактен по замыслу: "
+    "если для полного урока не хватает свежих примеров, практики или "
+    "актуальных сведений об OpenSpec — запрашивай поиск. Обязательно вызови "
+    "функцию DocsDecision: needs_docs — true/false; query — поисковый "
+    "запрос на английском (обязателен при needs_docs=true, например "
+    "\"OpenSpec change proposal workflow\"); reason — краткое обоснование "
+    "(оно попадёт в лог сеанса)."
+)
+
+TEACH_SYSTEM_PROMPT = (
+    "Ты — SDD Trainer, преподаватель Spec-Driven Development. Тебе дан "
+    "скелет урока (markdown с фиксированными секциями Goal / Key concepts / "
+    "Socratic questions / Examples / Quiz ref, ADR-009) и уровень ученика. "
+    "Разверни скелет в полный урок на русском языке под этот уровень: "
+    "new_topic — полный урок с нуля; partial — разбор пробелов; knows_it — "
+    "краткий рекап. Сохраняй структуру секций скелета, пиши конкретно и "
+    "живо, разбери примеры из скелета, в конце подведи итог и предложи "
+    "проверить себя квизом. Не выдумывай факты, которых нет в скелете и в "
+    "приложенной свежей документации; если чего-то не хватает — честно "
+    "скажи об этом в уроке."
+)
+
+#: Per-level unfolding directives — the level reaches the teach node from
+#: the assessment (``state["assessment"]["level"]``, T3 graph), and each
+#: level gets a distinct unfolding strategy (task 3.3).
+LEVEL_DIRECTIVES: dict[str, str] = {
+    "new_topic": (
+        "Уровень new_topic: тема ученику незнакома — построй полный урок "
+        "с нуля: определи каждый термин, веди от простого к сложному, "
+        "разбери каждый пример скелета подробно."
+    ),
+    "partial": (
+        "Уровень partial: у ученика есть пробелы — не читай лекцию с нуля, "
+        "сфокусируйся на пробелах из обоснования оценки и закрой их."
+    ),
+    "knows_it": (
+        "Уровень knows_it: ученик уверенно владеет темой — дай краткий "
+        "рекап ключевых инвариантов и подготовь к квизу."
+    ),
+}
 
 
 def build_assessment_messages(student_answer: str) -> list[dict]:
@@ -81,6 +124,66 @@ def build_route_messages(assessment: Assessment) -> list[dict]:
                 "Выбери путь обучения."
             ),
         },
+    ]
+
+
+def build_docs_decision_messages(
+    skeleton: str, level: str, justification: str
+) -> list[dict]:
+    """Build the messages for the docs-sufficiency decision (T4, task 3.3).
+
+    Pure function: the docs policy prompt plus the whole lesson skeleton,
+    the student's level and the assessment justification. The teach node
+    calls this before unfolding — when the skeleton alone is not enough,
+    the node pulls fresh documentation via ``search_sdd_docs`` (ADR-006).
+    """
+    return [
+        {"role": "system", "content": DOCS_SYSTEM_PROMPT},
+        {
+            "role": "user",
+            "content": (
+                f"Скелет урока (ADR-009):\n\n{skeleton}\n\n"
+                f"Уровень ученика: {level}\n"
+                f"Обоснование оценки: {justification or '—'}\n\n"
+                "Достаточно ли материала скелета для полного урока, или "
+                "нужен свежий поиск документации?"
+            ),
+        },
+    ]
+
+
+def build_teach_messages(
+    skeleton: str,
+    level: str,
+    justification: str,
+    search_results: list[dict],
+) -> list[dict]:
+    """Build the messages for unfolding the skeleton into a lesson (task 3.3).
+
+    Pure function: the teacher prompt plus the skeleton, the per-level
+    directive (distinct unfolding per level), the assessment justification
+    (the gaps to close for ``partial``), and — when the docs decision asked
+    for fresh material — the ``search_sdd_docs`` results block.
+    """
+    parts = [
+        f"Скелет урока (ADR-009, секции фиксированы):\n\n{skeleton}",
+        LEVEL_DIRECTIVES[level],
+    ]
+    if justification:
+        parts.append(f"Пробелы ученика (из обоснования оценки): {justification}")
+    if search_results:
+        lines = "\n".join(
+            f"- {result['title']} — {result['url']}\n  {result['content']}"
+            for result in search_results
+        )
+        parts.append(f"Свежая документация (search_sdd_docs):\n{lines}")
+    parts.append(
+        "Разверни скелет в полный урок. Пиши по-русски, в markdown, "
+        "сохрани секции скелета как структуру урока."
+    )
+    return [
+        {"role": "system", "content": TEACH_SYSTEM_PROMPT},
+        {"role": "user", "content": "\n\n".join(parts)},
     ]
 
 

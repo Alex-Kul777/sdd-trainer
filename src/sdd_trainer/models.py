@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 class DomainProgress(BaseModel):
@@ -82,6 +82,41 @@ class RouteDecision(BaseModel):
     reason: str = Field(
         description="Краткая причина выбора пути — видна в логе сессии (spec: routing scenario)",
     )
+
+
+class DocsDecision(BaseModel):
+    """Structured decision: does the lesson need fresh external docs (T4).
+
+    The teach node asks this before unfolding (task 3.3): when the lesson
+    skeleton alone is not enough material, the node pulls fresh
+    documentation through ``search_sdd_docs`` (Tavily, ADR-006) and feeds
+    it into the unfolding prompt. The decision goes through the same
+    structured-output seam as Assessment / RouteDecision (ADR-005).
+    """
+
+    needs_docs: bool = Field(
+        description=(
+            "true — материала скелета не хватает для полноценного урока, "
+            "нужен свежий поиск документации"
+        ),
+    )
+    query: str = Field(
+        default="",
+        description=(
+            "Поисковый запрос на английском для search_sdd_docs — "
+            "обязателен, когда needs_docs=true"
+        ),
+    )
+    reason: str = Field(
+        description="Краткое обоснование решения — попадает в лог сеанса",
+    )
+
+    @model_validator(mode="after")
+    def _query_required_when_docs_needed(self) -> "DocsDecision":
+        """A docs request without a search query cannot be executed."""
+        if self.needs_docs and not self.query.strip():
+            raise ValueError("query обязателен, когда needs_docs=true")
+        return self
 
 
 class QuizQuestion(BaseModel):
