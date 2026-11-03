@@ -1,0 +1,178 @@
+"""Unit tests for the MCP server layer (ADR-010, issue #9, tasks 1.1-1.2).
+
+The seam is the same as in the graph unit tests (design.md): a real FastMCP
+server whose ``LLMManager`` is wired to a fake OpenAI client — no network.
+The SDK's in-memory transport (``create_connected_server_and_client_session``)
+carries the actual MCP protocol, so every tool call exercises the full
+path: FastMCP tool dispatch → step engine → compiled graph → checkpointer
+→ payload. The stdio transport (``python -m sdd_trainer.mcp``) is proven by
+the integration test (live GigaChat) and the demo script — any stray stdout
+print in the server would corrupt the protocol stream and fail there.
+"""
+from __future__ import annotations
+
+import json
+from types import SimpleNamespace
+
+import anyio
+import pytest
+from langgraph.checkpoint.memory import InMemorySaver
+from mcp.shared.memory import create_connected_server_and_client_session
+
+from sdd_trainer.config import GigaChatConfig
+from sdd_trainer.core.llm_manager import LLMManager
+from sdd_trainer.core.memory import TrainingStateStore
+from sdd_trainer.mcp import create_server
+
+pytestmark = pytest.mark.unit
+
+SERVER_NAME = "sdd-trainer"
+
+
+# --- fake OpenAI client (the same seam as test_graph, no network) ---
+
+def _tool_call_response(tool_name: str, arguments: str) -> SimpleNamespace:
+    """Build an openai-like completion whose message carries one tool call."""
+    function = SimpleNamespace(name=tool_name, arguments=arguments)
+    tool_call = SimpleNamespace(id="call_1", type="function", function=function)
+    message = SimpleNamespace(content=None, tool_calls=[tool_call])
+    return SimpleNamespace(choices=[SimpleNamespace(message=message)])
+
+
+def _text_response(text: str) -> SimpleNamespace:
+    """Build an openai-like plain-text completion (for ``LLMManager.complete``)."""
+    message = SimpleNamespace(content=text)
+    return SimpleNamespace(choices=[SimpleNamespace(message=message)])
+
+
+class FakeOpenAI:
+    """Stand-in for ``openai.OpenAI`` recording ``create()`` calls (test seam)."""
+
+    def __init__(self, replies: list) -> None:
+        self._replies = list(replies)
+        self.calls: list[dict] = []
+        self.chat = SimpleNamespace(completions=SimpleNamespace(create=self._create))
+
+    def _create(self, *, model: str, messages: list[dict], **kwargs) -> SimpleNamespace:
+        self.calls.append({"model": model, "messages": messages, **kwargs})
+        reply = self._replies.pop(0)
+        if isinstance(reply, Exception):
+            raise reply
+        if isinstance(reply, str):
+            return _text_response(reply)
+        return reply
+
+
+def _assessment_payload(
+    level: str = "partial",
+    confidence: float = 0.8,
+    justification: str = "Знает про specs/, но путается в change proposals.",
+) -> str:
+    return json.dumps(
+        {
+            "domain": "openspec-basics",
+            "level": level,
+            "justification": justification,
+            "confidence": confidence,
+        },
+        ensure_ascii=False,
+    )
+
+
+def _route_payload(path: str = "partial", reason: str = "Есть пробелы.") -> str:
+    return json.dumps({"path": path, "reason": reason}, ensure_ascii=False)
+
+
+def _docs_payload(
+    needs_docs: bool = False,
+    query: str = "",
+    reason: str = "Скелета достаточно для полного урока.",
+) -> str:
+    return json.dumps(
+        {"needs_docs": needs_docs, "query": query, "reason": reason},
+        ensure_ascii=False,
+    )
+
+
+LESSON_TEXT = "# OpenSpec-основы — урок\n\n## Goal\nПонять specs/ и changes/.\n"
+
+
+def _confident_replies(
+    level: str = "partial", confidence: float = 0.9
+) -> list:
+    """Fake replies for a confident session: assessment → route → docs → lesson."""
+    return [
+        _tool_call_response(
+            "Assessment", _assessment_payload(level=level, confidence=confidence)
+        ),
+        _tool_call_response("RouteDecision", _route_payload(path=level)),
+        _tool_call_response("DocsDecision", _docs_payload()),
+        LESSON_TEXT,
+    ]
+
+
+def _server(replies: list, checkpointer=None):
+    """Build the MCP server over a fake LLM (no network, in-memory checkpoint).
+
+    The training-state store points at a throwaway temp file: unit tests
+    must never touch the repo's runtime ``data/training-state.json``.
+    """
+    import tempfile
+    from pathlib import Path
+
+    llm = LLMManager(config=GigaChatConfig(api_key="test"), client=FakeOpenAI(replies))
+    state_store = TrainingStateStore(
+        path=Path(tempfile.mkdtemp()) / "training-state.json"
+    )
+    return create_server(
+        llm,
+        checkpointer=checkpointer or InMemorySaver(),
+        state_store=state_store,
+    )
+
+
+def _call_tools(server, tool_calls: list[tuple[str, dict]]) -> list[dict]:
+    """Drive the server through a real SDK client session; return payloads.
+
+    ``tool_calls`` is a list of ``(tool_name, arguments)`` pairs executed in
+    order against one in-memory MCP connection. Each result's first content
+    block is parsed from the FastMCP JSON serialization into a dict.
+    """
+    from mcp.types import CallToolResult
+
+    async def scenario() -> list[CallToolResult]:
+        async with create_connected_server_and_client_session(server) as session:
+            await session.initialize()
+            results = []
+            for name, arguments in tool_calls:
+                results.append(await session.call_tool(name, arguments))
+            return results
+
+    results = anyio.run(scenario)
+    payloads = []
+    for result in results:
+        assert not result.isError, f"tool call failed: {result.content}"
+        payloads.append(json.loads(result.content[0].text))
+    return payloads
+
+
+# --- 1.1: minimal carcass — a valid MCP server behind the SDK client ---
+
+def test_server_handshake_over_in_memory_transport():
+    """The factory returns a FastMCP server a real SDK client can talk to.
+
+    Tracer-bullet minimum (task 1.1): ``create_server`` assembles a valid
+    MCP server (initialize handshake succeeds, server name per ADR-010)
+    over the LLM seam — the same FakeOpenAI wiring as the graph tests.
+    """
+    server = _server(_confident_replies())
+    from mcp.server.fastmcp import FastMCP
+
+    assert isinstance(server, FastMCP)
+
+    async def scenario():
+        async with create_connected_server_and_client_session(server) as session:
+            return await session.initialize()
+
+    init = anyio.run(scenario)
+    assert init.serverInfo.name == SERVER_NAME
