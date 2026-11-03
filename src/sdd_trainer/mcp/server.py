@@ -48,25 +48,34 @@ SERVER_NAME = "sdd-trainer"
 _QUESTION_KINDS = {"assess": "calibration", "clarify": "clarification", "quiz": "quiz"}
 
 #: The tool that answers each question kind — used in mismatch errors to
-#: point the client at the right next call (quiz answering arrives in M2).
+#: point the client at the right next call.
 _KIND_TOOLS = {
     "calibration": "answer_calibration",
     "clarification": "answer_clarification",
-    "quiz": "ответ на вопрос квиза — инструмент появится в M2 (issue #10)",
+    "quiz": "answer_quiz_question",
 }
 
 
-def _question_kind(next_nodes) -> Optional[str]:
+def _question_kind(snapshot) -> Optional[str]:
     """Classify the pending interrupt by the node that raised it.
 
-    ``snapshot.next`` holds the node about to (re-)execute — the node whose
-    ``interrupt`` the student must answer next. Unknown nodes (future
-    graph extensions) classify as None; the payload still carries the raw
-    question, so the client is never left without information.
+    Two pause shapes (the issue #8 live smoke): a task pending execution
+    (``snapshot.next`` non-empty — a node's first interrupt) and a task
+    holding a pending interrupt after resume cycles (``snapshot.next``
+    empty — e.g. a mid-quiz pause at question 2+). Both are classified:
+    first by the node about to (re-)execute, then by the tasks actually
+    holding interrupts. Unknown nodes (future graph extensions) classify
+    as None; the payload still carries the raw question, so the client is
+    never left without information.
     """
-    for node in next_nodes or ():
+    for node in getattr(snapshot, "next", None) or ():
         if node in _QUESTION_KINDS:
             return _QUESTION_KINDS[node]
+    for task in getattr(snapshot, "tasks", None) or ():
+        if getattr(task, "interrupts", None):
+            name = getattr(task, "name", None)
+            if name in _QUESTION_KINDS:
+                return _QUESTION_KINDS[name]
     return None
 
 
@@ -151,6 +160,8 @@ def create_server(
             "question": question,
             "assessment": values.get("assessment") or None,
             "route": values.get("route") or None,
+            "lesson": values.get("teach_output") or None,
+            "quiz": values.get("quiz_result") or None,
             "log": list(values.get("log") or []),
             "done": done,
             "message": message,
@@ -180,7 +191,7 @@ def create_server(
                 thread_id=thread_id,
                 resumed=resumed,
                 question=interrupts[0].value,
-                question_kind=_question_kind(snapshot.next),
+                question_kind=_question_kind(snapshot),
                 values=snapshot.values,
             )
         return _payload(
@@ -222,7 +233,7 @@ def create_server(
                         thread_id=thread_id,
                         resumed=True,
                         question=question,
-                        question_kind=_question_kind(snapshot.next),
+                        question_kind=_question_kind(snapshot),
                         values=snapshot.values,
                     )
                 # Pending work without a stored question (e.g. a crashed
@@ -272,7 +283,7 @@ def create_server(
                     message="Сеанс ждёт продолжения без ответа — вызови "
                             "start_session.",
                 )
-            kind = _question_kind(snapshot.next)
+            kind = _question_kind(snapshot)
             if kind != expected_kind:
                 tool = _KIND_TOOLS.get(kind, "start_session")
                 return _payload(
@@ -298,7 +309,8 @@ def create_server(
         выбранный маршрут (path, reason); при низкой уверенности — вместо
         вердикта уточняющий вопрос (question_kind = "clarification"), ответ
         на него отправляй инструментом answer_clarification. Если маршрут
-        уже выбран — следующий вопрос квиза (quiz-инструменты — M2, issue #10).
+        уже выбран — следующий вопрос квиза, ответ на него отправляй
+        инструментом answer_quiz_question.
         """
         return _resume_answer(student, answer, "calibration")
 
@@ -309,8 +321,21 @@ def create_server(
         Возвращает переоценённый вердикт и маршрут; если уверенность
         по-прежнему низкая — следующий уточняющий вопрос (раунды ограничены,
         после предела граф ведёт по оценённому уровню). Если маршрут
-        выбран — следующий вопрос квиза (quiz-инструменты — M2, issue #10).
+        выбран — следующий вопрос квиза, ответ на него отправляй
+        инструментом answer_quiz_question.
         """
         return _resume_answer(student, answer, "clarification")
+
+    @server.tool()
+    def answer_quiz_question(student: str, answer: str) -> dict:
+        """Ответить на вопрос квиза (question_kind = "quiz") — один за вызов.
+
+        Каждый вызов возобновляет граф одним ответом и возвращает следующий
+        вопрос квиза; после последнего ответа — итог сеанса: взвешенный
+        F1-вердикт (score, passed, feedback; порог квиза 0.60), урок и
+        записанный прогресс (done = true). Вердикт квиза детерминирован —
+        F1 по референсным ответам квиза, без LLM-судьи (ADR-009).
+        """
+        return _resume_answer(student, answer, "quiz")
 
     return server

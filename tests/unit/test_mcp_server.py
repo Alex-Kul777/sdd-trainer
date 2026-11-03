@@ -343,6 +343,19 @@ def test_answer_tools_guard_the_state_machine():
     assert "answer_clarification" in mismatch["message"]
 
 
+def _quiz_reference_answers(domain: str = "openspec-basics") -> list[str]:
+    """Reference answers from the authored quiz data (deterministic F1 = 1).
+
+    The real ``data/quizzes/<domain>.json`` — the same fixture the graph's
+    quiz node loads — keeps the test honest: no reference answers are
+    duplicated here, and the F1 scoring runs against the real references
+    (ADR-009), exactly as in a live session.
+    """
+    from sdd_trainer.lessons import load_quiz
+
+    return [q.reference_answer for q in load_quiz(domain).questions]
+
+
 def test_start_session_resumes_pending_question_after_restart():
     """A new server instance over the same checkpointer resumes the session.
 
@@ -365,3 +378,159 @@ def test_start_session_resumes_pending_question_after_restart():
     assert resumed["resumed"] is True
     assert resumed["question_kind"] == "calibration"
     assert resumed["question"] == CALIBRATION_QUESTION
+
+
+# --- 2.1: quiz stepwise — answer_quiz_question (issue #10) ---
+
+def test_answer_quiz_question_steps_to_f1_verdict():
+    """The quiz is answered one question per call until the F1 verdict.
+
+    One call = one graph step (ADR-010): each answer_quiz_question resumes
+    the pending quiz interrupt and returns the next question; after the
+    last answer the graph scores the weighted token F1 against the
+    references (threshold 0.60, ADR-009), records progress and reaches
+    END — the final payload carries the verdict (done=True), the lesson
+    and the quiz result alongside the M1 assessment/route contract.
+    """
+    server = _server(_confident_replies())
+    answers = _quiz_reference_answers()
+    calls = [
+        ("start_session", {"student": "unit_mcp"}),
+        (
+            "answer_calibration",
+            {
+                "student": "unit_mcp",
+                "answer": "specs/ — стабильные спеки, changes/ — предложения",
+            },
+        ),
+    ]
+    calls += [
+        ("answer_quiz_question", {"student": "unit_mcp", "answer": answer})
+        for answer in answers
+    ]
+    payloads = _call_tools(server, calls)
+
+    assert len(payloads) == 2 + len(answers)
+    # every intermediate payload is the next pending quiz question
+    for payload in payloads[1:-1]:
+        assert payload["type"] == "question"
+        assert payload["question_kind"] == "quiz"
+        assert payload["question"]
+        assert payload["done"] is False
+
+    verdict = payloads[-1]
+    assert verdict["type"] == "result"
+    assert verdict["done"] is True
+    # the M1 contract is preserved in the final payload
+    assert verdict["assessment"]["level"] == "partial"
+    assert verdict["route"]["path"] == "partial"
+    # the F1 quiz verdict (ADR-009: weighted score, threshold 0.60)
+    assert verdict["quiz"]["domain"] == "openspec-basics"
+    assert verdict["quiz"]["passed"] is True
+    assert verdict["quiz"]["score"] >= 0.60
+    assert verdict["quiz"]["feedback"]
+    # the lesson unfolded by the teach node travels to the client too
+    assert verdict["lesson"] == LESSON_TEXT
+    # the session log carries the F1 verdict and the recorded progress
+    assert any("\u043f\u043e\u0440\u043e\u0433 0.60" in entry for entry in verdict["log"])
+    assert any("\u041f\u0440\u043e\u0433\u0440\u0435\u0441\u0441" in entry for entry in verdict["log"])
+
+
+def test_quiz_survives_server_restart_midway():
+    """A mid-quiz restart continues from the pending question (ADR-008).
+
+    The tools are stateless — the checkpoint IS the state: after two quiz
+    answers a fresh server over the same saver continues the quiz from
+    question 3 and reaches the same verdict. The restarted server gets an
+    EMPTY fake LLM: quiz stepping is deterministic (no LLM calls — ADR-009),
+    so any model call would pop from the empty list and fail loudly.
+    """
+    checkpointer = InMemorySaver()
+    first = _server(_confident_replies(), checkpointer=checkpointer)
+    answers = _quiz_reference_answers()
+    payloads = _call_tools(
+        first,
+        [
+            ("start_session", {"student": "unit_mcp"}),
+            (
+                "answer_calibration",
+                {"student": "unit_mcp", "answer": "specs/ и changes/"},
+            ),
+            (
+                "answer_quiz_question",
+                {"student": "unit_mcp", "answer": answers[0]},
+            ),
+        ],
+    )
+    assert payloads[-1]["question_kind"] == "quiz"  # question 2 is pending
+
+    second = _server([], checkpointer=checkpointer)  # no LLM replies needed
+    rest = _call_tools(
+        second,
+        [
+            (
+                "answer_quiz_question",
+                {"student": "unit_mcp", "answer": answer},
+            )
+            for answer in answers[1:]
+        ],
+    )
+    verdict = rest[-1]
+    assert verdict["type"] == "result"
+    assert verdict["done"] is True
+    assert verdict["quiz"]["passed"] is True
+    assert verdict["quiz"]["score"] >= 0.60
+
+
+def test_quiz_tools_guard_the_state_machine():
+    """Quiz guards: wrong tool for the pending kind names the right one.
+
+    answer_quiz_question without a session, answer_calibration on a
+    pending quiz question and answer_quiz_question on a pending
+    calibration each return an error payload naming the right tool — the
+    checkpoint is never fed an answer through the wrong interrupt.
+    """
+    server = _server(_confident_replies())
+    (no_session,) = _call_tools(
+        server,
+        [("answer_quiz_question", {"student": "ghost", "answer": "..."})],
+    )
+    assert no_session["type"] == "error"
+    assert "start_session" in no_session["message"]
+
+    payloads = _call_tools(
+        server,
+        [
+            ("start_session", {"student": "unit_mcp"}),
+            (
+                "answer_calibration",
+                {"student": "unit_mcp", "answer": "specs/ и changes/"},
+            ),
+        ],
+    )
+    assert payloads[1]["question_kind"] == "quiz"  # quiz is pending now
+    (wrong_tool,) = _call_tools(
+        server,
+        [
+            (
+                "answer_calibration",
+                {"student": "unit_mcp", "answer": "не тот инструмент"},
+            )
+        ],
+    )
+    assert wrong_tool["type"] == "error"
+    assert "answer_quiz_question" in wrong_tool["message"]
+
+    other = _server(_confident_replies())
+    _call_tools(other, [("start_session", {"student": "unit_mcp"})])
+    (wrong_kind,) = _call_tools(
+        other,
+        [
+            (
+                "answer_quiz_question",
+                {"student": "unit_mcp", "answer": "не тот инструмент"},
+            )
+        ],
+    )
+    assert wrong_kind["type"] == "error"
+    assert "answer_calibration" in wrong_kind["message"]
