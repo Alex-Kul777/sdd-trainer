@@ -82,12 +82,39 @@ def find_pending_question(snapshot: Any) -> Optional[str]:
     return None
 
 
-def format_session_summary(state: dict, student: str, thread_id: str) -> list[str]:
-    """Format the end-of-session summary lines (task 6.1).
+def _next_step_advice(state: dict) -> str:
+    """Recommend the next step from the final state (task 7.3, issue #8).
+
+    Pure function: the advice depends only on whether the quiz ran and
+    its verdict — a passed quiz means the lesson counts in training-state
+    (next domain), a failed one asks for a retry, and a session that
+    never reached the quiz should be continued from its checkpoint.
+    """
+    quiz_result = state.get("quiz_result")
+    if quiz_result:
+        if quiz_result.get("passed"):
+            return (
+                "квиз зачтён — урок засчитан в training-state; переходи "
+                "к следующему домену или углубляйся в OpenSpec новым сеансом"
+            )
+        return (
+            "квиз не зачтён — перечитай урок выше и перезапусти сеанс "
+            "с тем же --student, чтобы пройти квиз снова"
+        )
+    return "сеанс не дошёл до квиза — продолжи с тем же --student"
+
+
+def format_session_summary(
+    state: dict, student: str, thread_id: str, progress: dict | None = None
+) -> list[str]:
+    """Format the end-of-session summary lines (tasks 6.1 + 7.3).
 
     Pure function (unit-tested): renders whatever the final graph state
     holds — level, route, the unfolded lesson (T4), quiz stub (T5),
-    clarification rounds — without touching the graph or the network.
+    clarification rounds — plus the persisted domain progress
+    (``progress``: the ``training-state.json`` entry — score, streak,
+    completed lessons) and a "what's next" recommendation, without
+    touching the graph, the filesystem, or the network.
     """
     lines = [
         "",
@@ -113,6 +140,15 @@ def format_session_summary(state: dict, student: str, thread_id: str) -> list[st
     rounds = state.get("clarification_rounds", 0)
     if rounds:
         lines.append(f"Уточняющих вопросов за сеанс: {rounds}")
+    if progress:
+        lines.append(
+            "Прогресс (training-state.json): счёт {:.2f}, серия {}, "
+            "уроков завершено {}".format(
+                progress["score"], progress["streak"],
+                progress["completed_lessons"],
+            )
+        )
+    lines.append(f"Что дальше: {_next_step_advice(state)}")
     lines.append("Чекпоинт сохранён — сеанс можно продолжить с тем же --student.")
     return lines
 
@@ -157,12 +193,14 @@ def _print_new_log(result: dict, printed: int) -> int:
     return len(log)
 
 
-def _print_interrupted_exit(student: str, state: dict, thread_id: str) -> None:
+def _print_interrupted_exit(
+    student: str, state: dict, thread_id: str, progress: dict | None = None
+) -> None:
     """Report an interrupted session: checkpoint saved, resume instructions."""
     print("\n[чекпоинт] Сеанс прерван — состояние сохранено в чекпоинте.")
     print(f"Перезапусти с тем же учеником (--student {student}), "
           "чтобы продолжить с того же места.")
-    for line in format_session_summary(state, student, thread_id):
+    for line in format_session_summary(state, student, thread_id, progress):
         print(line)
 
 
@@ -210,6 +248,12 @@ def run_session(
         snapshot = graph.get_state(thread_config)
         printed = _print_prior_log(snapshot.values)
 
+        def _domain_progress(values: dict) -> dict | None:
+            """Domain entry from training-state.json for the summary."""
+            domains = memory.load_training_state().get("domains", {})
+            entry = domains.get(values.get("domain", ""))
+            return dict(entry) if entry else None
+
         if snapshot.next:
             print("\n[чекпоинт] Найден незавершённый сеанс — "
                   "возобновляю с чекпоинта (критерий 4).")
@@ -218,7 +262,8 @@ def run_session(
                 answer = _ask(question)
                 if answer is None:
                     _print_interrupted_exit(
-                        student, snapshot.values, thread_id
+                        student, snapshot.values, thread_id,
+                        _domain_progress(snapshot.values),
                     )
                     return
                 result = graph.invoke(Command(resume=answer), thread_config)
@@ -237,14 +282,19 @@ def run_session(
                 break
             answer = _ask(interrupts[0].value)
             if answer is None:
+                interrupted = graph.get_state(thread_config).values
                 _print_interrupted_exit(
-                    student, graph.get_state(thread_config).values, thread_id
+                    student, interrupted, thread_id,
+                    _domain_progress(interrupted),
                 )
                 return
             result = graph.invoke(Command(resume=answer), thread_config)
 
         final_state = graph.get_state(thread_config).values
-        for line in format_session_summary(final_state, student, thread_id):
+        summary = format_session_summary(
+            final_state, student, thread_id, _domain_progress(final_state)
+        )
+        for line in summary:
             print(line)
     except OpenAIError as exc:
         print(f"\n[GigaChat недоступен: {exc}]")

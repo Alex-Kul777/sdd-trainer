@@ -214,3 +214,78 @@ class TestFormatSessionSummary:
 
         assert "Квиз: [quiz/stub] Квиз…" in text
         assert "Урок:" not in text
+
+    def test_progress_renders_training_state_score(self) -> None:
+        """Score comes from training-state.json (progress), not the graph state.
+
+        Task 7.3 (issue #8): the summary must show the persisted score —
+        the checkpoint state may be gone while training-state survives.
+        """
+        state = {
+            "domain": "openspec-basics",
+            "quiz_result": {
+                "domain": "openspec-basics",
+                "score": 0.83,
+                "passed": True,
+                "feedback": "Хорошо!",
+            },
+        }
+        progress = {"score": 0.83, "streak": 1, "completed_lessons": 1}
+
+        text = "\n".join(
+            format_session_summary(
+                state, "alex", "student:alex", progress=progress
+            )
+        )
+
+        assert (
+            "Прогресс (training-state.json): счёт 0.83, серия 1, "
+            "уроков завершено 1" in text
+        )
+
+    def test_passed_quiz_advises_next_domain(self) -> None:
+        state = {
+            "domain": "openspec-basics",
+            "quiz_result": {
+                "domain": "openspec-basics",
+                "score": 0.9,
+                "passed": True,
+                "feedback": "Отлично",
+            },
+        }
+
+        text = "\n".join(format_session_summary(state, "alex", "student:alex"))
+
+        assert "Что дальше:" in text
+        assert "квиз зачтён" in text
+        assert "следующему домену" in text
+
+    def test_failed_quiz_advises_retry(self) -> None:
+        state = {
+            "domain": "openspec-basics",
+            "quiz_result": {
+                "domain": "openspec-basics",
+                "score": 0.2,
+                "passed": False,
+                "feedback": "Повтори",
+            },
+        }
+
+        text = "\n".join(format_session_summary(state, "alex", "student:alex"))
+
+        assert "Что дальше:" in text
+        assert "квиз не зачтён" in text
+        assert "--student" in text
+
+    def test_no_quiz_advises_continuing(self) -> None:
+        text = "\n".join(format_session_summary({}, "maria", "student:maria"))
+
+        assert "Что дальше:" in text
+        assert "не дошёл до квиза" in text
+
+    def test_without_progress_no_score_line(self) -> None:
+        state = {"domain": "openspec-basics"}
+
+        text = "\n".join(format_session_summary(state, "alex", "student:alex"))
+
+        assert "Прогресс (training-state.json)" not in text
