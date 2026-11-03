@@ -10,7 +10,9 @@ Registered as LangGraph tools (AIA_02/AIA_05 patterns):
 - ``get_student_history(query)`` — the student's OpenSpec dialogue history via
   the ``openclaw sessions`` CLI subprocess (ADR-007, pull model) — phase 3;
 - ``analyze_student_repo(repo_path)`` — passive assessment of the student's
-  repository (specs/changes quality, SHALL and WHEN/THEN usage) — T6.
+  repository (specs/changes structure, SHALL and WHEN/THEN usage) — task
+  2.2, T6 (issue #7). A local filesystem scan: no network, no LLM — the
+  evidence the assess node weighs against the self-report (task 3.1).
 
 The seam for tests is the ``client`` parameter of ``search_sdd_docs``: unit
 tests inject a fake httpx client (no network), integration tests use the
@@ -18,11 +20,13 @@ real Tavily endpoint and are skipped without ``TAVILY_API_KEY``.
 """
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Optional
 
 import httpx
 
 from sdd_trainer.config import TavilyConfig
+from sdd_trainer.models import RepoAnalysis
 
 
 def search_sdd_docs(
@@ -98,6 +102,90 @@ def get_student_history(query: str = "") -> list[dict]:
     pass
 
 
-def analyze_student_repo(repo_path: str) -> dict:
-    """Passively assess the student's repository (T6, issue #7)."""
-    pass
+def analyze_student_repo(repo_path: str) -> RepoAnalysis:
+    """Passively assess the student's repository (task 2.2, issue #7).
+
+    A local filesystem scan (no network, no LLM): looks for ``openspec/``
+    and collects the evidence of live SDD practice — stable spec domains
+    (``openspec/specs/<domain>/spec.md``), active change proposals
+    (``openspec/changes/<name>/`` except ``archive/``), and the SHALL
+    requirements / ``#### Scenario:`` blocks across every ``spec.md``
+    (stable specs + change deltas). The deterministic ``summary`` is the
+    prose that reaches the assessment prompt and the session log.
+
+    A repo without ``openspec/`` is valid evidence (``has_openspec=False``),
+    not an error: honestly no visible practice. A missing path is a
+    configuration error and raises.
+
+    Args:
+        repo_path: path to the student's repository (CLI ``--repo-path``
+            or config; fixture repos in tmpdir for tests).
+
+    Returns:
+        :class:`~sdd_trainer.models.RepoAnalysis` — the structured scan.
+
+    Raises:
+        FileNotFoundError: ``repo_path`` does not exist.
+    """
+    root = Path(repo_path)
+    if not root.exists():
+        raise FileNotFoundError(
+            "Репозиторий ученика не найден: {!r}".format(str(repo_path))
+        )
+
+    openspec_dir = root / "openspec"
+    if not openspec_dir.is_dir():
+        return RepoAnalysis(
+            repo_path=str(repo_path),
+            has_openspec=False,
+            summary=(
+                "openspec/ не найден — живой практики SDD "
+                "в репозитории не видно"
+            ),
+        )
+
+    specs_dir = openspec_dir / "specs"
+    spec_domains = (
+        sorted(spec.parent.name for spec in specs_dir.glob("*/spec.md"))
+        if specs_dir.is_dir()
+        else []
+    )
+    changes_dir = openspec_dir / "changes"
+    change_names = (
+        sorted(
+            entry.name
+            for entry in changes_dir.iterdir()
+            if entry.is_dir() and entry.name != "archive"
+        )
+        if changes_dir.is_dir()
+        else []
+    )
+
+    shall_count = 0
+    scenario_count = 0
+    for spec_file in openspec_dir.rglob("spec.md"):
+        text = spec_file.read_text(encoding="utf-8", errors="replace")
+        shall_count += text.count("SHALL")
+        scenario_count += text.count("#### Scenario:")
+
+    if not spec_domains and not change_names:
+        summary = "openspec/ найден, но спецификаций и изменений в нём нет"
+    else:
+        parts: list[str] = []
+        if spec_domains:
+            parts.append("спецификации — " + ", ".join(spec_domains))
+        if change_names:
+            parts.append("активные changes — " + ", ".join(change_names))
+        parts.append("требований SHALL — {}".format(shall_count))
+        parts.append("сценариев WHEN/THEN — {}".format(scenario_count))
+        summary = "openspec/ активен: " + "; ".join(parts)
+
+    return RepoAnalysis(
+        repo_path=str(repo_path),
+        has_openspec=True,
+        spec_domains=spec_domains,
+        change_names=change_names,
+        shall_count=shall_count,
+        scenario_count=scenario_count,
+        summary=summary,
+    )
