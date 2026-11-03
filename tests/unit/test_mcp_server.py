@@ -621,3 +621,65 @@ def test_search_docs_over_mcp():
     (error,) = _call_tools(failing, [("search_docs", {"query": "anything"})])
     assert error["type"] == "error"
     assert "TAVILY_API_KEY" in error["message"]
+
+
+# --- 2.3: get_progress — training state over MCP (issue #10) ---
+
+def test_get_progress_returns_updated_training_state():
+    """get_progress after a completed quiz returns the updated state.
+
+    The spec scenario: the client queries progress after a finished
+    session and sees the recorded domain progress — score, streak and the
+    completed lesson, read from the same TrainingStateStore the quiz node
+    wrote through (ADR-008: progress survives reconnection).
+    """
+    server = _server(_confident_replies())
+    answers = _quiz_reference_answers()
+    calls = [
+        ("start_session", {"student": "unit_mcp"}),
+        (
+            "answer_calibration",
+            {"student": "unit_mcp", "answer": "specs/ и changes/"},
+        ),
+    ]
+    calls += [
+        ("answer_quiz_question", {"student": "unit_mcp", "answer": answer})
+        for answer in answers
+    ]
+    calls.append(("get_progress", {"student": "unit_mcp"}))
+    payloads = _call_tools(server, calls)
+
+    verdict = payloads[-2]
+    assert verdict["done"] is True  # the quiz really finished
+    progress = payloads[-1]
+    assert progress["type"] == "progress"
+    assert progress["student"] == "unit_mcp"
+    assert progress["thread_id"] == "student:unit_mcp"
+    entry = progress["domains"]["openspec-basics"]
+    assert entry["score"] == verdict["quiz"]["score"]
+    assert entry["streak"] == 1
+    assert entry["completed_lessons"] == 1
+
+
+def test_get_progress_empty_for_a_fresh_student():
+    """get_progress on a fresh trainer state returns no domains.
+
+    An honest empty answer: no quiz has been recorded, so the domains map
+    is empty — not an error, not fabricated zeros.
+    """
+    server = _server([])
+    (progress,) = _call_tools(
+        server, [("get_progress", {"student": "fresh_student"})]
+    )
+    assert progress["type"] == "progress"
+    assert progress["domains"] == {}
+
+
+def test_get_progress_rejects_invalid_student_name():
+    """An invalid student name is an error payload (thread-id convention)."""
+    server = _server([])
+    (error,) = _call_tools(
+        server, [("get_progress", {"student": "two words"})]
+    )
+    assert error["type"] == "error"
+    assert "\u043d\u0435\u0434\u043e\u043f\u0443\u0441\u0442\u0438\u043c\u043e\u0435 \u0438\u043c\u044f" in error["message"]

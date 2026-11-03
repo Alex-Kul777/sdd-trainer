@@ -375,4 +375,27 @@ def create_server(
             return {"type": "error", "message": str(exc)}
         return {"type": "docs_results", "query": query, "results": results}
 
+    @server.tool()
+    def get_progress(student: str) -> dict:
+        """Прогресс ученика по доменам — training-state (score, streak, уроки).
+
+        Возвращает записанный прогресс обучения: счёт последнего квиза,
+        серию и число завершённых уроков по каждому домену (ADR-008,
+        data/training-state.json) — тот же сторе, куда квиз записывает
+        результат, поэтому прогресс переживает рестарт сервера. Пустой
+        ответ (domains = {}) — честное «квизов ещё не было», не ошибка.
+        """
+        try:
+            thread_id = student_thread_id(student)
+        except ValueError as exc:
+            return _payload(type_="error", student=student, thread_id=None,
+                            message=str(exc))
+        store = state_store or TrainingStateStore()
+        return {
+            "type": "progress",
+            "student": student,
+            "thread_id": thread_id,
+            "domains": dict(store.load().get("domains") or {}),
+        }
+
     return server
