@@ -30,4 +30,4 @@
 ## 7. Tests & smoke
 - [x] 7.1 Unit tests at the graph seam with FakeLLM (routing, checkpoint, training-state, F1)
 - [x] 7.2 Integration tests with real GigaChat (skip without GIGACHAT_KEY)
-- [ ] 7.3 Manual smoke checklist: criteria 1–5 visible in session logs
+- [x] 7.3 Manual smoke checklist: criteria 1–5 visible in session logs
