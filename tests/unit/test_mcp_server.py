@@ -295,3 +295,73 @@ def test_low_confidence_clarification_loop():
     assert verdict["assessment"]["confidence"] == 0.85
     assert verdict["route"]["path"] == "partial"
     assert any("Переоценка: partial" in entry for entry in verdict["log"])
+
+
+# --- state-machine guards and restart resilience (ADR-008) ---
+
+def test_answer_tools_guard_the_state_machine():
+    """Guards return error payloads naming the right tool — never a wrong resume.
+
+    A session tool without a pending session, a mismatched question kind
+    and an invalid student name each produce type "error" with guidance;
+    the checkpoint is never fed an answer through the wrong interrupt.
+    """
+    server = _server(
+        [_tool_call_response("Assessment", _assessment_payload(confidence=0.3))]
+    )
+    payloads = _call_tools(
+        server,
+        [
+            # no session for this student yet
+            ("answer_calibration", {"student": "ghost", "answer": "..."}),
+            # invalid student name (thread id convention, ADR-008)
+            ("start_session", {"student": "two words"}),
+            # drive to a pending clarification, then call the wrong tool
+            ("start_session", {"student": "unit_mcp"}),
+            (
+                "answer_calibration",
+                {"student": "unit_mcp", "answer": "что-то слышал про спеки"},
+            ),
+            (
+                "answer_calibration",
+                {"student": "unit_mcp", "answer": "не тот инструмент"},
+            ),
+        ],
+    )
+
+    no_session = payloads[0]
+    assert no_session["type"] == "error"
+    assert "start_session" in no_session["message"]
+
+    bad_name = payloads[1]
+    assert bad_name["type"] == "error"
+    assert "недопустимое имя" in bad_name["message"]
+
+    assert payloads[3]["question_kind"] == "clarification"  # pending state
+    mismatch = payloads[4]
+    assert mismatch["type"] == "error"
+    assert "answer_clarification" in mismatch["message"]
+
+
+def test_start_session_resumes_pending_question_after_restart():
+    """A new server instance over the same checkpointer resumes the session.
+
+    The tools are stateless — the checkpoint IS the state (ADR-008/010):
+    after a "restart" (a fresh create_server over the same saver) the same
+    student gets the same pending calibration question with resumed=True.
+    """
+    from sdd_trainer.core.prompts import CALIBRATION_QUESTION
+
+    checkpointer = InMemorySaver()
+    first = _server(_confident_replies(), checkpointer=checkpointer)
+    (payload,) = _call_tools(first, [("start_session", {"student": "unit_mcp"})])
+    assert payload["resumed"] is False
+
+    second = _server(_confident_replies(), checkpointer=checkpointer)
+    (resumed,) = _call_tools(
+        second, [("start_session", {"student": "unit_mcp"})]
+    )
+    assert resumed["type"] == "question"
+    assert resumed["resumed"] is True
+    assert resumed["question_kind"] == "calibration"
+    assert resumed["question"] == CALIBRATION_QUESTION
