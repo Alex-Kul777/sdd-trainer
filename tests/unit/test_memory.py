@@ -7,7 +7,7 @@ import pytest
 from langgraph.checkpoint.sqlite import SqliteSaver
 
 from sdd_trainer.config import trainer_config
-from sdd_trainer.core.memory import MemoryManager
+from sdd_trainer.core.memory import MemoryManager, TrainingStateStore
 
 pytestmark = pytest.mark.unit
 
@@ -77,18 +77,121 @@ class TestThreadConvention:
         }
 
 
-class TestTrainingStateStubs:
-    """training-state.json is task 4.2 — ticket T5 (issue #6): stubs stay."""
+class TestTrainingStateStore:
+    """TrainingStateStore: file-backed training-state.json (task 4.2, T5)."""
 
-    def test_load_returns_empty_state_for_now(self) -> None:
+    def test_fresh_state_when_file_missing(self, tmp_path: Path) -> None:
+        store = TrainingStateStore(path=tmp_path / "training-state.json")
+
+        assert store.load() == {"domains": {}}
+
+    def test_save_load_roundtrip(self, tmp_path: Path) -> None:
+        store = TrainingStateStore(path=tmp_path / "training-state.json")
+        state = {
+            "domains": {
+                "openspec-basics": {
+                    "score": 0.84,
+                    "streak": 2,
+                    "completed_lessons": 2,
+                }
+            }
+        }
+
+        store.save(state)
+
+        assert store.load() == state
+
+    def test_state_survives_restart_via_new_instance(self, tmp_path: Path) -> None:
+        path = tmp_path / "training-state.json"
+        TrainingStateStore(path=path).save(
+            {"domains": {"openspec-basics": {"score": 1.0, "streak": 1, "completed_lessons": 1}}}
+        )
+
+        restarted = TrainingStateStore(path=path)
+
+        assert restarted.load()["domains"]["openspec-basics"]["streak"] == 1
+
+    def test_passed_quiz_starts_streak_and_completes_lesson(
+        self, tmp_path: Path
+    ) -> None:
+        store = TrainingStateStore(path=tmp_path / "training-state.json")
+
+        entry = store.record_quiz_result("openspec-basics", score=0.84, passed=True)
+
+        assert entry == {"score": 0.84, "streak": 1, "completed_lessons": 1}
+        assert store.load()["domains"]["openspec-basics"] == entry
+
+    def test_consecutive_passed_quizzes_grow_the_streak(
+        self, tmp_path: Path
+    ) -> None:
+        store = TrainingStateStore(path=tmp_path / "training-state.json")
+        store.record_quiz_result("openspec-basics", score=0.8, passed=True)
+
+        entry = store.record_quiz_result("openspec-basics", score=0.9, passed=True)
+
+        assert entry["streak"] == 2
+        assert entry["score"] == 0.9  # latest score, not the best
+        assert entry["completed_lessons"] == 2
+
+    def test_failed_quiz_resets_streak_and_keeps_completed_count(
+        self, tmp_path: Path
+    ) -> None:
+        store = TrainingStateStore(path=tmp_path / "training-state.json")
+        store.record_quiz_result("openspec-basics", score=0.9, passed=True)
+
+        entry = store.record_quiz_result("openspec-basics", score=0.2, passed=False)
+
+        assert entry == {"score": 0.2, "streak": 0, "completed_lessons": 1}
+
+    def test_domains_are_tracked_independently(self, tmp_path: Path) -> None:
+        store = TrainingStateStore(path=tmp_path / "training-state.json")
+        store.record_quiz_result("openspec-basics", score=0.9, passed=True)
+
+        entry = store.record_quiz_result("requirement-writing", score=0.5, passed=False)
+
+        assert entry["streak"] == 0
+        domains = store.load()["domains"]
+        assert domains["openspec-basics"]["streak"] == 1
+        assert domains["requirement-writing"]["streak"] == 0
+
+    def test_corrupt_state_file_fails_loudly(self, tmp_path: Path) -> None:
+        path = tmp_path / "training-state.json"
+        path.write_text("{not json", encoding="utf-8")
+        store = TrainingStateStore(path=path)
+
+        with pytest.raises(ValueError):
+            store.load()
+
+
+class TestMemoryManagerTrainingState:
+    """MemoryManager delegates training state to the store (task 4.2)."""
+
+    def test_default_training_state_path_matches_adr008(self) -> None:
         manager = MemoryManager(thread_id="student:test")
 
-        assert manager.load_training_state() == {}
+        assert manager.training_state_path == trainer_config.training_state_path
 
-    def test_save_is_a_no_op_for_now(self, tmp_path: Path) -> None:
+    def test_load_reads_the_state_file(self, tmp_path: Path) -> None:
+        path = tmp_path / "training-state.json"
+        TrainingStateStore(path=path).save(
+            {"domains": {"openspec-basics": {"score": 1.0, "streak": 1, "completed_lessons": 1}}}
+        )
         manager = MemoryManager(
             thread_id="student:test",
             checkpoint_path=tmp_path / "checkpoints.sqlite",
+            training_state_path=path,
         )
 
-        manager.save_training_state({"domain": "openspec-basics"})  # no error
+        assert manager.load_training_state()["domains"]["openspec-basics"]["streak"] == 1
+
+    def test_save_writes_the_state_file(self, tmp_path: Path) -> None:
+        path = tmp_path / "training-state.json"
+        manager = MemoryManager(
+            thread_id="student:test",
+            checkpoint_path=tmp_path / "checkpoints.sqlite",
+            training_state_path=path,
+        )
+
+        manager.save_training_state({"domains": {}})
+
+        assert TrainingStateStore(path=path).load() == {"domains": {}}

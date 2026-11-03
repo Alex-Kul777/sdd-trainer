@@ -8,11 +8,13 @@ Two layers:
   interrupted session resumes from the checkpoint on the next run.
 - training state — ``data/training-state.json``: per-domain progress
   (domain, score, streak) across the 6 SDD domains (openclaw-tutor
-  pattern). Task 4.2 — ticket T5 (issue #6); the methods below stay stubs
-  until then.
+  pattern). Task 4.2 (ticket T5, issue #6): :class:`TrainingStateStore`
+  owns the file; the quiz node records results through it, and
+  ``MemoryManager`` exposes load/save for the transports.
 """
 from __future__ import annotations
 
+import json
 import sqlite3
 from pathlib import Path
 from typing import Optional
@@ -20,6 +22,71 @@ from typing import Optional
 from langgraph.checkpoint.sqlite import SqliteSaver
 
 from sdd_trainer.config import trainer_config
+
+
+class TrainingStateStore:
+    """File-backed ``data/training-state.json`` (ADR-008, task 4.2).
+
+    The state is a plain dict keyed by domain —
+    ``{"domains": {<domain>: {"score", "streak", "completed_lessons"}}}``
+    (the ``DomainProgress`` fields, models.py). Update policy
+    (``record_quiz_result``): the score always reflects the latest quiz;
+    a passed quiz grows the streak and completes a lesson, a failed one
+    resets the streak and leaves the completed count alone. The file is a
+    runtime artifact (git-ignored like the checkpoint database).
+    """
+
+    def __init__(self, path: Optional[Path] = None) -> None:
+        """Store the state file path (defaults to ``TrainerConfig``)."""
+        self.path = Path(path or trainer_config.training_state_path)
+
+    def load(self) -> dict:
+        """Return the persisted state, or a fresh one for a new student.
+
+        Raises:
+            ValueError: the file exists but is not valid JSON — a corrupt
+                progress file must fail loudly, not silently reset the
+                student's progress.
+        """
+        if not self.path.exists():
+            return {"domains": {}}
+        return json.loads(self.path.read_text(encoding="utf-8"))
+
+    def save(self, state: dict) -> None:
+        """Persist the state atomically enough for a console trainer."""
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        self.path.write_text(
+            json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
+
+    def record_quiz_result(
+        self, domain: str, score: float, passed: bool
+    ) -> dict:
+        """Update the domain's progress with a scored quiz and persist it.
+
+        Args:
+            domain: the quiz domain, e.g. ``openspec-basics``.
+            score: the latest weighted quiz score (0..1).
+            passed: the quiz verdict against the authored pass threshold.
+
+        Returns:
+            The updated domain entry
+            (``{"score", "streak", "completed_lessons"}``).
+        """
+        state = self.load()
+        domains = state.setdefault("domains", {})
+        entry = domains.setdefault(
+            domain, {"score": 0.0, "streak": 0, "completed_lessons": 0}
+        )
+        entry["score"] = score
+        if passed:
+            entry["streak"] += 1
+            entry["completed_lessons"] += 1
+        else:
+            entry["streak"] = 0
+        domains[domain] = entry
+        self.save(state)
+        return dict(entry)
 
 
 class MemoryManager:
@@ -37,8 +104,9 @@ class MemoryManager:
         self,
         thread_id: str = "student:alex",
         checkpoint_path: Optional[Path] = None,
+        training_state_path: Optional[Path] = None,
     ) -> None:
-        """Store the student thread id and the checkpoint database path.
+        """Store the student thread id and the persistence paths.
 
         Args:
             thread_id: LangGraph thread id of the student — the ADR-008
@@ -46,10 +114,16 @@ class MemoryManager:
             checkpoint_path: sqlite database for the SqliteSaver checkpointer;
                 defaults to ``TrainerConfig.checkpoint_path``
                 (``data/checkpoints.sqlite``).
+            training_state_path: JSON file for the training state; defaults
+                to ``TrainerConfig.training_state_path``
+                (``data/training-state.json``).
         """
         self.thread_id = thread_id
         self.checkpoint_path = Path(
             checkpoint_path or trainer_config.checkpoint_path
+        )
+        self.training_state_path = Path(
+            training_state_path or trainer_config.training_state_path
         )
         self._checkpointer: Optional[SqliteSaver] = None
         self._conn: Optional[sqlite3.Connection] = None
@@ -82,14 +156,9 @@ class MemoryManager:
             self._checkpointer = None
 
     def load_training_state(self) -> dict:
-        """Load training-state.json or return a fresh state.
-
-        Stub — task 4.2 is ticket T5 (issue #6): domain, score, streak.
-        """
-        return {}
+        """Load training-state.json or return a fresh state (task 4.2)."""
+        return TrainingStateStore(path=self.training_state_path).load()
 
     def save_training_state(self, state: dict) -> None:
-        """Persist training-state.json.
-
-        Stub — task 4.2 is ticket T5 (issue #6): domain, score, streak.
-        """
+        """Persist training-state.json (task 4.2)."""
+        TrainingStateStore(path=self.training_state_path).save(state)
