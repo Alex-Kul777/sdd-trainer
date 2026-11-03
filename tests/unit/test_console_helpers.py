@@ -7,6 +7,8 @@ summary formatting. The interactive loop itself is manual smoke
 """
 from __future__ import annotations
 
+import tempfile
+from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
@@ -16,6 +18,7 @@ from langgraph.types import Command
 from sdd_trainer.config import GigaChatConfig
 from sdd_trainer.core.graph import build_graph
 from sdd_trainer.core.llm_manager import LLMManager
+from sdd_trainer.core.memory import TrainingStateStore
 from sdd_trainer.__main__ import (
     DEFAULT_STUDENT,
     find_pending_question,
@@ -79,10 +82,17 @@ def _docs_arguments() -> str:
 
 
 def _graph(replies: list | None = None):
-    """Graph over a fake client; a completed session needs both replies."""
+    """Graph over a fake client; a completed session needs both replies.
+
+    The training-state store points at a throwaway temp file: unit tests
+    must never touch the repo's runtime ``data/training-state.json``.
+    """
     return build_graph(
         LLMManager(config=GigaChatConfig(api_key="test"), client=_FakeOpenAI(replies)),
         checkpointer=InMemorySaver(),
+        state_store=TrainingStateStore(
+            path=Path(tempfile.mkdtemp()) / "training-state.json"
+        ),
     )
 
 

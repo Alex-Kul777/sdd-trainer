@@ -12,6 +12,8 @@ from __future__ import annotations
 
 import json
 import sqlite3
+import tempfile
+from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
@@ -133,9 +135,18 @@ def _teach_replies(
 def _graph(
     replies: list, checkpointer=None, docs_search=None, state_store=None
 ) -> tuple:
-    """Compile the trainer graph over a fake LLM client (no network)."""
+    """Compile the trainer graph over a fake LLM client (no network).
+
+    The training-state store defaults to a throwaway temp file: unit
+    tests must never touch the repo's runtime ``data/training-state.json``
+    (the quiz node writes through the store when a session completes).
+    """
     fake = FakeOpenAI(replies)
     llm = LLMManager(config=GigaChatConfig(api_key="test"), client=fake)
+    if state_store is None:
+        state_store = TrainingStateStore(
+            path=Path(tempfile.mkdtemp()) / "training-state.json"
+        )
     graph = build_graph(
         llm,
         checkpointer=checkpointer or InMemorySaver(),

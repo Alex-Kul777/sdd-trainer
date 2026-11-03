@@ -19,7 +19,9 @@ from langgraph.types import Command
 from sdd_trainer.config import GigaChatConfig
 from sdd_trainer.core.graph import build_graph
 from sdd_trainer.core.llm_manager import LLMManager
+from sdd_trainer.core.memory import TrainingStateStore
 from sdd_trainer.core.prompts import CALIBRATION_QUESTION
+from sdd_trainer.lessons import load_quiz
 
 pytestmark = pytest.mark.integration
 
@@ -41,10 +43,23 @@ KNOWLEDGEABLE_ANSWER = (
 )
 
 
-def _live_graph(checkpointer) -> object:
-    """Compile the trainer graph against the real GigaChat endpoint."""
+def _live_graph(checkpointer, state_store=None) -> object:
+    """Compile the trainer graph against the real GigaChat endpoint.
+
+    The training-state store defaults to a throwaway temp file — live
+    tests must not write into the repo's runtime training-state.json.
+    """
+    import tempfile
+    from pathlib import Path
+
+    if state_store is None:
+        state_store = TrainingStateStore(
+            path=Path(tempfile.mkdtemp()) / "training-state.json"
+        )
     return build_graph(
-        LLMManager(config=GigaChatConfig()), checkpointer=checkpointer
+        LLMManager(config=GigaChatConfig()),
+        checkpointer=checkpointer,
+        state_store=state_store,
     )
 
 
@@ -62,12 +77,16 @@ def test_newcomer_full_session_routes_to_new_topic_live() -> None:
 
     assert result["assessment"]["level"] == "new_topic"
     assert result["route"]["path"] == "new_topic"
-    assert result["teach_output"]  # new_topic → teach stub
-    assert not result.get("quiz_output")
+    assert result["teach_output"]  # new_topic → the real lesson ran
+    assert not result.get("quiz_output")  # the quiz has not been answered yet
     assert any(
         entry.startswith("Маршрут: new_topic") for entry in result["log"]
     )  # criterion 5: the route is visible in the session log
-    assert graph.get_state(thread).next == ()
+    # teach flows into the quiz (T5): the session waits at the first question
+    assert result["__interrupt__"][0].value == (
+        load_quiz("openspec-basics").questions[0].question
+    )
+    assert graph.get_state(thread).next == ("quiz",)
 
 
 @requires_key
@@ -92,7 +111,8 @@ def test_newcomer_lesson_is_real_not_stub_live() -> None:
     # the docs decision and the finished lesson are visible in the log
     assert any(entry.startswith("Материалы:") for entry in result["log"])
     assert any("Урок готов" in entry for entry in result["log"])
-    assert graph.get_state(thread).next == ()
+    # the lesson is followed by the quiz (T5 topology)
+    assert graph.get_state(thread).next == ("quiz",)
 
 
 @requires_key
@@ -105,12 +125,18 @@ def test_knowledgeable_student_skips_to_quiz_or_targeted_lesson_live() -> None:
     result = graph.invoke(Command(resume=KNOWLEDGEABLE_ANSWER), thread)
 
     assert result["assessment"]["level"] in {"knows_it", "partial"}
-    assert result["route"]["path"] in {"knows_it", "partial"}
-    # exactly one stub ran: knows_it → quiz, partial → teach (the other
-    # channel was never written, hence .get())
-    assert bool(result.get("teach_output")) != bool(result.get("quiz_output"))
+    path = result["route"]["path"]
+    assert path in {"knows_it", "partial"}
+    # every path now ends at the quiz (T5): the first question is pending
+    assert result["__interrupt__"][0].value == (
+        load_quiz("openspec-basics").questions[0].question
+    )
+    assert graph.get_state(thread).next == ("quiz",)
+    if path == "knows_it":
+        assert not result["teach_output"]  # the full lecture was skipped
+    else:
+        assert result["teach_output"]  # partial got a targeted lesson first
     assert any(entry.startswith("Маршрут:") for entry in result["log"])
-    assert graph.get_state(thread).next == ()
 
 
 @requires_key
@@ -137,4 +163,5 @@ def test_sqlite_checkpoint_survives_restart_live(tmp_path) -> None:
 
     assert result["calibration_answer"] == NEWCOMER_ANSWER
     assert result["route"]["path"] == "new_topic"
-    assert graph2.get_state(thread).next == ()
+    # resumed through teach, now waiting at the quiz (T5)
+    assert graph2.get_state(thread).next == ("quiz",)
