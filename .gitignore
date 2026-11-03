@@ -23,9 +23,11 @@ dist/
 .env.local
 .env.*.local
 
-# Project runtime data (ADR-008: sqlite checkpointer is a runtime artifact)
+# Project runtime data (ADR-008: sqlite checkpointer + training state are
+# runtime artifacts; authored content like data/quizzes/ IS tracked)
 data/*.sqlite
 data/*.sqlite-journal
+data/training-state.json
 logs/
 *.log
 

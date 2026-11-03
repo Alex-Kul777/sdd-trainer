@@ -10,13 +10,16 @@ tool_choice, ADR-005) is printed.
 T3 (issue #4): ``--session`` — a trainer session on the LangGraph graph:
 assess → route (knows_it / partial / new_topic + clarification) → teach
 (T4, issue #5: a real lesson unfolded from the ADR-009 skeleton under the
-assessed level, with ``search_sdd_docs`` pulled on demand) / quiz stub
-(T5), with the selected route visible in the session log and the state
-persisted by a SqliteSaver checkpointer under the student thread id
-``student:<name>`` (ADR-008, criterion 4). The console is thin glue without
-business logic (design.md): it wires the graph, drives the HITL loop
-(``interrupt`` → ``Command(resume=...)``), prints the session log and a
-summary at exit; every decision lives in the graph nodes.
+assessed level, with ``search_sdd_docs`` pulled on demand) → quiz (T5,
+issue #6: questions from the authored JSON quiz, one interrupt per
+question, deterministic token F1 against the reference answers, progress
+recorded into training-state.json), with the selected route visible in
+the session log and the state persisted by a SqliteSaver checkpointer
+under the student thread id ``student:<name>`` (ADR-008, criterion 4).
+The console is thin glue without business logic (design.md): it wires
+the graph, drives the HITL loop (``interrupt`` → ``Command(resume=...)``),
+prints the session log and a summary at exit; every decision lives in
+the graph nodes.
 """
 from __future__ import annotations
 
@@ -180,7 +183,7 @@ def run_session(config: GigaChatConfig, student: str) -> None:
     graph = build_graph(llm, checkpointer=memory.get_checkpointer())
     thread_config = memory.thread_config()
 
-    print("SDD Trainer — сеанс на графе (T3+T4, issues #4/#5)")
+    print("SDD Trainer — сеанс на графе (T3+T4+T5, issues #4/#5/#6)")
     print(f"Модель: {config.model} · endpoint: {config.base_url} (ADR-005)")
     print(f"Ученик: {student} · thread_id: {thread_id} (ADR-008)")
     print(f"Чекпоинтер: {trainer_config.checkpoint_path} (SqliteSaver)")
@@ -297,7 +300,8 @@ def main() -> None:
         "--session",
         action="store_true",
         help="сеанс T3 на графе: оценка → маршрут (knows_it/partial/new_topic/"
-        "+clarification) → урок/квиз, память через чекпоинт (issue #4)",
+        "+clarification) → урок → квиз с F1-оценкой, память через чекпоинт "
+        "и training-state (issues #4/#5/#6)",
     )
     parser.add_argument(
         "--student",
