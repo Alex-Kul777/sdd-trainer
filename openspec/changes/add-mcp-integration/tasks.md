@@ -8,9 +8,9 @@
 
 ## 2. Полный набор инструментов (M2, issue #10)
 
-- [ ] 2.1 Урок и квиз пошагово через MCP: ответ → следующий вопрос или F1-вердикт (порог 0.60)
-- [ ] 2.2 Прямые tools: analyze_repo, search_docs
-- [ ] 2.3 get_progress: training-state (domain, score, streak, completed lessons)
+- [x] 2.1 Урок и квиз пошагово через MCP: ответ → следующий вопрос или F1-вердикт (порог 0.60)
+- [x] 2.2 Прямые tools: analyze_repo, search_docs
+- [x] 2.3 get_progress: training-state (domain, score, streak, completed lessons)
 
 ## 3. Смоук и скринкаст прототипа (M3, issue #11)
 
