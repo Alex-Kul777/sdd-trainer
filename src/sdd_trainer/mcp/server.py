@@ -26,6 +26,7 @@ from __future__ import annotations
 from typing import Callable, Optional
 
 from langgraph.checkpoint.base import BaseCheckpointSaver
+from langgraph.types import Command
 from mcp.server.fastmcp import FastMCP
 from openai import OpenAIError
 
@@ -45,6 +46,14 @@ SERVER_NAME = "sdd-trainer"
 
 #: Mapping of pending graph nodes to the kind of question the client sees.
 _QUESTION_KINDS = {"assess": "calibration", "clarify": "clarification", "quiz": "quiz"}
+
+#: The tool that answers each question kind — used in mismatch errors to
+#: point the client at the right next call (quiz answering arrives in M2).
+_KIND_TOOLS = {
+    "calibration": "answer_calibration",
+    "clarification": "answer_clarification",
+    "quiz": "ответ на вопрос квиза — инструмент появится в M2 (issue #10)",
+}
 
 
 def _question_kind(next_nodes) -> Optional[str]:
@@ -231,5 +240,66 @@ def create_server(
                             type(exc).__name__, exc),
             )
         return _step_payload(student, thread_id, result)
+
+    def _resume_answer(student: str, answer: str, expected_kind: str) -> dict:
+        """Resume the pending question with the student's answer (one step).
+
+        State-machine guards first (the checkpoint is the only state): a
+        missing session, a pending step without a stored question, or a
+        different question kind each return an error payload naming the
+        right tool — the client can never feed an answer into the wrong
+        interrupt by mistake.
+        """
+        try:
+            thread_id = student_thread_id(student)
+        except ValueError as exc:
+            return _payload(type_="error", student=student, thread_id=None,
+                            message=str(exc))
+        graph = _build_graph(thread_id)
+        config = {"configurable": {"thread_id": thread_id}}
+        try:
+            snapshot = graph.get_state(config)
+            if not has_pending_session(snapshot):
+                return _payload(
+                    type_="error", student=student, thread_id=thread_id,
+                    message="Нет незавершённого сеанса — сначала вызови "
+                            "start_session.",
+                )
+            question = find_pending_question(snapshot)
+            if question is None:
+                return _payload(
+                    type_="error", student=student, thread_id=thread_id,
+                    message="Сеанс ждёт продолжения без ответа — вызови "
+                            "start_session.",
+                )
+            kind = _question_kind(snapshot.next)
+            if kind != expected_kind:
+                tool = _KIND_TOOLS.get(kind, "start_session")
+                return _payload(
+                    type_="error", student=student, thread_id=thread_id,
+                    message="Сеанс ждёт {}-вопроса — используй {}.".format(
+                        kind or "неизвестный", tool),
+                )
+            result = graph.invoke(Command(resume=answer), config)
+        except (OpenAIError, StructuredOutputError) as exc:
+            return _payload(
+                type_="error", student=student, thread_id=thread_id,
+                message="Шаг не завершён ({}: {}); чекпоинт хранит "
+                        "последний завершённый шаг — повтори вызов.".format(
+                            type(exc).__name__, exc),
+            )
+        return _step_payload(student, thread_id, result)
+
+    @server.tool()
+    def answer_calibration(student: str, answer: str) -> dict:
+        """Ответить на калибровочный вопрос сеанса (question_kind = "calibration").
+
+        Возвращает вердикт оценки (level, confidence, justification) и
+        выбранный маршрут (path, reason); при низкой уверенности — вместо
+        вердикта уточняющий вопрос (question_kind = "clarification"), ответ
+        на него отправляй инструментом answer_clarification. Если маршрут
+        уже выбран — следующий вопрос квиза (quiz-инструменты — M2, issue #10).
+        """
+        return _resume_answer(student, answer, "calibration")
 
     return server

@@ -203,3 +203,40 @@ def test_start_session_asks_calibration_question():
     assert payload["done"] is False
     assert payload["assessment"] is None
     assert payload["route"] is None
+
+
+def test_answer_calibration_returns_verdict_and_route():
+    """answer_calibration resumes the graph and returns verdict + route.
+
+    One call = one step (ADR-010): the answer resumes the assess node, the
+    graph runs assess → route → teach → quiz and stops at the first quiz
+    question. The payload carries the assessment verdict, the selected
+    route and the pending question — quiz answering itself arrives in M2
+    (issue #10), so for M1 the assess session ends at this verdict.
+    """
+    server = _server(_confident_replies(level="partial", confidence=0.9))
+    payloads = _call_tools(
+        server,
+        [
+            ("start_session", {"student": "unit_mcp"}),
+            (
+                "answer_calibration",
+                {
+                    "student": "unit_mcp",
+                    "answer": "specs/ — стабильные спеки, changes/ — предложения изменений",
+                },
+            ),
+        ],
+    )
+
+    verdict = payloads[1]
+    assert verdict["type"] == "question"
+    assert verdict["question_kind"] == "quiz"
+    assert verdict["question"]  # the first quiz question is pending
+    assert verdict["assessment"]["level"] == "partial"
+    assert verdict["assessment"]["confidence"] == 0.9
+    assert verdict["route"]["path"] == "partial"
+    assert verdict["done"] is False
+    # the session log carries the verdict and route entries (course criteria)
+    assert any("Оценка: partial" in entry for entry in verdict["log"])
+    assert any("Маршрут: partial" in entry for entry in verdict["log"])
