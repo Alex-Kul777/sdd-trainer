@@ -5,6 +5,7 @@ import pytest
 
 from sdd_trainer.core.prompts import (
     ASSESSMENT_DOMAIN,
+    ASSESSMENT_SYSTEM_PROMPT,
     CALIBRATION_QUESTION,
     DOCS_SYSTEM_PROMPT,
     ROUTE_SYSTEM_PROMPT,
@@ -17,7 +18,7 @@ from sdd_trainer.core.prompts import (
     build_teach_messages,
     default_docs_query,
 )
-from sdd_trainer.models import Assessment
+from sdd_trainer.models import Assessment, RepoAnalysis
 
 pytestmark = pytest.mark.unit
 
@@ -196,3 +197,65 @@ class TestReassessmentMessages:
         assert CALIBRATION_QUESTION in messages[1]["content"]
         assert "мой ответ" in messages[1]["content"]
         assert ASSESSMENT_DOMAIN == "openspec-basics"
+
+
+class TestAssessmentRepoEvidence:
+    """Task 3.1 (issue #7): the passive scan reaches the assessment call.
+
+    The repo analysis is live evidence weighed against the self-report —
+    the prompt must carry it next to the calibration answer.
+    """
+
+    def test_repo_evidence_reaches_the_assessment_call(self) -> None:
+        analysis = RepoAnalysis(
+            repo_path="/tmp/rich-repo",
+            has_openspec=True,
+            spec_domains=["console-trainer"],
+            change_names=["add-console-trainer"],
+            shall_count=4,
+            scenario_count=2,
+            summary=(
+                "openspec/ активен: спецификации — console-trainer; "
+                "активные changes — add-console-trainer; требований SHALL — 4; "
+                "сценариев WHEN/THEN — 2"
+            ),
+        )
+
+        messages = build_assessment_messages("мой ответ", repo_analysis=analysis)
+
+        assert [message["role"] for message in messages] == ["system", "user"]
+        content = messages[1]["content"]
+        assert "мой ответ" in content  # calibration answer stays
+        assert CALIBRATION_QUESTION in content
+        assert (
+            "Анализ репозитория ученика (живая практика, не самоотчёт):"
+            in content
+        )
+        assert analysis.summary in content
+
+    def test_empty_repo_evidence_is_carried_too(self) -> None:
+        """has_openspec=False is evidence — an empty repo must reach the prompt."""
+        analysis = RepoAnalysis(
+            repo_path="/tmp/plain-repo",
+            has_openspec=False,
+            summary=(
+                "openspec/ не найден — живой практики SDD "
+                "в репозитории не видно"
+            ),
+        )
+
+        messages = build_assessment_messages("уверенный ответ", repo_analysis=analysis)
+
+        assert analysis.summary in messages[1]["content"]
+
+    def test_no_evidence_section_without_repo_analysis(self) -> None:
+        """Without a repo the T2 shape holds — no evidence header."""
+        messages = build_assessment_messages("мой ответ")
+
+        assert (
+            "Анализ репозитория ученика" not in messages[1]["content"]
+        )
+
+    def test_system_prompt_tells_to_weigh_repo_evidence(self) -> None:
+        """The system prompt instructs weighing live practice, not just self-report."""
+        assert "живое доказательство практики" in ASSESSMENT_SYSTEM_PROMPT

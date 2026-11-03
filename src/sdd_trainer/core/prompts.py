@@ -11,7 +11,9 @@ tools + tool_choice — no free-text parsing).
 """
 from __future__ import annotations
 
-from sdd_trainer.models import Assessment
+from typing import Optional
+
+from sdd_trainer.models import Assessment, RepoAnalysis
 
 ASSESSMENT_DOMAIN = "openspec-basics"
 CALIBRATION_QUESTION = (
@@ -27,7 +29,11 @@ ASSESSMENT_SYSTEM_PROMPT = (
     "поля: level — new_topic (тема незнакома), partial (частичное понимание), "
     "knows_it (уверенное владение); justification — краткое обоснование "
     "(1–2 предложения); confidence — уверенность от 0.0 до 1.0; domain — "
-    "openspec-basics. Оценивай честно: не завышай уровень и не льсти ученику."
+    "openspec-basics. Оценивай честно: не завышай уровень и не льсти ученику. "
+    "Если в сообщении приведён анализ репозитория ученика — это живое "
+    "доказательство практики: взвешивай его наравне с самооценкой и честно "
+    "отражай в justification; пустой репозиторий при уверенном ответе — "
+    "повод усомниться и снизить уверенность."
 )
 
 ROUTE_SYSTEM_PROMPT = (
@@ -107,23 +113,32 @@ LEVEL_DIRECTIVES: dict[str, str] = {
 }
 
 
-def build_assessment_messages(student_answer: str) -> list[dict]:
-    """Build the chat messages for the structured assessment call (T2).
+def build_assessment_messages(
+    student_answer: str,
+    repo_analysis: Optional[RepoAnalysis] = None,
+) -> list[dict]:
+    """Build the chat messages for the structured assessment call (T2 + 3.1).
 
     Pure function (unit-tested): the assessment system prompt plus one user
-    message carrying the calibration question and the student's answer.
+    message carrying the calibration question and the student's answer —
+    and, when the passive repo scan produced evidence (task 3.1, issue #7),
+    the analysis summary as live practice weighed against the self-report.
     Shared by the ``--assess`` demo, the assess graph node, and the live
     integration tests.
     """
+    content = (
+        f"Калибровочный вопрос:\n{CALIBRATION_QUESTION}\n\n"
+        f"Ответ ученика:\n{student_answer}"
+    )
+    if repo_analysis is not None:
+        content += (
+            "\n\nАнализ репозитория ученика "
+            "(живая практика, не самоотчёт):\n"
+            f"{repo_analysis.summary}"
+        )
     return [
         {"role": "system", "content": ASSESSMENT_SYSTEM_PROMPT},
-        {
-            "role": "user",
-            "content": (
-                f"Калибровочный вопрос:\n{CALIBRATION_QUESTION}\n\n"
-                f"Ответ ученика:\n{student_answer}"
-            ),
-        },
+        {"role": "user", "content": content},
     ]
 
 
