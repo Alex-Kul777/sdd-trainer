@@ -23,6 +23,7 @@ from sdd_trainer.__main__ import (
     DEFAULT_STUDENT,
     find_pending_question,
     format_session_summary,
+    has_pending_session,
     student_thread_id,
 )
 
@@ -163,6 +164,73 @@ class TestFindPendingQuestion:
         snapshot = graph.get_state(THREAD)
         assert snapshot.next == ()
         assert find_pending_question(snapshot) is None
+
+
+class TestHasPendingSession:
+    """has_pending_session: the resume gate must see every pause shape.
+
+    Regression (live smoke 03.11, issue #8): after the first resume cycle
+    LangGraph leaves ``snapshot.next`` empty while the task still holds a
+    pending interrupt. A mid-quiz pause (question 2+) must still be
+    detected as resumable — gating on ``snapshot.next`` alone made the
+    console start a fresh session and lose the student's answers.
+    """
+
+    def test_fresh_thread_has_no_pending_session(self) -> None:
+        graph = _graph()
+
+        assert has_pending_session(graph.get_state(THREAD)) is False
+
+    def test_calibration_pause_is_pending(self) -> None:
+        graph = _graph()
+        graph.invoke({"domain": "openspec-basics"}, THREAD)
+
+        assert has_pending_session(graph.get_state(THREAD)) is True
+
+    def test_mid_quiz_pause_is_pending(self) -> None:
+        graph = _graph(
+            [
+                {"tool": "Assessment", "arguments": _assessment_arguments()},
+                {"tool": "RouteDecision", "arguments": _route_arguments()},
+                {"tool": "DocsDecision", "arguments": _docs_arguments()},
+                {"text": "# Урок OpenSpec-основы"},
+            ]
+        )
+        mid = {"configurable": {"thread_id": "student:glue-midquiz"}}
+        graph.invoke({"domain": "openspec-basics"}, mid)
+        # through assess -> route -> teach; paused at quiz q1
+        result = graph.invoke(Command(resume="ответ"), mid)
+        assert result.get("__interrupt__")
+        # answer q1 and q2 -> paused at q3: next is empty, interrupt pending
+        graph.invoke(Command(resume="ответ 1"), mid)
+        graph.invoke(Command(resume="ответ 2"), mid)
+
+        snapshot = graph.get_state(mid)
+        assert snapshot.next == ()  # the LangGraph pause shape that broke the gate
+        assert find_pending_question(snapshot) is not None
+        assert has_pending_session(snapshot) is True
+
+    def test_completed_session_is_not_pending(self) -> None:
+        from sdd_trainer.lessons import load_quiz
+
+        graph = _graph(
+            [
+                {"tool": "Assessment", "arguments": _assessment_arguments()},
+                {"tool": "RouteDecision", "arguments": _route_arguments()},
+                {"tool": "DocsDecision", "arguments": _docs_arguments()},
+                {"text": "# Урок OpenSpec-основы"},
+            ]
+        )
+        done = {"configurable": {"thread_id": "student:glue-done2"}}
+        graph.invoke({"domain": "openspec-basics"}, done)
+        result = graph.invoke(Command(resume="ответ"), done)
+        answers = iter(
+            ["эталонный ответ"] * len(load_quiz("openspec-basics").questions)
+        )
+        while result.get("__interrupt__"):
+            result = graph.invoke(Command(resume=next(answers)), done)
+
+        assert has_pending_session(graph.get_state(done)) is False
 
 
 class TestFormatSessionSummary:

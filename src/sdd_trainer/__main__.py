@@ -82,6 +82,20 @@ def find_pending_question(snapshot: Any) -> Optional[str]:
     return None
 
 
+def has_pending_session(snapshot: Any) -> bool:
+    """True when the snapshot holds an interrupted session to resume.
+
+    Covers both pause shapes LangGraph produces: a task pending execution
+    (``snapshot.next`` non-empty — a node's first interrupt or crashed
+    work) and a task holding a pending interrupt after resume cycles
+    (``snapshot.next`` empty — e.g. a mid-quiz pause at question 2+).
+    The live smoke (issue #8) exposed the second shape: gating the resume
+    on ``snapshot.next`` alone made the console start a fresh session and
+    lose the student's answers.
+    """
+    return bool(snapshot.next) or find_pending_question(snapshot) is not None
+
+
 def _next_step_advice(state: dict) -> str:
     """Recommend the next step from the final state (task 7.3, issue #8).
 
@@ -254,7 +268,7 @@ def run_session(
             entry = domains.get(values.get("domain", ""))
             return dict(entry) if entry else None
 
-        if snapshot.next:
+        if has_pending_session(snapshot):
             print("\n[чекпоинт] Найден незавершённый сеанс — "
                   "возобновляю с чекпоинта (критерий 4).")
             question = find_pending_question(snapshot)
