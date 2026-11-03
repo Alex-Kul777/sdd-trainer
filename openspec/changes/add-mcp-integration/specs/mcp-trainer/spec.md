@@ -15,7 +15,7 @@ The session tools SHALL drive the checkpointed graph stepwise: each tool call ad
 - **THEN** the server returns either the next question or the F1 verdict, and progress survives reconnection
 
 ### Requirement: Direct Tool Access
-The MCP server SHALL expose `analyze_student_repo` and `search_sdd_docs` as MCP tools so any MCP client can use the trainer's tools directly.
+The MCP server SHALL expose `analyze_repo` and `search_docs` as MCP tools so any MCP client can use the trainer's tools directly.
 
 #### Scenario: Repo analysis over MCP
 - **WHEN** a client calls the repo analysis tool with a repository path
