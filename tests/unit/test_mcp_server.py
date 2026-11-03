@@ -176,3 +176,30 @@ def test_server_handshake_over_in_memory_transport():
 
     init = anyio.run(scenario)
     assert init.serverInfo.name == SERVER_NAME
+
+
+# --- 1.2: session tools — one call = one graph step (ADR-010) ---
+
+def test_start_session_asks_calibration_question():
+    """start_session on a fresh thread returns the calibration question.
+
+    One call = one graph step (ADR-010): the graph runs from START up to
+    the assess node's interrupt and the tool returns that interrupt's
+    payload — the calibration question under the student's thread id
+    (ADR-008), with no verdict yet (the LLM is called only after the
+    answer — the fake client must stay untouched).
+    """
+    from sdd_trainer.core.prompts import CALIBRATION_QUESTION
+
+    server = _server(_confident_replies())
+    (payload,) = _call_tools(server, [("start_session", {"student": "unit_mcp"})])
+
+    assert payload["type"] == "question"
+    assert payload["question_kind"] == "calibration"
+    assert payload["question"] == CALIBRATION_QUESTION
+    assert payload["student"] == "unit_mcp"
+    assert payload["thread_id"] == "student:unit_mcp"
+    assert payload["resumed"] is False
+    assert payload["done"] is False
+    assert payload["assessment"] is None
+    assert payload["route"] is None
