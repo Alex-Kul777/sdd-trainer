@@ -118,11 +118,43 @@ class DocsDecision(BaseModel):
 
 
 class QuizQuestion(BaseModel):
-    """A single quiz question with a reference answer (reproducible F1, Q10)."""
+    """A single quiz question with a reference answer (reproducible F1, Q10).
 
-    domain: str
-    question: str
-    reference_answer: str
+    Authored content (ADR-009): the question, the reference answer the
+    student's reply is scored against (deterministic token F1, no LLM
+    judge — ticket T5 / issue #6), and the question's ``weight`` in the
+    weighted quiz score.
+    """
+
+    id: str = Field(default="", description="Короткий id вопроса, например q1")
+    domain: str = Field(default="", description="Домен квиза")
+    question: str = Field(description="Текст вопроса ученику")
+    reference_answer: str = Field(
+        description="Эталонный ответ: F1 ответа ученика считается против него",
+    )
+    weight: float = Field(
+        default=1.0,
+        gt=0,
+        description="Вес вопроса в взвешенном счёте квиза (> 0)",
+    )
+
+
+class Quiz(BaseModel):
+    """An authored domain quiz: questions + reference answers + weights.
+
+    ADR-009 location: ``data/quizzes/<domain>.json``. The loader
+    (``sdd_trainer.lessons.load_quiz``) validates the file against this
+    schema, so a broken quiz fails loudly instead of degrading the score.
+    """
+
+    domain: str = Field(description="Домен квиза, например openspec-basics")
+    pass_threshold: float = Field(
+        default=0.6,
+        ge=0.0,
+        le=1.0,
+        description="Взвешенный счёт, начиная с которого квиз засчитан",
+    )
+    questions: list[QuizQuestion] = Field(min_length=1)
 
 
 class QuizResult(BaseModel):

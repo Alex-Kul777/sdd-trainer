@@ -1,0 +1,41 @@
+{
+  "domain": "openspec-basics",
+  "pass_threshold": 0.6,
+  "questions": [
+    {
+      "id": "q1",
+      "domain": "openspec-basics",
+      "question": "Что такое Spec-Driven Development? Что в этой методологии объявлено источником истины и почему?",
+      "reference_answer": "Методология, в которой спецификация, а не код — источник истины: план составляется до кода, спека остаётся контрактом, с которым сверяется каждая строка кода.",
+      "weight": 1.0
+    },
+    {
+      "id": "q2",
+      "domain": "openspec-basics",
+      "question": "Из каких двух директорий состоит openspec/ в репозитории и что в каждой из них лежит?",
+      "reference_answer": "specs — стабильные спецификации, описывают текущее поведение «как есть»; changes — change proposals, предложения «как будет».",
+      "weight": 1.0
+    },
+    {
+      "id": "q3",
+      "domain": "openspec-basics",
+      "question": "Из каких элементов состоит требование в спецификации OpenSpec? Назови ключевые слова формата.",
+      "reference_answer": "Requirement с SHALL задаёт инвариант; Scenario с WHEN THEN — проверяемый пример поведения.",
+      "weight": 1.0
+    },
+    {
+      "id": "q4",
+      "domain": "openspec-basics",
+      "question": "Опиши анатомию change proposal: какие файлы входят в него и за что каждый отвечает?",
+      "reference_answer": "proposal.md — зачем: проблема и решение; design.md — как: ключевые решения и ADR; tasks.md — чек-лист реализации; specs — дельта требований ADDED MODIFIED.",
+      "weight": 1.5
+    },
+    {
+      "id": "q5",
+      "domain": "openspec-basics",
+      "question": "Опиши цикл работы с change proposal в OpenSpec — от изучения репозитория до архивации.",
+      "reference_answer": "explore — изучение текущих спецификаций; propose — новый change с дельтой; apply — реализация и перенос дельты в specs; archive — change уходит в архив.",
+      "weight": 1.0
+    }
+  ]
+}

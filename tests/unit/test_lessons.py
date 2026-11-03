@@ -16,7 +16,9 @@ import pytest
 from sdd_trainer.lessons import (
     lesson_skeleton_path,
     load_lesson_skeleton,
+    load_quiz,
     missing_skeleton_sections,
+    quiz_path,
 )
 
 pytestmark = pytest.mark.unit
@@ -115,3 +117,124 @@ class TestSkeletonValidation:
     def test_unknown_domain_raises_missing_file(self, prompts_dir: Path) -> None:
         with pytest.raises(FileNotFoundError):
             load_lesson_skeleton("no-such-domain", prompts_dir=prompts_dir)
+
+
+class TestQuizPath:
+    """quiz_path: ADR-009 location data/quizzes/<domain>.json."""
+
+    def test_path_is_data_quizzes_domain_json(self) -> None:
+        path = quiz_path("openspec-basics", data_dir=Path("/x/data"))
+
+        assert path == Path("/x/data/quizzes/openspec-basics.json")
+
+    def test_default_data_dir_is_the_repo_data_dir(self) -> None:
+        from sdd_trainer.config import trainer_config
+
+        path = quiz_path("openspec-basics")
+
+        assert path.parent.parent == trainer_config.data_dir
+
+
+class TestOpenSpecBasicsQuiz:
+    """The phase 1 deliverable: data/quizzes/openspec-basics.json (task 5.2)."""
+
+    def test_quiz_file_exists_and_loads(self) -> None:
+        quiz = load_quiz("openspec-basics")
+
+        assert quiz.domain == "openspec-basics"
+        assert len(quiz.questions) >= 3
+
+    def test_every_question_has_reference_answer_and_weight(self) -> None:
+        quiz = load_quiz("openspec-basics")
+
+        for question in quiz.questions:
+            assert question.question.strip()
+            assert question.reference_answer.strip()
+            assert question.weight > 0
+
+    def test_weights_sum_is_independent_literal(self) -> None:
+        """Weights are authored content: their sum is asserted as a literal
+        computed by hand from the JSON, not via the loaded model."""
+        quiz = load_quiz("openspec-basics")
+
+        assert [q.weight for q in quiz.questions] == [1.0, 1.0, 1.0, 1.5, 1.0]
+
+    def test_pass_threshold_is_within_unit_interval(self) -> None:
+        quiz = load_quiz("openspec-basics")
+
+        assert 0.0 < quiz.pass_threshold <= 1.0
+
+
+class TestQuizValidation:
+    """load_quiz enforces the ADR-009 quiz contract loudly."""
+
+    @pytest.fixture
+    def data_dir(self, tmp_path: Path) -> Path:
+        quizzes = tmp_path / "quizzes"
+        quizzes.mkdir()
+        return tmp_path
+
+    @staticmethod
+    def _write(data_dir: Path, name: str, payload: object) -> None:
+        import json
+
+        (data_dir / "quizzes" / f"{name}.json").write_text(
+            json.dumps(payload, ensure_ascii=False), encoding="utf-8"
+        )
+
+    def test_unknown_domain_raises_missing_file(self, data_dir: Path) -> None:
+        with pytest.raises(FileNotFoundError):
+            load_quiz("no-such-domain", data_dir=data_dir)
+
+    def test_domain_mismatch_raises_value_error(self, data_dir: Path) -> None:
+        self._write(
+            data_dir,
+            "basics",
+            {
+                "domain": "other-domain",
+                "pass_threshold": 0.6,
+                "questions": [
+                    {
+                        "id": "q1",
+                        "question": "В?",
+                        "reference_answer": "Да",
+                        "weight": 1.0,
+                    }
+                ],
+            },
+        )
+
+        with pytest.raises(ValueError) as excinfo:
+            load_quiz("basics", data_dir=data_dir)
+
+        assert "other-domain" in str(excinfo.value)
+
+    def test_empty_questions_raise_value_error(self, data_dir: Path) -> None:
+        self._write(
+            data_dir, "empty", {"domain": "empty", "questions": []}
+        )
+
+        with pytest.raises(ValueError):
+            load_quiz("empty", data_dir=data_dir)
+
+    def test_non_positive_weight_is_rejected(self, data_dir: Path) -> None:
+        import pydantic
+
+        self._write(
+            data_dir,
+            "badweight",
+            {
+                "domain": "badweight",
+                "questions": [
+                    {
+                        "id": "q1",
+                        "question": "В?",
+                        "reference_answer": "Да",
+                        "weight": 0,
+                    }
+                ],
+            },
+        )
+
+        with pytest.raises(pydantic.ValidationError):
+            load_quiz("badweight", data_dir=data_dir)

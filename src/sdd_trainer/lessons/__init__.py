@@ -22,6 +22,7 @@ from pathlib import Path
 from typing import Optional
 
 from sdd_trainer.config import trainer_config
+from sdd_trainer.models import Quiz
 
 LESSON_DOMAINS: list[str] = [
     "sdd-fundamentals",
@@ -96,3 +97,51 @@ def load_lesson_skeleton(
             + ", ".join(missing)
         )
     return markdown
+
+
+def quiz_path(domain: str, data_dir: Optional[Path] = None) -> Path:
+    """Return the ADR-009 location of a domain quiz.
+
+    ``<data_dir>/quizzes/<domain>.json`` — by default the repo ``data/``
+    directory (``TrainerConfig.data_dir``).
+    """
+    base = Path(data_dir) if data_dir is not None else trainer_config.data_dir
+    return base / "quizzes" / f"{domain}.json"
+
+
+def load_quiz(domain: str, data_dir: Optional[Path] = None) -> Quiz:
+    """Read and validate the domain quiz (ADR-009, task 5.2).
+
+    The JSON is validated through the ``Quiz`` schema (Pydantic — loud
+    failure on a broken quiz: missing reference answers, non-positive
+    weights, no questions), and the quiz's own ``domain`` field must match
+    the requested one — a mismatched file is a content bug.
+
+    Args:
+        domain: quiz domain id, e.g. ``openspec-basics``.
+        data_dir: directory holding ``quizzes/<domain>.json``; defaults to
+            the repo ``data/`` directory.
+
+    Returns:
+        The validated :class:`sdd_trainer.models.Quiz`.
+
+    Raises:
+        FileNotFoundError: no quiz file exists for the domain.
+        ValueError: the quiz declares a different domain, or has no
+            questions.
+        pydantic.ValidationError: the JSON violates the quiz contract
+            (missing question / reference_answer, weight <= 0, threshold
+            outside [0, 1]).
+    """
+    import json
+
+    path = quiz_path(domain, data_dir=data_dir)
+    quiz = Quiz.model_validate(
+        json.loads(path.read_text(encoding="utf-8"))
+    )
+    if quiz.domain != domain:
+        raise ValueError(
+            f"квиз {path} объявляет домен {quiz.domain!r}, а запрошен "
+            f"{domain!r} — файл лежит не на своём месте"
+        )
+    return quiz
