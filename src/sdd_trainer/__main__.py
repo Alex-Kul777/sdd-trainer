@@ -166,27 +166,44 @@ def _print_interrupted_exit(student: str, state: dict, thread_id: str) -> None:
         print(line)
 
 
-def run_session(config: GigaChatConfig, student: str) -> None:
-    """T3 session (issue #4): drive the trainer graph in the console.
+def run_session(
+    config: GigaChatConfig, student: str, repo_path: str | None = None
+) -> None:
+    """T3+T6 session: drive the trainer graph in the console.
 
     Thin glue (task 6.1): wire ``MemoryManager`` (SqliteSaver, ADR-008) +
     ``LLMManager`` + ``build_graph``, then loop ``invoke`` → print new log
     entries → answer interrupts with ``Command(resume=...)`` until the graph
     reaches END. An interrupted session (Ctrl-D/Ctrl-C at a question) leaves
     a checkpoint; the next run with the same ``--student`` resumes it.
+    ``repo_path`` (task 3.1, issue #7) switches on the passive assessment:
+    the assess node scans the student's repository with
+    ``analyze_student_repo`` and weighs the evidence against the
+    self-report; without it the assessment is self-report-only.
     """
     thread_id = student_thread_id(student)
     memory = MemoryManager(
         thread_id=thread_id, checkpoint_path=trainer_config.checkpoint_path
     )
     llm = LLMManager(config=config)
-    graph = build_graph(llm, checkpointer=memory.get_checkpointer())
+    graph = build_graph(
+        llm, checkpointer=memory.get_checkpointer(), repo_path=repo_path
+    )
     thread_config = memory.thread_config()
 
-    print("SDD Trainer — сеанс на графе (T3+T4+T5, issues #4/#5/#6)")
+    print("SDD Trainer — сеанс на графе (T3+T4+T5+T6, issues #4/#5/#6/#7)")
     print(f"Модель: {config.model} · endpoint: {config.base_url} (ADR-005)")
     print(f"Ученик: {student} · thread_id: {thread_id} (ADR-008)")
     print(f"Чекпоинтер: {trainer_config.checkpoint_path} (SqliteSaver)")
+    if repo_path:
+        print(
+            f"Репозиторий ученика: {repo_path} — пассивная оценка "
+            "(analyze_student_repo, T6)"
+        )
+    else:
+        print(
+            "Репозиторий не указан (--repo-path) — оценка только по самоотчёту"
+        )
     print("Выход в любой момент: Ctrl-D — сеанс сохранится и возобновится.")
 
     try:
@@ -309,6 +326,13 @@ def main() -> None:
         help="имя ученика для --session: thread_id student:<name> и чекпоинт "
         "(ADR-008; по умолчанию alex)",
     )
+    parser.add_argument(
+        "--repo-path",
+        default=None,
+        help="путь к репозиторию ученика для пассивной оценки "
+        "(analyze_student_repo сканирует openspec/, T6/issue #7); "
+        "без него — оценка только по самоотчёту",
+    )
     args = parser.parse_args()
 
     config = GigaChatConfig()
@@ -327,7 +351,7 @@ def main() -> None:
         return
 
     if args.session:
-        run_session(config, args.student)
+        run_session(config, args.student, args.repo_path)
         return
 
     manager = LLMManager(config=config, system_prompt=SYSTEM_PROMPT)
