@@ -31,7 +31,7 @@ from sdd_trainer.core.llm_manager import LLMManager
 from sdd_trainer.core.memory import TrainingStateStore
 from sdd_trainer.core.prompts import CALIBRATION_QUESTION
 from sdd_trainer.lessons import load_quiz
-from sdd_trainer.models import Assessment, DocsDecision, RouteDecision
+from sdd_trainer.models import Assessment, DocsDecision, RepoAnalysis, RouteDecision
 
 pytestmark = pytest.mark.unit
 
@@ -133,13 +133,21 @@ def _teach_replies(
 
 
 def _graph(
-    replies: list, checkpointer=None, docs_search=None, state_store=None
+    replies: list,
+    checkpointer=None,
+    docs_search=None,
+    state_store=None,
+    repo_path=None,
+    repo_analyzer=None,
 ) -> tuple:
     """Compile the trainer graph over a fake LLM client (no network).
 
     The training-state store defaults to a throwaway temp file: unit
     tests must never touch the repo's runtime ``data/training-state.json``
     (the quiz node writes through the store when a session completes).
+    ``repo_path`` / ``repo_analyzer`` wire the passive analysis seam
+    (task 3.1): tests inject a fake analyzer — the same external-
+    collaborator discipline as ``docs_search``.
     """
     fake = FakeOpenAI(replies)
     llm = LLMManager(config=GigaChatConfig(api_key="test"), client=fake)
@@ -152,8 +160,42 @@ def _graph(
         checkpointer=checkpointer or InMemorySaver(),
         docs_search=docs_search,
         state_store=state_store,
+        repo_path=repo_path,
+        repo_analyzer=repo_analyzer,
     )
     return graph, fake
+
+
+#: Canned passive-scan evidence (independent truth, literal — the graph must
+#: deliver it to the prompt, the log, and the state verbatim).
+RICH_ANALYSIS = RepoAnalysis(
+    repo_path="/tmp/rich-repo",
+    has_openspec=True,
+    spec_domains=["console-trainer"],
+    change_names=["add-console-trainer"],
+    shall_count=4,
+    scenario_count=2,
+    summary=(
+        "openspec/ активен: спецификации — console-trainer; "
+        "активные changes — add-console-trainer; требований SHALL — 4; "
+        "сценариев WHEN/THEN — 2"
+    ),
+)
+
+
+class FakeAnalyzer:
+    """Stand-in for ``analyze_student_repo`` at the graph seam (records calls)."""
+
+    def __init__(self, analysis: RepoAnalysis = RICH_ANALYSIS, error: Exception | None = None) -> None:
+        self.calls: list[str] = []
+        self._analysis = analysis
+        self._error = error
+
+    def __call__(self, repo_path: str) -> RepoAnalysis:
+        self.calls.append(repo_path)
+        if self._error is not None:
+            raise self._error
+        return self._analysis
 
 
 def _start(graph, thread: dict = THREAD) -> dict:
@@ -223,6 +265,95 @@ class TestAssessNode:
         assert result["clarification_rounds"] == 0
         assert any(entry.startswith("Оценка: partial") for entry in result["log"])
         assert fake.calls[0]["tools"][0]["function"]["name"] == "Assessment"
+
+    def test_passive_repo_analysis_reaches_prompt_log_and_state(self) -> None:
+        """Task 3.1 (issue #7): scan evidence → LLM call, session log, state."""
+        analyzer = FakeAnalyzer()
+        graph, fake = _graph(
+            _knows_it_replies(),
+            repo_path="/tmp/rich-repo",
+            repo_analyzer=analyzer,
+        )
+
+        _start(graph)
+        result = _resume(graph, "мой ответ")
+
+        assert analyzer.calls == ["/tmp/rich-repo"]
+        # evidence reached the structured assessment call (recorded at the seam)
+        user_message = fake.calls[0]["messages"][-1]["content"]
+        assert RICH_ANALYSIS.summary in user_message
+        # the tool call is visible in the session log (course criterion 3)
+        # and precedes the assessment verdict entry
+        tool_entries = [
+            i for i, e in enumerate(result["log"]) if e.startswith("Инструмент analyze_student_repo")
+        ]
+        assert tool_entries, result["log"]
+        assert RICH_ANALYSIS.summary in result["log"][tool_entries[0]]
+        verdict = next(
+            i for i, e in enumerate(result["log"]) if e.startswith("Оценка:")
+        )
+        assert tool_entries[0] < verdict
+        # the structured evidence lands in the graph state
+        assert result["repo_analysis"]["has_openspec"] is True
+        assert result["repo_analysis"]["shall_count"] == 4
+        assert result["repo_analysis"]["summary"] == RICH_ANALYSIS.summary
+
+    def test_no_repo_path_skips_passive_analysis(self) -> None:
+        """Without a repo the assess node stays on the self-report only."""
+        analyzer = FakeAnalyzer()
+        graph, fake = _graph(
+            [
+                _tool_call_response("Assessment", _assessment_payload()),
+                _tool_call_response("RouteDecision", _route_payload(path="partial")),
+                _tool_call_response("DocsDecision", _docs_payload()),
+                LESSON_TEXT,
+            ],
+            repo_analyzer=analyzer,  # wired but must not fire: no repo_path
+        )
+
+        _start(graph)
+        result = _resume(graph, "мой ответ")
+
+        assert analyzer.calls == []
+        assert not any(
+            "analyze_student_repo" in entry for entry in result["log"]
+        )
+        assert (
+            "Анализ репозитория ученика"
+            not in fake.calls[0]["messages"][-1]["content"]
+        )
+        assert result["repo_analysis"] == {}
+
+    def test_analyzer_failure_degrades_to_self_assessment(self) -> None:
+        """A scan failure must not kill the session — honest log, self-report."""
+        analyzer = FakeAnalyzer(error=RuntimeError("scan failed"))
+        graph, fake = _graph(
+            [
+                _tool_call_response(
+                    "Assessment",
+                    _assessment_payload(level="partial", confidence=0.7),
+                ),
+                _tool_call_response("RouteDecision", _route_payload(path="partial")),
+                _tool_call_response("DocsDecision", _docs_payload()),
+                LESSON_TEXT,
+            ],
+            repo_path="/tmp/broken-repo",
+            repo_analyzer=analyzer,
+        )
+
+        _start(graph)
+        result = _resume(graph, "мой ответ")
+
+        assert any(
+            "не смог проанализировать репозиторий (RuntimeError)" in entry
+            for entry in result["log"]
+        )
+        assert result["assessment"]["level"] == "partial"  # session survived
+        assert (
+            "Анализ репозитория ученика"
+            not in fake.calls[0]["messages"][-1]["content"]
+        )
+        assert result["repo_analysis"] == {}
 
 
 class TestRoutingPaths:

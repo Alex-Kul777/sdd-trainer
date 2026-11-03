@@ -6,7 +6,11 @@ with a clarification loop:
 - ``assess`` — ask the calibration question (HITL via ``interrupt`` /
   ``Command(resume=...)``, AIA_03/07) and produce a structured
   ``Assessment`` via ``llm_call`` (ADR-005). The passive part of the
-  assessment (``analyze_student_repo``) is ticket T6 — task 3.1 stays open;
+  assessment (``analyze_student_repo``, task 3.1 / T6, issue #7): when a
+  student repo is configured, the scan runs after the answer and its
+  evidence is weighed against the self-report — the tool call lands in
+  the session log (course criterion 3); a scan failure degrades to a
+  self-report-only assessment;
 - ``route`` — routing node with >= 3 paths: knows_it / partial / new_topic
   plus ``clarification`` when the assessment is inconclusive (confidence
   below the threshold) — course criterion 5. A confident assessment is
@@ -58,9 +62,9 @@ from sdd_trainer.core.prompts import (
     default_docs_query,
 )
 from sdd_trainer.core.quiz import score_quiz
-from sdd_trainer.core.tools import search_sdd_docs
+from sdd_trainer.core.tools import analyze_student_repo, search_sdd_docs
 from sdd_trainer.lessons import load_lesson_skeleton, load_quiz
-from sdd_trainer.models import Assessment, DocsDecision, RouteDecision
+from sdd_trainer.models import Assessment, DocsDecision, RepoAnalysis, RouteDecision
 
 #: Confidence below this routes to ``clarification`` (spec: inconclusive
 #: assessment). Assessments at or above it are routed by the LLM call.
@@ -84,6 +88,7 @@ class TrainerState(TypedDict):
     domain: str
     calibration_answer: str
     assessment: dict
+    repo_analysis: dict
     route: dict
     clarification_rounds: int
     clarification_answers: Annotated[list[str], operator.add]
@@ -101,6 +106,8 @@ def build_graph(
     max_clarification_rounds: int = MAX_CLARIFICATION_ROUNDS,
     docs_search: Optional[Callable[[str], list[dict]]] = None,
     state_store: Optional[TrainingStateStore] = None,
+    repo_path: Optional[str] = None,
+    repo_analyzer: Optional[Callable[[str], RepoAnalysis]] = None,
 ):
     """Assemble and compile the trainer StateGraph (criterion 2).
 
@@ -126,6 +133,15 @@ def build_graph(
             :class:`~sdd_trainer.core.memory.TrainingStateStore` over
             ``data/training-state.json`` by default; unit tests inject one
             over a tmp path so they never touch the repo's runtime data.
+        repo_path: path to the student's repository for the passive
+            assessment (task 3.1, issue #7) — CLI ``--repo-path`` in the
+            console. ``None`` (default) skips the passive scan: the
+            assessment falls back to the self-report alone.
+        repo_analyzer: the repo-scan tool the assess node pulls evidence
+            through — the real ``analyze_student_repo`` by default; unit
+            tests inject a fake callable (the same seam discipline as
+            ``docs_search``: external collaborators are faked at the graph
+            boundary, never internal ones mocked).
 
     Returns:
         The compiled graph: invoke it with ``{"domain": ...}`` and a
@@ -136,27 +152,58 @@ def build_graph(
         docs_search = search_sdd_docs
     if state_store is None:
         state_store = TrainingStateStore()
+    if repo_analyzer is None:
+        repo_analyzer = analyze_student_repo
 
     def assess_node(state: TrainerState) -> dict:
-        """Ask the calibration question, then assess the level (task 3.1, T3 part).
+        """Calibration question, then assess with passive repo evidence (3.1).
 
         The question goes through ``interrupt`` (HITL, AIA_03/07): the first
         execution pauses the graph — the checkpoint stores the pending
         question — and ``Command(resume=answer)`` re-enters the node with
         the student's answer. No LLM call happens before the answer.
+
+        Task 3.1 (issue #7): when ``repo_path`` is configured, the passive
+        scan runs *after* the interrupt (the node re-executes on resume, so
+        the scan would run twice if it sat before the interrupt) and its
+        evidence is weighed against the self-report in the assessment
+        prompt. The tool call lands in the session log (criterion 3); a
+        scan failure degrades honestly to a self-report-only assessment —
+        only the exception type is logged (secret hygiene convention).
         """
         answer = interrupt(CALIBRATION_QUESTION)
-        assessment = llm.llm_call(build_assessment_messages(answer), Assessment)
+        log: list[str] = []
+        analysis: RepoAnalysis | None = None
+        if repo_path:
+            try:
+                analysis = repo_analyzer(repo_path)
+            except Exception as exc:
+                log.append(
+                    "Инструмент analyze_student_repo(\"{}\") не смог "
+                    "проанализировать репозиторий ({}) — оценка по "
+                    "самоотчёту".format(repo_path, type(exc).__name__)
+                )
+            else:
+                log.append(
+                    "Инструмент analyze_student_repo(\"{}\"): {}".format(
+                        repo_path, analysis.summary
+                    )
+                )
+        assessment = llm.llm_call(
+            build_assessment_messages(answer, repo_analysis=analysis), Assessment
+        )
         return {
             "calibration_answer": answer,
             "assessment": assessment.model_dump(),
+            "repo_analysis": analysis.model_dump() if analysis else {},
             "clarification_rounds": 0,
             # per-session outputs: clear values left over from a previous
             # session on the same thread (channels persist across runs)
             "teach_output": "",
             "quiz_output": "",
             "quiz_result": {},
-            "log": [
+            "log": log
+            + [
                 "Оценка: {} (уверенность {:.2f}) — {}".format(
                     assessment.level, assessment.confidence, assessment.justification
                 )
