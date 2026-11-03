@@ -27,6 +27,7 @@ from typing import Callable, Optional
 
 from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.types import Command
+import httpx
 from mcp.server.fastmcp import FastMCP
 from openai import OpenAIError
 
@@ -39,6 +40,7 @@ from sdd_trainer.core.graph import build_graph
 from sdd_trainer.core.llm_manager import LLMManager, StructuredOutputError
 from sdd_trainer.core.memory import TrainingStateStore
 from sdd_trainer.core.prompts import ASSESSMENT_DOMAIN
+from sdd_trainer.core.tools import analyze_student_repo, search_sdd_docs
 from sdd_trainer.models import RepoAnalysis
 
 #: Server name announced in the MCP initialize handshake (ADR-010).
@@ -337,5 +339,40 @@ def create_server(
         F1 по референсным ответам квиза, без LLM-судьи (ADR-009).
         """
         return _resume_answer(student, answer, "quiz")
+
+    # --- direct tools: thin wrappers over core/tools.py (task 2.2) ---
+
+    @server.tool()
+    def analyze_repo(path: str) -> dict:
+        """Проанализировать репозиторий ученика — пассивная оценка без LLM.
+
+        Локальное сканирование openspec/ (те же инструменты, что взвешивает
+        узел оценки): стабильные спеки (specs/), активные change proposals
+        (changes/ без archive/), SHALL-требования и сценарии WHEN/THEN.
+        Возвращает структурированный RepoAnalysis; репозиторий без openspec/
+        — честное «нет видимой практики», не ошибка.
+        """
+        analyzer = repo_analyzer or analyze_student_repo
+        try:
+            analysis = analyzer(path)
+        except FileNotFoundError as exc:
+            return {"type": "error", "message": str(exc)}
+        return {"type": "repo_analysis", "analysis": analysis.model_dump()}
+
+    @server.tool()
+    def search_docs(query: str) -> dict:
+        """Поиск свежей документации SDD/OpenSpec в интернете (Tavily).
+
+        Возвращает список результатов {title, url, content} — те же данные,
+        которыми узел урока обогащает обучение. Требует TAVILY_API_KEY
+        (.env, ADR-006); без ключа или при сетевой ошибке — error-payload
+        с подсказкой, инструмент остаётся честным.
+        """
+        searcher = docs_search or search_sdd_docs
+        try:
+            results = searcher(query)
+        except (RuntimeError, httpx.HTTPError) as exc:
+            return {"type": "error", "message": str(exc)}
+        return {"type": "docs_results", "query": query, "results": results}
 
     return server

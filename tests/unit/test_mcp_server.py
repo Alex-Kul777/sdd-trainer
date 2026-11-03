@@ -111,11 +111,14 @@ def _confident_replies(
     ]
 
 
-def _server(replies: list, checkpointer=None):
+def _server(replies: list, checkpointer=None, **seams):
     """Build the MCP server over a fake LLM (no network, in-memory checkpoint).
 
     The training-state store points at a throwaway temp file: unit tests
     must never touch the repo's runtime ``data/training-state.json``.
+    ``seams`` forwards the create_server injection points (docs_search,
+    repo_analyzer) — the direct-tools tests inject fakes there, the same
+    discipline as the graph tests.
     """
     import tempfile
     from pathlib import Path
@@ -128,6 +131,8 @@ def _server(replies: list, checkpointer=None):
         llm,
         checkpointer=checkpointer or InMemorySaver(),
         state_store=state_store,
+        docs_search=seams.get("docs_search"),
+        repo_analyzer=seams.get("repo_analyzer"),
     )
 
 
@@ -534,3 +539,85 @@ def test_quiz_tools_guard_the_state_machine():
     )
     assert wrong_kind["type"] == "error"
     assert "answer_calibration" in wrong_kind["message"]
+
+
+# --- 2.2: direct tools — analyze_repo + search_docs (issue #10) ---
+
+def test_analyze_repo_over_mcp(tmp_path):
+    """analyze_repo returns the structured RepoAnalysis over MCP.
+
+    A thin wrapper over ``core.tools.analyze_student_repo`` (ADR-010): a
+    real local scan of a fixture repo — no network, no LLM, the same
+    evidence the assess node weighs. A missing path is an error payload
+    with guidance, not a crashed tool call.
+    """
+    repo = tmp_path / "student-repo"
+    spec = repo / "openspec" / "specs" / "console-trainer"
+    spec.mkdir(parents=True)
+    (spec / "spec.md").write_text(
+        "# console-trainer\n\n"
+        "### Requirement: Session\nThe trainer SHALL run a session.\n\n"
+        "#### Scenario: Full session\n"
+        "- **WHEN** the student starts\n"
+        "- **THEN** the trainer assesses\n",
+        encoding="utf-8",
+    )
+    server = _server([])
+    analysis, missing = _call_tools(
+        server,
+        [
+            ("analyze_repo", {"path": str(repo)}),
+            ("analyze_repo", {"path": str(tmp_path / "no-such-repo")}),
+        ],
+    )
+
+    # hand-counted expectations: 1 domain, 1 SHALL, 1 scenario
+    assert analysis["type"] == "repo_analysis"
+    assert analysis["analysis"]["has_openspec"] is True
+    assert analysis["analysis"]["repo_path"] == str(repo)
+    assert analysis["analysis"]["spec_domains"] == ["console-trainer"]
+    assert analysis["analysis"]["shall_count"] == 1
+    assert analysis["analysis"]["scenario_count"] == 1
+    assert analysis["analysis"]["summary"]
+
+    assert missing["type"] == "error"
+    assert "\u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d" in missing["message"]
+
+
+def test_search_docs_over_mcp():
+    """search_docs returns fresh-docs results over MCP (no network in unit).
+
+    The docs_search seam — the same injection point the teach node uses —
+    carries a fake searcher, so unit tests never hit live Tavily (the
+    live proof is the integration test). Results travel to the client
+    verbatim; a missing key surfaces as an honest error payload (ADR-006).
+    """
+    results = [
+        {
+            "title": "OpenSpec guide",
+            "url": "https://example.com/openspec",
+            "content": "Specs live in specs/.",
+        }
+    ]
+
+    def fake_search(query):
+        assert query == "openspec change proposal"
+        return list(results)
+
+    def no_key(query):
+        raise RuntimeError(
+            "TAVILY_API_KEY \u043d\u0435 \u0437\u0430\u0434\u0430\u043d \u2014 search_sdd_docs \u043d\u0435\u0434\u043e\u0441\u0442\u0443\u043f\u0435\u043d"
+        )
+
+    server = _server([], docs_search=fake_search)
+    (payload,) = _call_tools(
+        server, [("search_docs", {"query": "openspec change proposal"})]
+    )
+    assert payload["type"] == "docs_results"
+    assert payload["query"] == "openspec change proposal"
+    assert payload["results"] == results
+
+    failing = _server([], docs_search=no_key)
+    (error,) = _call_tools(failing, [("search_docs", {"query": "anything"})])
+    assert error["type"] == "error"
+    assert "TAVILY_API_KEY" in error["message"]
