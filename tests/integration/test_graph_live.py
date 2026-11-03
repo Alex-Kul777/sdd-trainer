@@ -43,11 +43,12 @@ KNOWLEDGEABLE_ANSWER = (
 )
 
 
-def _live_graph(checkpointer, state_store=None) -> object:
+def _live_graph(checkpointer, state_store=None, repo_path=None) -> object:
     """Compile the trainer graph against the real GigaChat endpoint.
 
     The training-state store defaults to a throwaway temp file — live
     tests must not write into the repo's runtime training-state.json.
+    ``repo_path`` switches on the passive assessment (task 3.1, issue #7).
     """
     import tempfile
     from pathlib import Path
@@ -60,7 +61,55 @@ def _live_graph(checkpointer, state_store=None) -> object:
         LLMManager(config=GigaChatConfig()),
         checkpointer=checkpointer,
         state_store=state_store,
+        repo_path=repo_path,
     )
+
+
+@requires_key
+def test_passive_repo_evidence_reaches_live_assessment(tmp_path) -> None:
+    """WHEN a session runs with a student repo THEN the passive scan is
+    visible in the log and its evidence lands in the state (task 3.1,
+    issue #7, course criterion 3). The LLM verdict itself is tolerant —
+    the level is the model's call, the mechanics are the contract."""
+    repo = tmp_path / "student-repo"
+    spec = repo / "openspec" / "specs" / "console-trainer"
+    spec.mkdir(parents=True)
+    (spec / "spec.md").write_text(
+        "### Requirement: Session\n"
+        "The trainer SHALL run a session.\n\n"
+        "#### Scenario: Full session\n"
+        "- **WHEN** the student starts\n"
+        "- **THEN** the trainer assesses\n",
+        encoding="utf-8",
+    )
+    change = repo / "openspec" / "changes" / "add-console-trainer"
+    change.mkdir(parents=True)
+    (change / "proposal.md").write_text("# Proposal\n", encoding="utf-8")
+
+    graph = _live_graph(InMemorySaver(), repo_path=str(repo))
+    thread = {"configurable": {"thread_id": "student:live-repo"}}
+
+    result = graph.invoke({"domain": "openspec-basics"}, thread)
+
+    assert result["__interrupt__"][0].value == CALIBRATION_QUESTION
+
+    result = graph.invoke(Command(resume=KNOWLEDGEABLE_ANSWER), thread)
+
+    # the tool call and its evidence are visible in the session log
+    tool_entries = [
+        entry
+        for entry in result["log"]
+        if entry.startswith("Инструмент analyze_student_repo")
+    ]
+    assert tool_entries, result["log"]
+    assert "openspec/ активен" in tool_entries[0]
+    # the structured evidence landed in the graph state
+    assert result["repo_analysis"]["has_openspec"] is True
+    assert result["repo_analysis"]["shall_count"] == 1
+    assert result["repo_analysis"]["spec_domains"] == ["console-trainer"]
+    # the assessment is a valid structured verdict over the evidence
+    assert result["assessment"]["level"] in {"new_topic", "partial", "knows_it"}
+    assert 0.0 <= result["assessment"]["confidence"] <= 1.0
 
 
 @requires_key
