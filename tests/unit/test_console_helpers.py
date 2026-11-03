@@ -119,6 +119,8 @@ class TestFindPendingQuestion:
         assert "OpenSpec" in find_pending_question(snapshot)
 
     def test_returns_none_when_session_completed(self) -> None:
+        from sdd_trainer.lessons import load_quiz
+
         graph = _graph(
             [
                 {"tool": "Assessment", "arguments": _assessment_arguments()},
@@ -130,7 +132,16 @@ class TestFindPendingQuestion:
         )
         done = {"configurable": {"thread_id": "student:glue-done"}}
         graph.invoke({"domain": "openspec-basics"}, done)
-        graph.invoke(Command(resume="ответ"), done)
+        result = graph.invoke(Command(resume="ответ"), done)
+
+        # teach now flows into the quiz (T5): answer every question to
+        # complete the session — the quiz itself needs no scripted replies
+        # (deterministic F1, no LLM judge)
+        quiz_answers = iter(
+            ["эталонный ответ"] * len(load_quiz("openspec-basics").questions)
+        )
+        while result.get("__interrupt__"):
+            result = graph.invoke(Command(resume=next(quiz_answers)), done)
 
         snapshot = graph.get_state(done)
         assert snapshot.next == ()

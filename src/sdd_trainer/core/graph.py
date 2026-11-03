@@ -24,8 +24,11 @@ with a clarification loop:
   its results land in the session log (spec scenario) — and unfolds
   skeleton + docs into the lesson text (plain completion: prose, not a
   structured decision);
-- ``quiz`` — stub in T3: the knowledge check (questions + F1 against
-  reference answers, HITL) is ticket T5.
+- ``quiz`` — the knowledge check (T5, issue #6, ADR-009): questions from
+  the authored ``data/quizzes/<domain>.json``, one ``interrupt`` per
+  question, answers scored by the deterministic token F1 of ``core.quiz``
+  against the reference answers (no LLM judge — reproducible), progress
+  (score, streak) recorded into ``training-state.json`` (task 4.2).
 
 Every node appends human-readable entries to the ``log`` channel, so the
 selected route is visible in the session log (spec: routing scenario). The
@@ -43,6 +46,7 @@ from langgraph.graph import END, START, StateGraph
 from langgraph.types import interrupt
 
 from sdd_trainer.core.llm_manager import LLMManager
+from sdd_trainer.core.memory import TrainingStateStore
 from sdd_trainer.core.prompts import (
     CALIBRATION_QUESTION,
     build_assessment_messages,
@@ -53,8 +57,9 @@ from sdd_trainer.core.prompts import (
     build_teach_messages,
     default_docs_query,
 )
+from sdd_trainer.core.quiz import score_quiz
 from sdd_trainer.core.tools import search_sdd_docs
-from sdd_trainer.lessons import load_lesson_skeleton
+from sdd_trainer.lessons import load_lesson_skeleton, load_quiz
 from sdd_trainer.models import Assessment, DocsDecision, RouteDecision
 
 #: Confidence below this routes to ``clarification`` (spec: inconclusive
@@ -85,6 +90,7 @@ class TrainerState(TypedDict):
     log: Annotated[list[str], operator.add]
     teach_output: str
     quiz_output: str
+    quiz_result: dict
 
 
 def build_graph(
@@ -94,6 +100,7 @@ def build_graph(
     clarification_threshold: float = CLARIFICATION_THRESHOLD,
     max_clarification_rounds: int = MAX_CLARIFICATION_ROUNDS,
     docs_search: Optional[Callable[[str], list[dict]]] = None,
+    state_store: Optional[TrainingStateStore] = None,
 ):
     """Assemble and compile the trainer StateGraph (criterion 2).
 
@@ -114,6 +121,11 @@ def build_graph(
             (Tavily, ADR-006) by default; unit tests inject a fake callable
             (same seam discipline: external collaborators are faked at the
             graph boundary, never internal ones mocked).
+        state_store: the training-state persistence the quiz node records
+            progress through (task 4.2, ADR-008) — a
+            :class:`~sdd_trainer.core.memory.TrainingStateStore` over
+            ``data/training-state.json`` by default; unit tests inject one
+            over a tmp path so they never touch the repo's runtime data.
 
     Returns:
         The compiled graph: invoke it with ``{"domain": ...}`` and a
@@ -122,6 +134,8 @@ def build_graph(
     """
     if docs_search is None:
         docs_search = search_sdd_docs
+    if state_store is None:
+        state_store = TrainingStateStore()
 
     def assess_node(state: TrainerState) -> dict:
         """Ask the calibration question, then assess the level (task 3.1, T3 part).
@@ -141,6 +155,7 @@ def build_graph(
             # session on the same thread (channels persist across runs)
             "teach_output": "",
             "quiz_output": "",
+            "quiz_result": {},
             "log": [
                 "Оценка: {} (уверенность {:.2f}) — {}".format(
                     assessment.level, assessment.confidence, assessment.justification
@@ -305,13 +320,60 @@ def build_graph(
         return {"teach_output": lesson, "log": log}
 
     def quiz_node(state: TrainerState) -> dict:
-        """Stub of the quiz node — questions + F1 land in T5 (issue #6)."""
-        message = (
-            "[quiz/stub] Проверка знаний домена {} — наполнение в T5 "
-            "(issue #6): вопросы из data/quizzes/ + F1 по эталонам, "
-            "HITL через interrupt.".format(state["domain"])
+        """Ask the JSON-quiz questions and score F1 against the references.
+
+        Task 3.4 (T5, issue #6, ADR-009). The questions come from the
+        authored ``data/quizzes/<domain>.json`` — one ``interrupt`` per
+        question (HITL, AIA_03/07; LangGraph matches resume values to
+        interrupts by order, so every answer lands in its checkpoint and a
+        mid-quiz restart re-asks only the pending question). Scoring is the
+        deterministic token F1 of ``core.quiz`` — reproducible, no LLM
+        judge (ADR-009: reference answers + weights). The weighted score
+        and verdict land in ``quiz_result`` / ``quiz_output``, and the
+        domain progress (score, streak — task 4.2) is recorded through the
+        training-state store so it survives a restart (ADR-008).
+        """
+        domain = state["domain"]
+        quiz = load_quiz(domain)
+        log = [
+            "Проверка знаний: {} вопрос(ов) по домену {}".format(
+                len(quiz.questions), domain
+            )
+        ]
+
+        answers: list[str] = []
+        for question in quiz.questions:
+            answers.append(interrupt(question.question))
+
+        outcome = score_quiz(quiz, answers)
+        for question, f1 in zip(quiz.questions, outcome.question_f1s):
+            log.append(
+                "Вопрос {}: F1 = {:.2f}".format(
+                    question.id or question.question[:30], f1
+                )
+            )
+        log.append(
+            "Квиз {}: {:.2f} (порог {:.2f})".format(
+                "зачтён" if outcome.result.passed else "не зачтён",
+                outcome.result.score,
+                quiz.pass_threshold,
+            )
         )
-        return {"quiz_output": message, "log": [message]}
+
+        entry = state_store.record_quiz_result(
+            domain, outcome.result.score, outcome.result.passed
+        )
+        log.append(
+            "Прогресс (training-state.json): {} — счёт {:.2f}, серия {}, "
+            "уроков завершено {}".format(
+                domain, entry["score"], entry["streak"], entry["completed_lessons"]
+            )
+        )
+        return {
+            "quiz_output": outcome.result.feedback,
+            "quiz_result": outcome.result.model_dump(),
+            "log": log,
+        }
 
     def route_after_route(state: TrainerState) -> str:
         """Map the selected path to the next node (conditional edges)."""
@@ -336,6 +398,6 @@ def build_graph(
         },
     )
     graph.add_edge("clarify", "route")
-    graph.add_edge("teach", END)
+    graph.add_edge("teach", "quiz")
     graph.add_edge("quiz", END)
     return graph.compile(checkpointer=checkpointer)

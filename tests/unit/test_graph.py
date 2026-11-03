@@ -26,7 +26,9 @@ from sdd_trainer.core.graph import (
     build_graph,
 )
 from sdd_trainer.core.llm_manager import LLMManager
+from sdd_trainer.core.memory import TrainingStateStore
 from sdd_trainer.core.prompts import CALIBRATION_QUESTION
+from sdd_trainer.lessons import load_quiz
 from sdd_trainer.models import Assessment, DocsDecision, RouteDecision
 
 pytestmark = pytest.mark.unit
@@ -128,12 +130,17 @@ def _teach_replies(
     ]
 
 
-def _graph(replies: list, checkpointer=None, docs_search=None) -> tuple:
+def _graph(
+    replies: list, checkpointer=None, docs_search=None, state_store=None
+) -> tuple:
     """Compile the trainer graph over a fake LLM client (no network)."""
     fake = FakeOpenAI(replies)
     llm = LLMManager(config=GigaChatConfig(api_key="test"), client=fake)
     graph = build_graph(
-        llm, checkpointer=checkpointer or InMemorySaver(), docs_search=docs_search
+        llm,
+        checkpointer=checkpointer or InMemorySaver(),
+        docs_search=docs_search,
+        state_store=state_store,
     )
     return graph, fake
 
@@ -144,6 +151,34 @@ def _start(graph, thread: dict = THREAD) -> dict:
 
 def _resume(graph, answer: str, thread: dict = THREAD) -> dict:
     return graph.invoke(Command(resume=answer), thread)
+
+
+def _knows_it_replies() -> list:
+    """Fake replies for a confident knows_it session: assessment + route.
+
+    The quiz node is deterministic (no LLM judge) — no further replies.
+    """
+    return [
+        _tool_call_response(
+            "Assessment", _assessment_payload(level="knows_it", confidence=0.9)
+        ),
+        _tool_call_response("RouteDecision", _route_payload(path="knows_it")),
+    ]
+
+
+def _drive(graph, answers: list, thread: dict = THREAD) -> tuple:
+    """Run a whole session, feeding each interrupt the next canned answer.
+
+    Returns (final_state, asked_questions) — the interrupt payloads in the
+    order the graph asked them (calibration question first, then quiz).
+    """
+    canned = list(answers)
+    result = graph.invoke({"domain": "openspec-basics"}, thread)
+    asked: list[str] = []
+    while result.get("__interrupt__"):
+        asked.append(result["__interrupt__"][0].value)
+        result = graph.invoke(Command(resume=canned.pop(0)), thread)
+    return result, asked
 
 
 class TestAssessNode:
@@ -183,15 +218,15 @@ class TestRoutingPaths:
     """route: exactly one of knows_it / partial / new_topic (+ clarification)."""
 
     @pytest.mark.parametrize(
-        ("level", "path", "stub_key"),
+        ("level", "path"),
         [
-            ("knows_it", "knows_it", "quiz_output"),
-            ("partial", "partial", "teach_output"),
-            ("new_topic", "new_topic", "teach_output"),
+            ("knows_it", "knows_it"),
+            ("partial", "partial"),
+            ("new_topic", "new_topic"),
         ],
     )
     def test_confident_assessment_routes_via_llm_to_path(
-        self, level: str, path: str, stub_key: str
+        self, level: str, path: str
     ) -> None:
         replies = [
             _tool_call_response(
@@ -199,7 +234,7 @@ class TestRoutingPaths:
             ),
             _tool_call_response("RouteDecision", _route_payload(path=path)),
         ]
-        if stub_key == "teach_output":
+        if path != "knows_it":
             replies.extend(_teach_replies(level)[2:])  # docs decision + lesson
         graph, fake = _graph(replies)
 
@@ -207,11 +242,14 @@ class TestRoutingPaths:
         result = _resume(graph, "ответ ученика")
 
         assert result["route"]["path"] == path
-        assert result[stub_key]  # the path's node ran
-        other = "quiz_output" if stub_key == "teach_output" else "teach_output"
-        assert not result.get(other)  # …and only that one
         assert any(entry.startswith(f"Маршрут: {path}") for entry in result["log"])
-        assert "__interrupt__" not in result
+        # every path now ends at the quiz (proposal topology: teach -> quiz)
+        question = result["__interrupt__"][0].value
+        assert question == load_quiz("openspec-basics").questions[0].question
+        if path == "knows_it":
+            assert not result["teach_output"]  # knows_it skips the lesson
+        else:
+            assert result["teach_output"] == LESSON_TEXT  # the lesson came first
         # the routing decision came through the structured-output seam (ADR-005)
         assert fake.calls[1]["tools"][0]["function"]["name"] == "RouteDecision"
         assert fake.calls[1]["tool_choice"]["function"]["name"] == "RouteDecision"
@@ -258,7 +296,9 @@ class TestRoutingPaths:
         assert result["route"]["path"] == "knows_it"
         assert result["assessment"]["level"] == "knows_it"
         assert result["clarification_rounds"] == 1
-        assert result["quiz_output"]  # knows_it → quiz stub
+        # knows_it -> the quiz asks its first question
+        question = result["__interrupt__"][0].value
+        assert question == load_quiz("openspec-basics").questions[0].question
         # the re-assessment saw the whole dialogue
         reassessment = fake.calls[1]["messages"][1]["content"]
         assert "калибровочный ответ" in reassessment
@@ -292,7 +332,9 @@ class TestRoutingPaths:
         assert result["clarification_rounds"] == MAX_CLARIFICATION_ROUNDS
         assert result["teach_output"] == LESSON_TEXT
         assert len(fake.calls) == 5  # 3 assessments + docs decision + lesson
-        assert "__interrupt__" not in result
+        # the bounded route taught, and the session now waits at the quiz
+        question = result["__interrupt__"][0].value
+        assert question == load_quiz("openspec-basics").questions[0].question
 
 
 class TestCheckpoint:
@@ -317,8 +359,11 @@ class TestCheckpoint:
 
         result = _resume(graph, "ответ")
 
-        assert graph.get_state(THREAD).next == ()  # session completed
         assert result["route"]["path"] == "knows_it"
+        # the session advanced past assess/route and now waits at the quiz
+        assert graph.get_state(THREAD).next == ("quiz",)
+        question = result["__interrupt__"][0].value
+        assert question == load_quiz("openspec-basics").questions[0].question
 
     def test_sqlite_checkpoint_survives_restart(self, tmp_path) -> None:
         """A fresh graph + connection on the same db file resumes the session."""
@@ -348,8 +393,8 @@ class TestCheckpoint:
 
         assert result["route"]["path"] == "knows_it"
         assert result["calibration_answer"] == "ответ после рестарта"
-        assert result["quiz_output"]
-        assert graph2.get_state(THREAD).next == ()
+        # resumed straight to the quiz (no LLM call needed there)
+        assert graph2.get_state(THREAD).next == ("quiz",)
         assert len(fake2.calls) == 2
 
     def test_threads_are_isolated_per_student(self) -> None:
@@ -367,27 +412,31 @@ class TestCheckpoint:
         assert boris_snapshot.values == {}
 
     def test_new_session_on_same_thread_resets_per_session_outputs(self) -> None:
-        """Session 2 on the same thread must not inherit session 1's lesson."""
+        """Session 2 on the same thread must not inherit session 1's outputs."""
+        quiz = load_quiz("openspec-basics")
         graph, _ = _graph(
             [
-                # session 1: partial -> teach (docs decision + lesson)
+                # session 1: partial -> teach -> quiz (completed with refs)
                 *_teach_replies("partial"),
-                # session 2 (same thread): knows_it -> quiz stub
-                _tool_call_response("Assessment", _assessment_payload(level="knows_it", confidence=0.9)),
-                _tool_call_response("RouteDecision", _route_payload(path="knows_it")),
+                # session 2 (same thread): knows_it -> quiz again
+                *_knows_it_replies(),
             ]
         )
 
-        _start(graph)
-        first = _resume(graph, "ответ первого сеанса")
+        first, _ = _drive(
+            graph, ["ответ первого сеанса", *[q.reference_answer for q in quiz.questions]]
+        )
         assert first["teach_output"] == LESSON_TEXT
+        assert first["quiz_result"]["passed"] is True
 
-        _start(graph)  # a fresh session on the same thread
-        second = _resume(graph, "ответ второго сеанса")
+        # a fresh session on the same thread: assess resets per-session outputs
+        second, _ = _drive(
+            graph, ["ответ второго сеанса", *["абракадабра"] * len(quiz.questions)]
+        )
 
         assert second["route"]["path"] == "knows_it"
-        assert second["quiz_output"]
         assert second["teach_output"] == ""  # reset by assess, not inherited
+        assert second["quiz_result"]["passed"] is False  # this session's own quiz
         assert second["clarification_rounds"] == 0
 
 
@@ -566,3 +615,103 @@ class TestGraphDefaults:
             "new_topic",
             "clarification",
         }
+
+
+class TestQuizNode:
+    """quiz: JSON-quiz questions via interrupts, deterministic F1, state.
+
+    Task 3.4 + 4.2 at the graph seam (issue #6). The real authored quiz
+    (data/quizzes/openspec-basics.json, 5 questions, weights
+    [1, 1, 1, 1.5, 1] — asserted as literals in test_lessons) drives the
+    node; expected scores below are derived by hand from those weights,
+    never recomputed with the implementation's code (anti-tautology).
+    """
+
+    @staticmethod
+    def _store(tmp_path) -> TrainingStateStore:
+        return TrainingStateStore(path=tmp_path / "training-state.json")
+
+    def test_knows_it_session_reaches_quiz_and_scores_full(self, tmp_path) -> None:
+        quiz = load_quiz("openspec-basics")
+        graph, _ = _graph(_knows_it_replies(), state_store=self._store(tmp_path))
+
+        result, asked = _drive(
+            graph,
+            ["работаю с openspec", *[q.reference_answer for q in quiz.questions]],
+        )
+
+        assert asked[0] == CALIBRATION_QUESTION
+        assert asked[1:] == [q.question for q in quiz.questions]
+        quiz_result = result["quiz_result"]
+        assert quiz_result["domain"] == "openspec-basics"
+        assert quiz_result["score"] == pytest.approx(1.0)  # exact references
+        assert quiz_result["passed"] is True
+        entry = self._store(tmp_path).load()["domains"]["openspec-basics"]
+        assert entry == {"score": 1.0, "streak": 1, "completed_lessons": 1}
+
+    def test_disjoint_answers_score_zero_and_fail(self, tmp_path) -> None:
+        quiz = load_quiz("openspec-basics")
+        graph, _ = _graph(_knows_it_replies(), state_store=self._store(tmp_path))
+
+        result, asked = _drive(graph, ["ответ", *["абракадабра"] * len(quiz.questions)])
+
+        assert len(asked) == 1 + len(quiz.questions)
+        assert result["quiz_result"]["score"] == pytest.approx(0.0)
+        assert result["quiz_result"]["passed"] is False
+        entry = self._store(tmp_path).load()["domains"]["openspec-basics"]
+        assert entry == {"score": 0.0, "streak": 0, "completed_lessons": 0}
+
+    def test_weighted_score_at_the_seam(self, tmp_path) -> None:
+        """Only q4 (weight 1.5 of 5.5 total) answered exactly -> 3/11."""
+        quiz = load_quiz("openspec-basics")
+        answers = ["абракадабра"] * len(quiz.questions)
+        answers[3] = quiz.questions[3].reference_answer
+        graph, _ = _graph(_knows_it_replies(), state_store=self._store(tmp_path))
+
+        result, _ = _drive(graph, ["ответ", *answers])
+
+        assert result["quiz_result"]["score"] == pytest.approx(1.5 / 5.5)
+        assert result["quiz_result"]["passed"] is False  # 0.27 < 0.60
+
+    def test_teach_flows_into_quiz(self, tmp_path) -> None:
+        """partial route: lesson first, then the quiz (proposal topology)."""
+        quiz = load_quiz("openspec-basics")
+        graph, _ = _graph(
+            _teach_replies("partial"), state_store=self._store(tmp_path)
+        )
+
+        result, asked = _drive(
+            graph,
+            ["частично знаком", *[q.reference_answer for q in quiz.questions]],
+        )
+
+        assert result["teach_output"] == LESSON_TEXT
+        assert result["quiz_result"]["passed"] is True
+        log = result["log"]
+        lesson_at = next(i for i, e in enumerate(log) if e.startswith("Урок готов"))
+        quiz_at = next(
+            i for i, e in enumerate(log) if e.startswith("Проверка знаний")
+        )
+        assert lesson_at < quiz_at
+
+    def test_training_state_survives_restart_and_tracks_streak(
+        self, tmp_path
+    ) -> None:
+        """Passed quiz -> streak 1; restart (new store) sees it; a failed
+        second session resets the streak and keeps completed_lessons."""
+        quiz = load_quiz("openspec-basics")
+        graph, _ = _graph(
+            _knows_it_replies() + _knows_it_replies(),
+            state_store=self._store(tmp_path),
+        )
+
+        _drive(graph, ["ответ", *[q.reference_answer for q in quiz.questions]])
+        entry = self._store(tmp_path).load()["domains"]["openspec-basics"]
+        assert entry == {"score": 1.0, "streak": 1, "completed_lessons": 1}
+
+        result, _ = _drive(
+            graph, ["ответ", *["абракадабра"] * len(quiz.questions)]
+        )
+        assert result["quiz_result"]["passed"] is False
+        entry = self._store(tmp_path).load()["domains"]["openspec-basics"]
+        assert entry == {"score": 0.0, "streak": 0, "completed_lessons": 1}
