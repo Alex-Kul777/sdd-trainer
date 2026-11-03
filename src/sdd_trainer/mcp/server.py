@@ -302,4 +302,15 @@ def create_server(
         """
         return _resume_answer(student, answer, "calibration")
 
+    @server.tool()
+    def answer_clarification(student: str, answer: str) -> dict:
+        """Ответить на уточняющий вопрос сеанса (question_kind = "clarification").
+
+        Возвращает переоценённый вердикт и маршрут; если уверенность
+        по-прежнему низкая — следующий уточняющий вопрос (раунды ограничены,
+        после предела граф ведёт по оценённому уровню). Если маршрут
+        выбран — следующий вопрос квиза (quiz-инструменты — M2, issue #10).
+        """
+        return _resume_answer(student, answer, "clarification")
+
     return server

@@ -240,3 +240,58 @@ def test_answer_calibration_returns_verdict_and_route():
     # the session log carries the verdict and route entries (course criteria)
     assert any("Оценка: partial" in entry for entry in verdict["log"])
     assert any("Маршрут: partial" in entry for entry in verdict["log"])
+
+
+def test_low_confidence_clarification_loop():
+    """Low confidence routes to clarification; answer_clarification re-assesses.
+
+    The deterministic clarification path (confidence below the threshold,
+    course criterion 5): answer_calibration returns a clarification
+    question instead of a verdict; answer_clarification feeds the
+    follow-up answer back, the re-assessment is confident and the route
+    is selected — the payload carries the re-assessed verdict + route.
+    """
+    replies = [
+        _tool_call_response(
+            "Assessment", _assessment_payload(confidence=0.3)
+        ),
+        _tool_call_response(
+            "Assessment",
+            _assessment_payload(level="partial", confidence=0.85),
+        ),
+        _tool_call_response("RouteDecision", _route_payload(path="partial")),
+        _tool_call_response("DocsDecision", _docs_payload()),
+        LESSON_TEXT,
+    ]
+    server = _server(replies)
+    payloads = _call_tools(
+        server,
+        [
+            ("start_session", {"student": "unit_mcp"}),
+            (
+                "answer_calibration",
+                {"student": "unit_mcp", "answer": "что-то слышал про спеки"},
+            ),
+            (
+                "answer_clarification",
+                {
+                    "student": "unit_mcp",
+                    "answer": "specs/ видел в репозитории, changes/ не трогал",
+                },
+            ),
+        ],
+    )
+
+    clarification = payloads[1]
+    assert clarification["type"] == "question"
+    assert clarification["question_kind"] == "clarification"
+    assert clarification["question"]  # the follow-up question itself
+    assert clarification["route"]["path"] == "clarification"
+    assert clarification["assessment"]["confidence"] == 0.3
+
+    verdict = payloads[2]
+    assert verdict["question_kind"] == "quiz"
+    assert verdict["assessment"]["level"] == "partial"
+    assert verdict["assessment"]["confidence"] == 0.85
+    assert verdict["route"]["path"] == "partial"
+    assert any("Переоценка: partial" in entry for entry in verdict["log"])
