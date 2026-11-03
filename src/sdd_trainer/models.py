@@ -67,6 +67,57 @@ class Assessment(BaseModel):
     )
 
 
+class RepoAnalysis(BaseModel):
+    """Structured result of the passive student-repo scan (task 2.2, issue #7).
+
+    Produced by the ``analyze_student_repo`` tool — a local filesystem scan
+    (no network, no LLM): the evidence of *live* OpenSpec practice the
+    assess node weighs against the student's self-report (task 3.1).
+    ``has_openspec=False`` is valid evidence too — an empty repo honestly
+    means no visible practice, it is not an error. The ``summary`` is the
+    deterministic prose that reaches the assessment prompt and the session
+    log (course criterion 3).
+    """
+
+    repo_path: str = Field(
+        description="Абсолютный или относительный путь к репозиторию ученика",
+    )
+    has_openspec: bool = Field(
+        description="Найдена ли папка openspec/ в репозитории",
+    )
+    spec_domains: list[str] = Field(
+        default_factory=list,
+        description=(
+            "Имена доменов стабильных спецификаций — папки вида "
+            "openspec/specs/<домен>/"
+        ),
+    )
+    change_names: list[str] = Field(
+        default_factory=list,
+        description=(
+            "Имена активных change proposals — папки в openspec/changes/ "
+            "кроме archive/"
+        ),
+    )
+    shall_count: int = Field(
+        default=0,
+        ge=0,
+        description="Число требований SHALL во всех spec.md (спеки + дельты change-ов)",
+    )
+    scenario_count: int = Field(
+        default=0,
+        ge=0,
+        description="Число сценариев #### Scenario: (WHEN/THEN) во всех spec.md",
+    )
+    summary: str = Field(
+        default="",
+        description=(
+            "Краткое человекочитаемое резюме анализа для промпта оценки "
+            "и лога сеанса"
+        ),
+    )
+
+
 class RouteDecision(BaseModel):
     """Structured routing decision: the lesson path chosen from an assessment.
 

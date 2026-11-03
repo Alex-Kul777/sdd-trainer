@@ -4,7 +4,12 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from sdd_trainer.models import Assessment, DocsDecision, RouteDecision
+from sdd_trainer.models import (
+    Assessment,
+    DocsDecision,
+    RepoAnalysis,
+    RouteDecision,
+)
 
 pytestmark = pytest.mark.unit
 
@@ -104,3 +109,61 @@ class TestRouteDecision:
     def test_reason_required(self) -> None:
         with pytest.raises(ValidationError):
             RouteDecision(path="partial")
+
+
+VALID_REPO_ANALYSIS = {
+    "repo_path": "/tmp/student-repo",
+    "has_openspec": True,
+    "spec_domains": ["console-trainer"],
+    "change_names": ["add-console-trainer"],
+    "shall_count": 4,
+    "scenario_count": 2,
+    "summary": (
+        "openspec/ активен: 1 домен спецификаций, 1 активный change, "
+        "4 требования SHALL, 2 сценария WHEN/THEN"
+    ),
+}
+
+
+class TestRepoAnalysis:
+    """Passive repo scan contract (task 2.2, issue #7): openspec evidence.
+
+    The schema is the structured return of ``analyze_student_repo`` — the
+    evidence the assess node weighs against the self-report (task 3.1).
+    """
+
+    def test_valid_payload(self) -> None:
+        analysis = RepoAnalysis(**VALID_REPO_ANALYSIS)
+
+        assert analysis.has_openspec is True
+        assert analysis.spec_domains == ["console-trainer"]
+        assert analysis.change_names == ["add-console-trainer"]
+        assert analysis.shall_count == 4
+        assert analysis.scenario_count == 2
+        assert "SHALL" in analysis.summary
+
+    def test_empty_repo_defaults(self) -> None:
+        """A repo without openspec/ is valid evidence too — zeros, not errors."""
+        analysis = RepoAnalysis(repo_path="/tmp/plain-repo", has_openspec=False)
+
+        assert analysis.spec_domains == []
+        assert analysis.change_names == []
+        assert analysis.shall_count == 0
+        assert analysis.scenario_count == 0
+        assert analysis.summary == ""
+
+    def test_has_openspec_required(self) -> None:
+        payload = {
+            k: v for k, v in VALID_REPO_ANALYSIS.items() if k != "has_openspec"
+        }
+
+        with pytest.raises(ValidationError):
+            RepoAnalysis(**payload)
+
+    def test_repo_path_required(self) -> None:
+        payload = {
+            k: v for k, v in VALID_REPO_ANALYSIS.items() if k != "repo_path"
+        }
+
+        with pytest.raises(ValidationError):
+            RepoAnalysis(**payload)
