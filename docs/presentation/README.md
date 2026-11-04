@@ -4,11 +4,11 @@ Defense deck and live dashboards for the project defense (deadline: 2026-11-13).
 
 ## Contents
 
-- `deck/presentation.html` — 11-slide defense deck. Self-contained HTML
+- `deck/presentation.html` — 11-slide defense deck + 2 appendix slides (A1: course-notebooks → project map, A2: three direct inheritances). Self-contained HTML
   (no CDN), 1280×720 slides; open in a browser and navigate with arrow
   keys or the bottom bar. Slide 5 shows the full system architecture
   (C4 container level) with course criteria mapped onto components.
-- `deck/presentation.pdf` — the same deck as an 11-page PDF.
+- `deck/presentation.pdf` — the same deck as a 13-page PDF (11 main + 2 appendix).
 - `deck/speaker_notes.html` — speaker notes: an oral script that
   complements the slides instead of repeating them.
 - `index.html` — index of four live dashboards:

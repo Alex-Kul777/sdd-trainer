@@ -301,13 +301,63 @@ td { padding: 10px 12px; border-bottom: 1px solid var(--border); line-height: 1.
 <div style="border-top:1px solid var(--border); padding-top:18px; display:flex; justify-content:space-between; align-items:center">
   <div class="body-text" style="font-size:19px">Разработка: <span class="mono" style="color:var(--accent)">github.com/Alex-Kul777/sdd-trainer</span></div>
   <div class="body-text" style="font-size:22px; font-weight:700; color:var(--primary)">SDD Trainer · спасибо!</div>
-</div><div class="slide-num">11 / 11</div></div>
+</div><div class="slide-num">11 / 11</div></div><div class="slide" id="slide-12"><div class="slide-tag">приложение</div>
+<h2>Курс → проект: карта наследования</h2>
+<table style="flex:1; align-self:stretch; font-size:15px">
+  <tr><th style="width:400px; font-size:13px">Ноутбук курса · разделы</th><th style="font-size:13px">→ Где живёт в SDD Trainer (as-built)</th></tr>
+  <tr><td><b>AIA_01</b> · Вызов API GigaChat, диалоговый формат</td>
+      <td class="mono" style="font-size:14px">core/llm_manager.py</td></tr>
+  <tr><td><b>AIA_02</b> · Pydantic, структурная генерация, инструменты</td>
+      <td>Pydantic-схемы вердиктов, structured output + <span class="mono" style="font-size:14px">tool_choice</span> (ADR-005)</td></tr>
+  <tr><td><b>AIA_03</b> · LangGraph, human-in-the-loop</td>
+      <td>Граф assess → route → teach → quiz; interrupt-паузы = диалог с учеником</td></tr>
+  <tr><td><b>AIA_04</b> · Чекпоинтер LangGraph, память</td>
+      <td>SqliteSaver + <span class="mono" style="font-size:14px">thread_id student:&lt;name&gt;</span> (ADR-008)</td></tr>
+  <tr><td><b>AIA_05</b> · Tavily, поиск как инструмент, реранк</td>
+      <td><span class="mono" style="font-size:14px">search_docs</span> — живой поиск в уроках и MCP-tool</td></tr>
+  <tr><td><b style="color:var(--primary)">AIA_06 ⭐</b> · Агент со сложным роутингом</td>
+      <td><b style="color:var(--green)">Прямой шаблон графа</b>: 4 маршрута — knows_it · partial · new_topic · clarification</td></tr>
+  <tr><td><b>AIA_07</b> · F1, токенизация; interrupt + Command</td>
+      <td>Взвешенный токенный F1 квизов (ADR-009); <span class="mono" style="font-size:14px">Command(resume)</span> в MCP</td></tr>
+  <tr><td><b>AIA_08</b> (PDF) · Архитектура agent harnesses</td>
+      <td>MCP stdio как harness-протокол (ADR-010)</td></tr>
+</table>
+<div class="small" style="border-top:1px solid var(--border); padding-top:10px; margin-top:12px; font-size:14px">
+  План (29.10) → реализация: ReAct-цикл заменён детерминированным роутингом — воспроизводимость вердиктов ·
+  GigaSearch не понадобился — хватило Tavily · FastAPI-деплой вырос в MCP-сервер, паттерн interrupt/Command сохранён.<br>
+  Основа карты — PLAN-FINAL-PROJECT.md §3, сверено с кодом репозитория.</div><div class="slide-num">Приложение · A1</div></div><div class="slide" id="slide-13"><div class="slide-tag">приложение</div>
+<h2>Три прямых наследования</h2>
+<div class="grid3" style="flex:1; align-content:start">
+  <div class="card">
+    <h3 style="font-size:20px">Роутинг → скелет тренажёра</h3>
+    <div class="small" style="margin-top:14px; font-size:15.5px; line-height:1.6">
+      <b style="color:var(--accent)">AIA_06</b>: knowledge_check → routing → clarification / knowledge<br><br>
+      <b>Проект</b>: assess → route → clarification / teach<br><br>
+      Узлы учебного агента стали ядром графа — критерий 5</div>
+  </div>
+  <div class="card">
+    <h3 style="font-size:20px">Чекпоинтер → фича рестарта</h3>
+    <div class="small" style="margin-top:14px; font-size:15.5px; line-height:1.6">
+      <b style="color:var(--accent)">AIA_04</b>: упражнение с чекпоинтером LangGraph<br><br>
+      <b>Проект</b>: SqliteSaver + thread_id — kill посреди квиза → <span style="color:var(--green); font-weight:700">resumed=True</span><br><br>
+      Упражнение стало фичей — слайд 9, ADR-008</div>
+  </div>
+  <div class="card">
+    <h3 style="font-size:20px">interrupt + Command → MCP</h3>
+    <div class="small" style="margin-top:14px; font-size:15.5px; line-height:1.6">
+      <b style="color:var(--accent)">AIA_07</b>: стриминг с HITL через interrupt и Command<br><br>
+      <b>Проект</b>: <span class="mono" style="font-size:14px">server.py:296 — Command(resume=answer)</span><br><br>
+      Каждое сообщение ученика продолжает прерванный граф; F1 → вердикт квиза</div>
+  </div>
 </div>
-<div class="slide-nav"><button onclick="go(0)">1</button><button onclick="go(1)">2</button><button onclick="go(2)">3</button><button onclick="go(3)">4</button><button onclick="go(4)">5</button><button onclick="go(5)">6</button><button onclick="go(6)">7</button><button onclick="go(7)">8</button><button onclick="go(8)">9</button><button onclick="go(9)">10</button><button onclick="go(10)">11</button></div>
+<div class="body-text" style="border-top:1px solid var(--border); padding-top:16px; font-size:20px; text-align:center">
+  Курс не остался теорией: <b style="color:var(--primary)">каждый паттерн из ноутбуков — строка в коде тренажёра</b></div><div class="slide-num">Приложение · A2</div></div>
+</div>
+<div class="slide-nav"><button onclick="go(0)">1</button><button onclick="go(1)">2</button><button onclick="go(2)">3</button><button onclick="go(3)">4</button><button onclick="go(4)">5</button><button onclick="go(5)">6</button><button onclick="go(6)">7</button><button onclick="go(7)">8</button><button onclick="go(8)">9</button><button onclick="go(9)">10</button><button onclick="go(10)">11</button><button onclick="go(11)">A1</button><button onclick="go(12)">A2</button></div>
 <script>
 let cur = 0;
 function go(i) {
-  cur = Math.max(0, Math.min(10, i));
+  cur = Math.max(0, Math.min(12, i));
   document.getElementById('slide-' + (cur + 1)).scrollIntoView({behavior: 'instant'});
   document.querySelectorAll('.slide-nav button').forEach((b, n) =>
     b.classList.toggle('active', n === cur));
