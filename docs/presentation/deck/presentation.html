@@ -79,7 +79,7 @@ td { padding: 10px 12px; border-bottom: 1px solid var(--border); line-height: 1.
   <h1 style="font-size:64px">Показывают код.</h1>
   <h1 style="font-size:64px; color:var(--primary)">А спецификации?</h1>
   <div class="small" style="margin-top:30px">SDD Trainer — защита проектной работы · курс «ИИ-агенты» · Standard Data · 13.11.2026</div>
-</div><div class="slide-num">1 / 10</div></div><div class="slide" id="slide-2"><div class="slide-tag">cover</div>
+</div><div class="slide-num">1 / 11</div></div><div class="slide" id="slide-2"><div class="slide-tag">cover</div>
 <div style="flex:1; display:flex; flex-direction:column; justify-content:center; gap:26px">
   <div><span class="badge">Проектная работа · Фаза 2 завершена</span></div>
   <h1>SDD Trainer</h1>
@@ -94,7 +94,7 @@ td { padding: 10px 12px; border-bottom: 1px solid var(--border); line-height: 1.
       <div class="small">MCP-инструментов · stdio · FastMCP</div></div>
   </div>
   <div class="small" style="margin-top:22px">Алекс · дедлайн сдачи — 13 ноября 2026</div>
-</div><div class="slide-num">2 / 10</div></div><div class="slide" id="slide-3"><div class="slide-tag">проблема</div>
+</div><div class="slide-num">2 / 11</div></div><div class="slide" id="slide-3"><div class="slide-tag">проблема</div>
 <h2>SDD — методология без тренера</h2>
 <div class="body-text" style="margin-bottom:24px">
   Spec-Driven Development: спецификация — <b>источник истины</b> (план, дельты, критерии приёмки).
@@ -112,7 +112,7 @@ td { padding: 10px 12px; border-bottom: 1px solid var(--border); line-height: 1.
 </div>
 <div class="body-text" style="margin-top:8px; border-top:1px solid var(--border); padding-top:20px">
   Нужен тренер, который <b style="color:var(--accent)">адаптируется под уровень</b> и
-  <b style="color:var(--accent)">проверяет понимание</b>.</div><div class="slide-num">3 / 10</div></div><div class="slide" id="slide-4"><div class="slide-tag">решение</div>
+  <b style="color:var(--accent)">проверяет понимание</b>.</div><div class="slide-num">3 / 11</div></div><div class="slide" id="slide-4"><div class="slide-tag">решение</div>
 <h2>LangGraph-граф с четырьмя маршрутами</h2>
 <svg viewBox="0 0 1160 430" style="width:100%; flex:1" font-family="ui-monospace,Menlo,Consolas,monospace">
   <defs>
@@ -151,7 +151,21 @@ td { padding: 10px 12px; border-bottom: 1px solid var(--border); line-height: 1.
   Структура — дамп скомпилированного графа (<span class="mono">draw_mermaid()</span>) ·
   решение через structured output: <span class="mono">RouteDecision</span> (ADR-005) ·
   knows_it → квиз сразу · partial → урок по пробелам · new_topic → урок с нуля ·
-  низкая уверенность → уточняющий цикл</div><div class="slide-num">4 / 10</div></div><div class="slide" id="slide-5"><div class="slide-tag">демо · run A</div>
+  низкая уверенность → уточняющий цикл</div><div class="slide-num">4 / 11</div></div><div class="slide" id="slide-5"><div class="slide-tag">архитектура</div>
+<h2>Одно ядро — два интерфейса</h2>
+<svg viewBox="0 0 1160 472" style="width:100%; flex:1"><defs><marker id="aha" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#A8B8CC"/></marker></defs><rect x="140" y="0" width="360" height="74" rx="10" fill="#818cf8" fill-opacity="0.12" stroke="#818cf8" stroke-width="2"/><text x="320.0" y="31" text-anchor="middle" font-size="20" font-weight="700" fill="#fff">Консольный CLI</text><text x="320.0" y="53" text-anchor="middle" font-size="14" fill="#A8B8CC">Фаза 1 · python -m sdd_trainer</text><rect x="660" y="0" width="360" height="74" rx="10" fill="#818cf8" fill-opacity="0.12" stroke="#818cf8" stroke-width="2"/><text x="840.0" y="31" text-anchor="middle" font-size="20" font-weight="700" fill="#fff">MCP-хост</text><text x="840.0" y="53" text-anchor="middle" font-size="14" fill="#A8B8CC">Claude · пробник · любой клиент</text><line x1="320" y1="74" x2="320" y2="236" stroke="#A8B8CC" stroke-width="2" marker-end="url(#aha)"/><text x="334" y="160" font-size="13" font-style="italic" fill="#A8B8CC">stdin / stdout</text><line x1="840" y1="74" x2="840" y2="116" stroke="#A8B8CC" stroke-width="2" marker-end="url(#aha)"/><text x="854" y="100" font-size="13" font-style="italic" fill="#A8B8CC">stdio · JSON-RPC</text><rect x="660" y="116" width="360" height="74" rx="10" fill="#E58B6D" fill-opacity="0.12" stroke="#E58B6D" stroke-width="2"/><text x="840.0" y="147" text-anchor="middle" font-size="20" font-weight="700" fill="#fff">FastMCP-сервер</text><text x="840.0" y="169" text-anchor="middle" font-size="14" fill="#A8B8CC">7 stateless-инструментов · ADR-010</text><circle cx="998" cy="138" r="11.5" fill="#0e1c30" stroke="#E58B6D" stroke-width="1.6"/><text x="998" y="142.5" text-anchor="middle" font-size="13.5" font-weight="700" fill="#E58B6D">6</text><line x1="840" y1="190" x2="840" y2="236" stroke="#A8B8CC" stroke-width="2" marker-end="url(#aha)"/><rect x="140" y="236" width="880" height="126" rx="10" fill="#D66A49" fill-opacity="0.12" stroke="#D66A49" stroke-width="2"/><text x="580.0" y="267" text-anchor="middle" font-size="21" font-weight="700" fill="#fff">Ядро — LangGraph-граф</text><circle cx="998" cy="258" r="11.5" fill="#0e1c30" stroke="#D66A49" stroke-width="1.6"/><text x="998" y="262.5" text-anchor="middle" font-size="13.5" font-weight="700" fill="#D66A49">2</text><text x="580" y="287" text-anchor="middle" font-size="14" fill="#A8B8CC">один и тот же граф — из консоли и из MCP</text><rect x="164" y="296" width="264" height="56" rx="8" fill="#0e1c30" stroke="#324B6D" stroke-width="1.5"/><text x="296.0" y="318" text-anchor="middle" font-size="14" fill="#d7e3f4" style="font-family:ui-monospace,Menlo,Consolas,monospace">assess → route → …</text><text x="296.0" y="337" text-anchor="middle" font-size="13" fill="#A8B8CC" style="font-family:ui-monospace,Menlo,Consolas,monospace">clarify · teach · quiz</text><circle cx="412" cy="311" r="11.5" fill="#0e1c30" stroke="#D66A49" stroke-width="1.6"/><text x="412" y="315.5" text-anchor="middle" font-size="13.5" font-weight="700" fill="#D66A49">5</text><rect x="448" y="296" width="264" height="56" rx="8" fill="#0e1c30" stroke="#324B6D" stroke-width="1.5"/><text x="580.0" y="318" text-anchor="middle" font-size="14" fill="#d7e3f4" style="font-family:ui-monospace,Menlo,Consolas,monospace">search_sdd_docs</text><text x="580.0" y="337" text-anchor="middle" font-size="13" fill="#A8B8CC" style="font-family:ui-monospace,Menlo,Consolas,monospace">analyze_repo</text><circle cx="696" cy="311" r="11.5" fill="#0e1c30" stroke="#D66A49" stroke-width="1.6"/><text x="696" y="315.5" text-anchor="middle" font-size="13.5" font-weight="700" fill="#D66A49">3</text><rect x="732" y="296" width="264" height="56" rx="8" fill="#0e1c30" stroke="#324B6D" stroke-width="1.5"/><text x="864.0" y="318" text-anchor="middle" font-size="14" fill="#d7e3f4" style="font-family:ui-monospace,Menlo,Consolas,monospace">structured output</text><text x="864.0" y="337" text-anchor="middle" font-size="13" fill="#A8B8CC" style="font-family:ui-monospace,Menlo,Consolas,monospace">+ fallback · ADR-005</text><circle cx="980" cy="311" r="11.5" fill="#0e1c30" stroke="#D66A49" stroke-width="1.6"/><text x="980" y="315.5" text-anchor="middle" font-size="13.5" font-weight="700" fill="#D66A49">1</text><line x1="400" y1="362" x2="400" y2="398" stroke="#A8B8CC" stroke-width="2" marker-end="url(#aha)"/><text x="414" y="384" font-size="13" font-style="italic" fill="#A8B8CC">чекпоинт после шага</text><line x1="760" y1="362" x2="760" y2="398" stroke="#A8B8CC" stroke-width="2" marker-end="url(#aha)"/><text x="774" y="384" font-size="13" font-style="italic" fill="#A8B8CC">HTTPS API</text><rect x="140" y="398" width="420" height="74" rx="10" fill="#4CAF7D" fill-opacity="0.12" stroke="#4CAF7D" stroke-width="2"/><text x="350.0" y="429" text-anchor="middle" font-size="19" font-weight="700" fill="#fff">SqliteSaver · thread_id</text><text x="350.0" y="451" text-anchor="middle" font-size="14" fill="#A8B8CC">ADR-008 · + training-state.json</text><circle cx="538" cy="420" r="11.5" fill="#0e1c30" stroke="#4CAF7D" stroke-width="1.6"/><text x="538" y="424.5" text-anchor="middle" font-size="13.5" font-weight="700" fill="#4CAF7D">4</text><rect x="580" y="398" width="440" height="74" rx="10" fill="#fbbf24" fill-opacity="0.12" stroke="#fbbf24" stroke-width="2"/><text x="800.0" y="429" text-anchor="middle" font-size="19" font-weight="700" fill="#fff">cloud.ru — GigaChat-3-Pro</text><text x="800.0" y="451" text-anchor="middle" font-size="14" fill="#A8B8CC">fallback-модель · Tavily API</text></svg>
+<div class="small" style="margin-top:8px">
+  <b style="color:var(--accent)">①</b> GigaChat ·
+  <b style="color:var(--accent)">②</b> LangGraph ·
+  <b style="color:var(--accent)">③</b> ≥2 инструмента ·
+  <b style="color:var(--accent)">④</b> память ·
+  <b style="color:var(--accent)">⑤</b> роутинг ≥3 путей ·
+  <b style="color:var(--accent)">⑥</b> MCP — критерии курса на компонентах</div>
+<div class="small" style="border-top:1px solid var(--border); padding-top:8px; margin-top:auto">
+  Один уровень абстракции (C4 container) · стрелки подписаны протоколами ·
+  цвета: <span style="color:#818cf8">интерфейс</span> / <span style="color:#E58B6D">транспорт</span> /
+  <span style="color:#D66A49">ядро</span> / <span style="color:#4CAF7D">хранение</span> /
+  <span style="color:#fbbf24">внешний мир</span></div><div class="slide-num">5 / 11</div></div><div class="slide" id="slide-6"><div class="slide-tag">демо · run A</div>
 <h2>Один сеанс — от калибровки до зачёта</h2>
 <div style="flex:1; display:flex; flex-direction:column; gap:12px; justify-content:center">
   <div><div class="who">🦊 Тренер · калибровочный вопрос</div>
@@ -171,7 +185,7 @@ td { padding: 10px 12px; border-bottom: 1px solid var(--border); line-height: 1.
     <div class="small" style="margin-top:6px; font-size:15px">Прогресс записан: · openspec-basics: счёт 1.00, серия 7, уроков завершено 7</div>
   </div>
 </div>
-<div class="small" style="margin-top:6px">Дословный транскрипт живого прогона 03.11.2026 · MCP stdio · GigaChat-3-Pro</div><div class="slide-num">5 / 10</div></div><div class="slide" id="slide-6"><div class="slide-tag">критерии 1–5</div>
+<div class="small" style="margin-top:6px">Дословный транскрипт живого прогона 03.11.2026 · MCP stdio · GigaChat-3-Pro</div><div class="slide-num">6 / 11</div></div><div class="slide" id="slide-7"><div class="slide-tag">критерии 1–5</div>
 <h2>Критерии курса 1–5 — закрыты кодом</h2>
 <table style="flex:1; align-self:stretch">
   <tr><th style="width:44px">№</th><th style="width:250px">Критерий</th><th style="width:230px">Где живёт</th><th>Доказательство</th></tr>
@@ -195,7 +209,7 @@ td { padding: 10px 12px; border-bottom: 1px solid var(--border); line-height: 1.
                 &quot;type&quot;: &quot;function&quot;,
                 &quot;function&quot;: {&quot;name&quot;: tool[&quot;function&quot;][&quot;name&quot;]},
             },</div>
-<div class="small" style="margin-top:10px">Фрагменты дословные, с номерами строк — на дашборде «Код по критериям»</div><div class="slide-num">6 / 10</div></div><div class="slide" id="slide-7"><div class="slide-tag">критерий 6 · mcp</div>
+<div class="small" style="margin-top:10px">Фрагменты дословные, с номерами строк — на дашборде «Код по критериям»</div><div class="slide-num">7 / 11</div></div><div class="slide" id="slide-8"><div class="slide-tag">критерий 6 · mcp</div>
 <h2>MCP-слой: один вызов = один шаг графа</h2>
 <div style="display:flex; align-items:center; gap:14px; margin:10px 0 22px">
   <div class="chip" style="flex:1; justify-content:center">MCP-клиент<br><span class="small" style="font-size:14px">Claude · пробник · любой хост</span></div>
@@ -218,7 +232,7 @@ td { padding: 10px 12px; border-bottom: 1px solid var(--border); line-height: 1.
       Рестарт сервера ничего не теряет. stdout чист — принты только в stderr
       (канарейка — реальный stdio-subprocess в интеграционном тесте).</div>
   </div>
-</div><div class="slide-num">7 / 10</div></div><div class="slide" id="slide-8"><div class="slide-tag">доказательство · run B</div>
+</div><div class="slide-num">8 / 11</div></div><div class="slide" id="slide-9"><div class="slide-tag">доказательство · run B</div>
 <h2>Сервер убит посреди квиза — сессия выжила</h2>
 <div class="grid2" style="flex:1; align-content:start; gap:28px">
   <div class="term" style="font-size:15.5px"><span class="cmd">$ python mcp_probe.py --student verify-m3b</span>  <span class="dim"># часть 1</span>
@@ -243,7 +257,7 @@ td { padding: 10px 12px; border-bottom: 1px solid var(--border); line-height: 1.
     <div class="small" style="font-size:15px; line-height:1.5">Чекпоинт — <b>единственное</b> состояние (ADR-008).
       Это дословные строки живых логов 03.11.2026, не сгенерированный сценарий.</div>
   </div>
-</div><div class="slide-num">8 / 10</div></div><div class="slide" id="slide-9"><div class="slide-tag">рекурсия</div>
+</div><div class="slide-num">9 / 11</div></div><div class="slide" id="slide-10"><div class="slide-tag">рекурсия</div>
 <h2>Тренер учит SDD — и построен по SDD</h2>
 <div style="display:flex; align-items:center; gap:10px; margin:14px 0 26px; flex-wrap:wrap">
   <div class="chip">proposal</div><div class="arrow">→</div>
@@ -263,7 +277,7 @@ td { padding: 10px 12px; border-bottom: 1px solid var(--border); line-height: 1.
 </div>
 <div class="body-text" style="margin-top:26px; border-top:1px solid var(--border); padding-top:20px; font-size:19px">
   На защите проверяющие видят системный подход <b style="color:var(--accent)">в самом репозитории</b>:
-  спеки → тикеты → коммиты — SDD не только предмет тренера, но и способ его постройки.</div><div class="slide-num">9 / 10</div></div><div class="slide" id="slide-10"><div class="slide-tag">итоги</div>
+  спеки → тикеты → коммиты — SDD не только предмет тренера, но и способ его постройки.</div><div class="slide-num">10 / 11</div></div><div class="slide" id="slide-11"><div class="slide-tag">итоги</div>
 <h2>Что сделано — и что дальше</h2>
 <div class="grid2" style="flex:1; align-content:start">
   <div class="card">
@@ -287,13 +301,13 @@ td { padding: 10px 12px; border-bottom: 1px solid var(--border); line-height: 1.
 <div style="border-top:1px solid var(--border); padding-top:18px; display:flex; justify-content:space-between; align-items:center">
   <div class="body-text" style="font-size:19px">Разработка: <span class="mono" style="color:var(--accent)">github.com/Alex-Kul777/sdd-trainer</span></div>
   <div class="body-text" style="font-size:22px; font-weight:700; color:var(--primary)">SDD Trainer · спасибо!</div>
-</div><div class="slide-num">10 / 10</div></div>
+</div><div class="slide-num">11 / 11</div></div>
 </div>
-<div class="slide-nav"><button onclick="go(0)">1</button><button onclick="go(1)">2</button><button onclick="go(2)">3</button><button onclick="go(3)">4</button><button onclick="go(4)">5</button><button onclick="go(5)">6</button><button onclick="go(6)">7</button><button onclick="go(7)">8</button><button onclick="go(8)">9</button><button onclick="go(9)">10</button></div>
+<div class="slide-nav"><button onclick="go(0)">1</button><button onclick="go(1)">2</button><button onclick="go(2)">3</button><button onclick="go(3)">4</button><button onclick="go(4)">5</button><button onclick="go(5)">6</button><button onclick="go(6)">7</button><button onclick="go(7)">8</button><button onclick="go(8)">9</button><button onclick="go(9)">10</button><button onclick="go(10)">11</button></div>
 <script>
 let cur = 0;
 function go(i) {
-  cur = Math.max(0, Math.min(9, i));
+  cur = Math.max(0, Math.min(10, i));
   document.getElementById('slide-' + (cur + 1)).scrollIntoView({behavior: 'instant'});
   document.querySelectorAll('.slide-nav button').forEach((b, n) =>
     b.classList.toggle('active', n === cur));
