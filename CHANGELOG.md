@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- **FastAPI HTTP transport (PSA-T2, issue #13)**: one FastAPI process now serves REST (`GET /health`, `POST /sessions/{student}/start`, `POST /sessions/{student}/answer`, `GET /sessions/{student}/stream` — SSE with human-in-the-loop) and mounts the MCP Streamable HTTP endpoint at `/mcp` via `FastMCP.streamable_http_app()` — ADR-001 honoured literally; stdio remains the fallback (ADR-010); REST payloads match the MCP tools byte-for-byte (pinned by test).
+- **get_student_history (PSA-T3, issue #14)**: the trainer pulls the student's dialogue history itself via `openclaw sessions --json` (subprocess, defensive parsing, graceful degradation to an empty result with a note — ADR-007 honoured).
+
+### Changed
+- **LESSON_DOMAINS now lists reality (PSA-T4, issue #15)**: the constant holds only `openspec-basics` — the single domain with authored content; the six roadmap domains moved to `docs/roadmap.md` (Phase 3 curriculum).
+- **ADR-010 promoted to DECISIONS.md (PSA-T1)**: the MCP-over-FastMCP/stdio decision now lives in the single-file ADR home, completing the `add-mcp-integration` archival.
+
+### Added
 - **Teach node T4 (issue #5)**: the lesson skeleton
   `prompts/lessons/openspec-basics.md` (ADR-009 sections: Goal / Key
   concepts / Socratic questions / Examples / Quiz ref) with a validating
