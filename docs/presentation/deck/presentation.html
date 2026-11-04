@@ -330,6 +330,142 @@ td { padding: 10px 12px; border-bottom: 1px solid var(--border); line-height: 1.
   GigaSearch не понадобился — хватило Tavily · REST+SSE реализованы, MCP смонтирован в тот же процесс —
   не замена, а второй шов; паттерн interrupt/Command сохранён.<br>
   Основа карты — PLAN-FINAL-PROJECT.md §3, сверено с кодом репозитория.</div><div class="slide-num">Приложение · A1</div></div><div class="slide" id="slide-13"><div class="slide-tag">приложение</div>
+<h2>Ноутбук AIA_01 → SDD Trainer</h2>
+<div style="flex:1; display:flex; align-items:center; gap:26px">
+  <div class="card" style="flex:1.1; height:100%; max-height:420px; display:flex; flex-direction:column; justify-content:center; gap:14px">
+    <div class="small" style="letter-spacing:.12em; text-transform:uppercase; font-weight:700">Ноутбук курса</div>
+    <div style="font-size:30px; font-weight:800; line-height:1.2"><span>AIA_01</span> · Введение в ИИ агентов</div>
+    <div class="small" style="font-size:17px">Разделы: Вызов API GigaChat · диалоговый формат</div>
+  </div>
+  <div class="arrow" style="font-size:44px">→</div>
+  <div class="card" style="flex:1.3; height:100%; max-height:420px; display:flex; flex-direction:column; justify-content:center; gap:14px; border-color:#D66A49">
+    <div class="small" style="letter-spacing:.12em; text-transform:uppercase; font-weight:700; color:#D66A49">В SDD Trainer</div>
+    <div class="body-text" style="font-size:20px; line-height:1.45">OpenAI-совместимый клиент cloud.ru — единая точка всех вызовов модели</div>
+    <div class="mono small" style="font-size:15px">core/llm_manager.py</div>
+  </div>
+</div>
+<div style="display:flex; justify-content:center; margin-top:6px">
+  <span class="badge">ADR-005</span>
+</div><div class="slide-num">Приложение · A2</div></div><div class="slide" id="slide-14"><div class="slide-tag">приложение</div>
+<h2>Ноутбук AIA_02 → SDD Trainer</h2>
+<div style="flex:1; display:flex; align-items:center; gap:26px">
+  <div class="card" style="flex:1.1; height:100%; max-height:420px; display:flex; flex-direction:column; justify-content:center; gap:14px">
+    <div class="small" style="letter-spacing:.12em; text-transform:uppercase; font-weight:700">Ноутбук курса</div>
+    <div style="font-size:30px; font-weight:800; line-height:1.2"><span>AIA_02</span> · Инструменты и структурная генерация</div>
+    <div class="small" style="font-size:17px">Разделы: Pydantic · tools / tool_choice</div>
+  </div>
+  <div class="arrow" style="font-size:44px">→</div>
+  <div class="card" style="flex:1.3; height:100%; max-height:420px; display:flex; flex-direction:column; justify-content:center; gap:14px; border-color:#D66A49">
+    <div class="small" style="letter-spacing:.12em; text-transform:uppercase; font-weight:700; color:#D66A49">В SDD Trainer</div>
+    <div class="body-text" style="font-size:20px; line-height:1.45">Pydantic-схемы вердиктов (Assessment, RouteDecision) — structured output без парсинга текста</div>
+    <div class="mono small" style="font-size:15px">core/schemas.py · tool_choice</div>
+  </div>
+</div>
+<div style="display:flex; justify-content:center; margin-top:6px">
+  <span class="badge">ADR-005</span>
+</div><div class="slide-num">Приложение · A3</div></div><div class="slide" id="slide-15"><div class="slide-tag">приложение</div>
+<h2>Ноутбук AIA_03 → SDD Trainer</h2>
+<div style="flex:1; display:flex; align-items:center; gap:26px">
+  <div class="card" style="flex:1.1; height:100%; max-height:420px; display:flex; flex-direction:column; justify-content:center; gap:14px">
+    <div class="small" style="letter-spacing:.12em; text-transform:uppercase; font-weight:700">Ноутбук курса</div>
+    <div style="font-size:30px; font-weight:800; line-height:1.2"><span>AIA_03</span> · LangGraph</div>
+    <div class="small" style="font-size:17px">Разделы: Графы · human-in-the-loop</div>
+  </div>
+  <div class="arrow" style="font-size:44px">→</div>
+  <div class="card" style="flex:1.3; height:100%; max-height:420px; display:flex; flex-direction:column; justify-content:center; gap:14px; border-color:#D66A49">
+    <div class="small" style="letter-spacing:.12em; text-transform:uppercase; font-weight:700; color:#D66A49">В SDD Trainer</div>
+    <div class="body-text" style="font-size:20px; line-height:1.45">Граф assess → route → teach → quiz; interrupt-паузы = диалог с учеником</div>
+    <div class="mono small" style="font-size:15px">core/graph.py</div>
+  </div>
+</div>
+<div style="display:flex; justify-content:center; margin-top:6px">
+  <span class="badge">критерий 2</span>
+</div><div class="slide-num">Приложение · A4</div></div><div class="slide" id="slide-16"><div class="slide-tag">приложение</div>
+<h2>Ноутбук AIA_04 → SDD Trainer</h2>
+<div style="flex:1; display:flex; align-items:center; gap:26px">
+  <div class="card" style="flex:1.1; height:100%; max-height:420px; display:flex; flex-direction:column; justify-content:center; gap:14px">
+    <div class="small" style="letter-spacing:.12em; text-transform:uppercase; font-weight:700">Ноутбук курса</div>
+    <div style="font-size:30px; font-weight:800; line-height:1.2"><span>AIA_04</span> · Состояние и память</div>
+    <div class="small" style="font-size:17px">Разделы: Чекпоинтер LangGraph</div>
+  </div>
+  <div class="arrow" style="font-size:44px">→</div>
+  <div class="card" style="flex:1.3; height:100%; max-height:420px; display:flex; flex-direction:column; justify-content:center; gap:14px; border-color:#D66A49">
+    <div class="small" style="letter-spacing:.12em; text-transform:uppercase; font-weight:700; color:#D66A49">В SDD Trainer</div>
+    <div class="body-text" style="font-size:20px; line-height:1.45">SqliteSaver + thread_id student:&lt;name&gt; — фича рестарта: kill посреди квиза → resumed=True</div>
+    <div class="mono small" style="font-size:15px">core/memory.py</div>
+  </div>
+</div>
+<div style="display:flex; justify-content:center; margin-top:6px">
+  <span class="badge">ADR-008 · критерий 4</span>
+</div><div class="slide-num">Приложение · A5</div></div><div class="slide" id="slide-17"><div class="slide-tag">приложение</div>
+<h2>Ноутбук AIA_05 → SDD Trainer</h2>
+<div style="flex:1; display:flex; align-items:center; gap:26px">
+  <div class="card" style="flex:1.1; height:100%; max-height:420px; display:flex; flex-direction:column; justify-content:center; gap:14px">
+    <div class="small" style="letter-spacing:.12em; text-transform:uppercase; font-weight:700">Ноутбук курса</div>
+    <div style="font-size:30px; font-weight:800; line-height:1.2"><span>AIA_05</span> · Поиск в LLM-агентах и LangGraph</div>
+    <div class="small" style="font-size:17px">Разделы: Tavily · поиск как инструмент</div>
+  </div>
+  <div class="arrow" style="font-size:44px">→</div>
+  <div class="card" style="flex:1.3; height:100%; max-height:420px; display:flex; flex-direction:column; justify-content:center; gap:14px; border-color:#D66A49">
+    <div class="small" style="letter-spacing:.12em; text-transform:uppercase; font-weight:700; color:#D66A49">В SDD Trainer</div>
+    <div class="body-text" style="font-size:20px; line-height:1.45">search_sdd_docs — живой поиск в уроках и MCP-tool</div>
+    <div class="mono small" style="font-size:15px">core/tools.py</div>
+  </div>
+</div>
+<div style="display:flex; justify-content:center; margin-top:6px">
+  <span class="badge">ADR-006 · критерий 3</span>
+</div><div class="slide-num">Приложение · A6</div></div><div class="slide" id="slide-18"><div class="slide-tag">приложение</div>
+<h2>Ноутбук AIA_06 → SDD Trainer</h2>
+<div style="flex:1; display:flex; align-items:center; gap:26px">
+  <div class="card" style="flex:1.1; height:100%; max-height:420px; display:flex; flex-direction:column; justify-content:center; gap:14px">
+    <div class="small" style="letter-spacing:.12em; text-transform:uppercase; font-weight:700">Ноутбук курса</div>
+    <div style="font-size:30px; font-weight:800; line-height:1.2"><span style="color:var(--primary)">AIA_06</span> · Практика разработки ИИ агентов ⭐</div>
+    <div class="small" style="font-size:17px">Разделы: Агент со сложным роутингом</div>
+  </div>
+  <div class="arrow" style="font-size:44px">→</div>
+  <div class="card" style="flex:1.3; height:100%; max-height:420px; display:flex; flex-direction:column; justify-content:center; gap:14px; border-color:#D66A49">
+    <div class="small" style="letter-spacing:.12em; text-transform:uppercase; font-weight:700; color:#D66A49">В SDD Trainer</div>
+    <div class="body-text" style="font-size:20px; line-height:1.45">Прямой шаблон графа: 4 маршрута — knows_it · partial · new_topic · clarification</div>
+    <div class="mono small" style="font-size:15px">core/graph.py</div>
+  </div>
+</div>
+<div style="display:flex; justify-content:center; margin-top:6px">
+  <span class="badge">критерий 5</span>
+</div><div class="slide-num">Приложение · A7</div></div><div class="slide" id="slide-19"><div class="slide-tag">приложение</div>
+<h2>Ноутбук AIA_07 → SDD Trainer</h2>
+<div style="flex:1; display:flex; align-items:center; gap:26px">
+  <div class="card" style="flex:1.1; height:100%; max-height:420px; display:flex; flex-direction:column; justify-content:center; gap:14px">
+    <div class="small" style="letter-spacing:.12em; text-transform:uppercase; font-weight:700">Ноутбук курса</div>
+    <div style="font-size:30px; font-weight:800; line-height:1.2"><span>AIA_07</span> · Сбор метрик и деплой ИИ агентов</div>
+    <div class="small" style="font-size:17px">Разделы: F1 · токенизация · interrupt + Command · деплой</div>
+  </div>
+  <div class="arrow" style="font-size:44px">→</div>
+  <div class="card" style="flex:1.3; height:100%; max-height:420px; display:flex; flex-direction:column; justify-content:center; gap:14px; border-color:#D66A49">
+    <div class="small" style="letter-spacing:.12em; text-transform:uppercase; font-weight:700; color:#D66A49">В SDD Trainer</div>
+    <div class="body-text" style="font-size:20px; line-height:1.45">Взвешенный токенный F1 квизов; Command(resume) в MCP; FastAPI REST+SSE деплой</div>
+    <div class="mono small" style="font-size:15px">core/quiz.py · mcp/server.py · FastAPI</div>
+  </div>
+</div>
+<div style="display:flex; justify-content:center; margin-top:6px">
+  <span class="badge">ADR-009 · PSA-T2 · критерий 6</span>
+</div><div class="slide-num">Приложение · A8</div></div><div class="slide" id="slide-20"><div class="slide-tag">приложение</div>
+<h2>Ноутбук AIA_08 → SDD Trainer</h2>
+<div style="flex:1; display:flex; align-items:center; gap:26px">
+  <div class="card" style="flex:1.1; height:100%; max-height:420px; display:flex; flex-direction:column; justify-content:center; gap:14px">
+    <div class="small" style="letter-spacing:.12em; text-transform:uppercase; font-weight:700">Ноутбук курса</div>
+    <div style="font-size:30px; font-weight:800; line-height:1.2"><span>AIA_08</span> · Архитектура современных агентных harnesses (PDF)</div>
+    <div class="small" style="font-size:17px">Разделы: MCP stdio · Streamable HTTP</div>
+  </div>
+  <div class="arrow" style="font-size:44px">→</div>
+  <div class="card" style="flex:1.3; height:100%; max-height:420px; display:flex; flex-direction:column; justify-content:center; gap:14px; border-color:#D66A49">
+    <div class="small" style="letter-spacing:.12em; text-transform:uppercase; font-weight:700; color:#D66A49">В SDD Trainer</div>
+    <div class="body-text" style="font-size:20px; line-height:1.45">MCP stdio + Streamable HTTP /mcp — harness-протоколы тренера</div>
+    <div class="mono small" style="font-size:15px">mcp/server.py · FastAPI /mcp</div>
+  </div>
+</div>
+<div style="display:flex; justify-content:center; margin-top:6px">
+  <span class="badge">ADR-010 / ADR-001</span>
+</div><div class="slide-num">Приложение · A9</div></div><div class="slide" id="slide-21"><div class="slide-tag">приложение</div>
 <h2>Три прямых наследования</h2>
 <div class="grid3" style="flex:1; align-content:start">
   <div class="card">
@@ -355,13 +491,50 @@ td { padding: 10px 12px; border-bottom: 1px solid var(--border); line-height: 1.
   </div>
 </div>
 <div class="body-text" style="border-top:1px solid var(--border); padding-top:16px; font-size:20px; text-align:center">
-  Курс не остался теорией: <b style="color:var(--primary)">каждый паттерн из ноутбуков — строка в коде тренажёра</b></div><div class="slide-num">Приложение · A2</div></div>
+  Курс не остался теорией: <b style="color:var(--primary)">каждый паттерн из ноутбуков — строка в коде тренажёра</b></div><div class="slide-num">Приложение · A10</div></div><div class="slide" id="slide-22"><div class="slide-tag">приложение</div>
+<h2>Бюджет работы агента</h2>
+<div style="flex:1; display:flex; flex-direction:column; justify-content:center">
+  <div style="display:flex; align-items:center; gap:16px; margin:9px 0">
+  <div class="small" style="flex:0 0 380px; font-size:16px; text-align:right">Фаза 1 · T1–T7 — консольный тренер</div>
+  <div class="bar" style="flex:1; height:14px"><div style="width:100%; background:#D66A49"></div></div>
+  <div class="mono small" style="flex:0 0 110px; font-size:15px">1 947 000 · ≈539 ₽</div>
+</div><div style="display:flex; align-items:center; gap:16px; margin:9px 0">
+  <div class="small" style="flex:0 0 380px; font-size:16px; text-align:right">Фаза 2 · M1–M3 — MCP-прототип</div>
+  <div class="bar" style="flex:1; height:14px"><div style="width:37%; background:#D66A49"></div></div>
+  <div class="mono small" style="flex:0 0 110px; font-size:15px">727 000 · ≈199 ₽</div>
+</div><div style="display:flex; align-items:center; gap:16px; margin:9px 0">
+  <div class="small" style="flex:0 0 380px; font-size:16px; text-align:right">PSA-пайплайн · T2–T4 — FastAPI  history  domains</div>
+  <div class="bar" style="flex:1; height:14px"><div style="width:16%; background:#D66A49"></div></div>
+  <div class="mono small" style="flex:0 0 110px; font-size:15px">323 500 · ≈87 ₽</div>
+</div><div style="display:flex; align-items:center; gap:16px; margin:9px 0">
+  <div class="small" style="flex:0 0 380px; font-size:16px; text-align:right">Ревью кода — независимый агент</div>
+  <div class="bar" style="flex:1; height:14px"><div style="width:6%; background:#D66A49"></div></div>
+  <div class="mono small" style="flex:0 0 110px; font-size:15px">123 000 · ≈27 ₽</div>
+</div><div style="display:flex; align-items:center; gap:16px; margin:9px 0">
+  <div class="small" style="flex:0 0 380px; font-size:16px; text-align:right">Deck v4 — субагент</div>
+  <div class="bar" style="flex:1; height:14px"><div style="width:4%; background:#D66A49"></div></div>
+  <div class="mono small" style="flex:0 0 110px; font-size:15px">93 000 · ≈23 ₽</div>
+</div><div style="display:flex; align-items:center; gap:16px; margin:9px 0">
+  <div class="small" style="flex:0 0 380px; font-size:16px; text-align:right">Ревью плана — 2 оси</div>
+  <div class="bar" style="flex:1; height:14px"><div style="width:2%; background:#D66A49"></div></div>
+  <div class="mono small" style="flex:0 0 110px; font-size:15px">57 000 · ≈12 ₽</div>
+</div><div style="display:flex; align-items:center; gap:16px; margin:9px 0">
+  <div class="small" style="flex:0 0 380px; font-size:16px; text-align:right">Координация — основная сессия</div>
+  <div class="bar" style="flex:1; height:14px"><div style="width:1%; background:#D66A49"></div></div>
+  <div class="mono small" style="flex:0 0 110px; font-size:15px">30 000 · ≈10 ₽</div>
 </div>
-<div class="slide-nav"><button onclick="go(0)">1</button><button onclick="go(1)">2</button><button onclick="go(2)">3</button><button onclick="go(3)">4</button><button onclick="go(4)">5</button><button onclick="go(5)">6</button><button onclick="go(6)">7</button><button onclick="go(7)">8</button><button onclick="go(8)">9</button><button onclick="go(9)">10</button><button onclick="go(10)">11</button><button onclick="go(11)">A1</button><button onclick="go(12)">A2</button></div>
+  <div style="display:flex; align-items:baseline; gap:24px; border-top:1px solid var(--border); margin-top:18px; padding-top:16px">
+    <div style="font-size:48px; font-weight:800; color:var(--primary)">≈3.3M токенов · ≈900 ₽</div>
+    <div class="body-text" style="font-size:22px">весь проект разработан ИИ-агентом — 17 сессий, in 2.55M + out 0.75M</div>
+  </div>
+</div>
+<div class="small" style="font-size:13.5px; line-height:1.45">Источник: кумулятивные счётчики OpenClaw session_status по 17 сессиям, 04.11.2026 · Тариф cloud.ru (GLM-5.3): 173.15 ₽/1M входных · 606.05 ₽/1M генерируемых · Кэш: 86–97% hit (~55M попаданий) — тарифицируется отдельно, дешевле · API предоставлен в рамках курса — фактических списаний нет.</div><div class="slide-num">Приложение · A11</div></div>
+</div>
+<div class="slide-nav"><button onclick="go(0)">1</button><button onclick="go(1)">2</button><button onclick="go(2)">3</button><button onclick="go(3)">4</button><button onclick="go(4)">5</button><button onclick="go(5)">6</button><button onclick="go(6)">7</button><button onclick="go(7)">8</button><button onclick="go(8)">9</button><button onclick="go(9)">10</button><button onclick="go(10)">11</button><button onclick="go(11)">A1</button><button onclick="go(12)">A2</button><button onclick="go(13)">A3</button><button onclick="go(14)">A4</button><button onclick="go(15)">A5</button><button onclick="go(16)">A6</button><button onclick="go(17)">A7</button><button onclick="go(18)">A8</button><button onclick="go(19)">A9</button><button onclick="go(20)">A10</button><button onclick="go(21)">A11</button></div>
 <script>
 let cur = 0;
 function go(i) {
-  cur = Math.max(0, Math.min(12, i));
+  cur = Math.max(0, Math.min(21, i));
   document.getElementById('slide-' + (cur + 1)).scrollIntoView({behavior: 'instant'});
   document.querySelectorAll('.slide-nav button').forEach((b, n) =>
     b.classList.toggle('active', n === cur));
