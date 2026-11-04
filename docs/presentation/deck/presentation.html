@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SDD Trainer — защита проектной работы</title>
+<style>
+:root {
+  --bg: #1B2F4C; --bg2: #243B5C; --primary: #D66A49; --accent: #E58B6D;
+  --text: #FFFFFF; --muted: #A8B8CC; --border: #324B6D;
+  --green: #4CAF7D; --red: #E5535B;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #0e1c30; font-family: -apple-system, 'Segoe UI', Roboto, 'PT Sans', sans-serif; color: var(--text); }
+.deck { display: flex; flex-direction: column; align-items: center; gap: 28px; padding: 28px 0 90px; }
+.slide {
+  width: 1280px; height: 720px; flex: 0 0 auto; background: var(--bg);
+  padding: 50px 60px; position: relative; overflow: hidden;
+  display: flex; flex-direction: column; box-shadow: 0 8px 30px rgba(0,0,0,.45);
+}
+.slide-tag { position: absolute; top: 22px; right: 28px; font-size: 13px; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--muted); border: 1px solid var(--border);
+  border-radius: 999px; padding: 4px 14px; background: rgba(36,59,92,.6); }
+.slide-num { position: absolute; bottom: 18px; right: 28px; font-size: 14px; color: var(--muted);
+  font-variant-numeric: tabular-nums; }
+h1 { font-size: 48px; font-weight: 800; line-height: 1.12; }
+h2 { font-size: 36px; font-weight: 700; color: var(--primary); line-height: 1.15; margin-bottom: 18px; }
+h3 { font-size: 24px; font-weight: 600; color: var(--accent); }
+.body-text { font-size: 20px; line-height: 1.45; }
+.small { font-size: 16px; color: var(--muted); line-height: 1.4; }
+.card { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 22px 24px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+table { width: 100%; border-collapse: collapse; font-size: 18px; }
+th { text-align: left; color: var(--accent); padding: 10px 12px; border-bottom: 2px solid var(--border); font-size: 16px; letter-spacing: .04em; text-transform: uppercase; }
+td { padding: 10px 12px; border-bottom: 1px solid var(--border); line-height: 1.3; }
+.mono { font-family: ui-monospace, 'Cascadia Code', Menlo, Consolas, monospace; }
+.codeblock { background: #0e1c30; border: 1px solid var(--border); border-radius: 10px;
+  padding: 16px 20px; font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: 16px; line-height: 1.5; color: #d7e3f4; white-space: pre; overflow: hidden; }
+.codeblock .kw { color: var(--accent); }
+.term { background: #0a1626; border: 1px solid var(--border); border-radius: 10px; padding: 18px 22px;
+  font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 15.5px; line-height: 1.65;
+  color: #c3d2e5; white-space: pre-wrap; }
+.term .ok { color: #4CAF7D; font-weight: 700; }
+.term .cmd { color: #E58B6D; }
+.term .dim { color: #64748b; }
+.badge { display: inline-block; border: 1px solid var(--primary); color: var(--primary);
+  border-radius: 999px; padding: 6px 18px; font-size: 15px; letter-spacing: .14em;
+  text-transform: uppercase; font-weight: 700; }
+.bubble { max-width: 900px; padding: 14px 20px; border-radius: 14px; font-size: 18px; line-height: 1.4; }
+.bubble-trainer { background: var(--bg2); border: 1px solid #3d5a8a; border-top-left-radius: 4px; }
+.bubble-student { background: #1d3557; border: 1px solid #35507f; border-top-right-radius: 4px; margin-left: auto; }
+.who { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin-bottom: 4px; }
+.bar { height: 10px; background: #0e1c30; border-radius: 999px; overflow: hidden; }
+.bar > div { height: 100%; background: var(--primary); border-radius: 999px; }
+.chip { display: inline-flex; align-items: center; gap: 10px; background: var(--bg2);
+  border: 1px solid var(--border); border-radius: 10px; padding: 12px 18px; font-size: 17px; }
+.chip b { color: var(--accent); }
+.arrow { color: var(--muted); font-size: 20px; }
+.slide-nav { position: fixed; bottom: 0; left: 0; right: 0; display: flex; justify-content: center;
+  gap: 4px; padding: 8px; z-index: 100; background: rgba(14,28,48,.85); }
+.slide-nav button { width: 30px; height: 30px; border: 1px solid var(--border);
+  background: var(--bg2); color: var(--muted); border-radius: 6px; cursor: pointer; font-size: 13px; }
+.slide-nav button.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+@media print {
+  body { background: #fff; }
+  .deck { gap: 0; padding: 0; }
+  .slide { box-shadow: none; page-break-after: always; }
+  .slide-nav { display: none; }
+}
+</style>
+</head>
+<body>
+<div class="deck">
+<div class="slide" id="slide-1"><div class="slide-tag">hook</div>
+<div style="flex:1; display:flex; flex-direction:column; justify-content:center; gap:26px">
+  <div class="body-text" style="font-size:30px; color:var(--muted)">Как учат разработке?</div>
+  <h1 style="font-size:64px">Показывают код.</h1>
+  <h1 style="font-size:64px; color:var(--primary)">А спецификации?</h1>
+  <div class="small" style="margin-top:30px">SDD Trainer — защита проектной работы · курс «ИИ-агенты» · Standard Data · 13.11.2026</div>
+</div><div class="slide-num">1 / 10</div></div><div class="slide" id="slide-2"><div class="slide-tag">cover</div>
+<div style="flex:1; display:flex; flex-direction:column; justify-content:center; gap:26px">
+  <div><span class="badge">Проектная работа · Фаза 2 завершена</span></div>
+  <h1>SDD Trainer</h1>
+  <div class="body-text" style="font-size:26px; color:var(--muted)">
+    ИИ-тренер по Spec-Driven Development — GigaChat · LangGraph · MCP</div>
+  <div class="grid3" style="margin-top:26px">
+    <div class="card"><div style="font-size:44px; font-weight:800; color:var(--accent)">226</div>
+      <div class="small">тестов — suite green</div></div>
+    <div class="card"><div style="font-size:44px; font-weight:800; color:var(--accent)">76.89%</div>
+      <div class="small">coverage (гейт курса — 40%)</div></div>
+    <div class="card"><div style="font-size:44px; font-weight:800; color:var(--accent)">7</div>
+      <div class="small">MCP-инструментов · stdio · FastMCP</div></div>
+  </div>
+  <div class="small" style="margin-top:22px">Алекс · дедлайн сдачи — 13 ноября 2026</div>
+</div><div class="slide-num">2 / 10</div></div><div class="slide" id="slide-3"><div class="slide-tag">проблема</div>
+<h2>SDD — методология без тренера</h2>
+<div class="body-text" style="margin-bottom:24px">
+  Spec-Driven Development: спецификация — <b>источник истины</b> (план, дельты, критерии приёмки).
+  Учить её приходится по документации — и это не работает:</div>
+<div class="grid3" style="flex:1; align-content:start">
+  <div class="card"><h3>Нет калибровки</h3>
+    <div class="small" style="margin-top:10px; font-size:17px">Курс не знает, что ученик уже умеет, —
+    все проходят одно и то же</div></div>
+  <div class="card"><h3>Нет обратной связи</h3>
+    <div class="small" style="margin-top:10px; font-size:17px">Непонятно, где именно пробелы, —
+    доки не отвечают на вопросы</div></div>
+  <div class="card"><h3>Нет проверки</h3>
+    <div class="small" style="margin-top:10px; font-size:17px">«Прочитал» не значит «понял», —
+    понимание никто не проверяет</div></div>
+</div>
+<div class="body-text" style="margin-top:8px; border-top:1px solid var(--border); padding-top:20px">
+  Нужен тренер, который <b style="color:var(--accent)">адаптируется под уровень</b> и
+  <b style="color:var(--accent)">проверяет понимание</b>.</div><div class="slide-num">3 / 10</div></div><div class="slide" id="slide-4"><div class="slide-tag">решение</div>
+<h2>LangGraph-граф с четырьмя маршрутами</h2>
+<svg viewBox="0 0 1160 430" style="width:100%; flex:1" font-family="ui-monospace,Menlo,Consolas,monospace">
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#A8B8CC"/></marker>
+  </defs>
+  <rect x="10" y="187" width="110" height="56" rx="28" fill="#243B5C" stroke="#324B6D"/>
+  <text x="65" y="221" text-anchor="middle" fill="#A8B8CC" font-size="17">__start__</text>
+  <rect x="180" y="187" width="150" height="56" rx="10" fill="rgba(129,140,248,.14)" stroke="#818cf8" stroke-width="2"/>
+  <text x="255" y="221" text-anchor="middle" fill="#fff" font-size="19">assess</text>
+  <rect x="400" y="187" width="150" height="56" rx="10" fill="rgba(251,191,36,.13)" stroke="#fbbf24" stroke-width="2"/>
+  <text x="475" y="221" text-anchor="middle" fill="#fff" font-size="19">route</text>
+  <rect x="400" y="22" width="150" height="56" rx="10" fill="rgba(251,146,60,.13)" stroke="#fb923c" stroke-width="2"/>
+  <text x="475" y="56" text-anchor="middle" fill="#fff" font-size="19">clarify</text>
+  <rect x="680" y="352" width="150" height="56" rx="10" fill="rgba(52,211,153,.13)" stroke="#34d399" stroke-width="2"/>
+  <text x="755" y="386" text-anchor="middle" fill="#fff" font-size="19">teach</text>
+  <rect x="680" y="22" width="150" height="56" rx="10" fill="rgba(167,139,250,.15)" stroke="#a78bfa" stroke-width="2"/>
+  <text x="755" y="56" text-anchor="middle" fill="#fff" font-size="19">quiz</text>
+  <rect x="960" y="187" width="110" height="56" rx="28" fill="#243B5C" stroke="#324B6D"/>
+  <text x="1015" y="221" text-anchor="middle" fill="#A8B8CC" font-size="17">__end__</text>
+
+  <line x1="120" y1="215" x2="176" y2="215" stroke="#A8B8CC" stroke-width="2" marker-end="url(#ah)"/>
+  <line x1="330" y1="215" x2="396" y2="215" stroke="#A8B8CC" stroke-width="2" marker-end="url(#ah)"/>
+  <line x1="458" y1="185" x2="458" y2="82" stroke="#fb923c" stroke-width="2" stroke-dasharray="7 6" marker-end="url(#ah)"/>
+  <line x1="492" y1="82" x2="492" y2="183" stroke="#fb923c" stroke-width="2" stroke-dasharray="7 6" marker-end="url(#ah)"/>
+  <path d="M550,196 C620,150 640,110 676,80" fill="none" stroke="#a78bfa" stroke-width="2" stroke-dasharray="7 6" marker-end="url(#ah)"/>
+  <path d="M550,234 C620,280 640,330 676,362" fill="none" stroke="#34d399" stroke-width="2" stroke-dasharray="7 6" marker-end="url(#ah)"/>
+  <line x1="755" y1="350" x2="755" y2="82" stroke="#A8B8CC" stroke-width="2" marker-end="url(#ah)"/>
+  <path d="M830,60 C900,90 950,150 980,183" fill="none" stroke="#A8B8CC" stroke-width="2" marker-end="url(#ah)"/>
+
+  <text x="430" y="140" text-anchor="end" fill="#fb923c" font-size="15" font-style="italic">clarification</text>
+  <text x="620" y="118" fill="#a78bfa" font-size="15" font-style="italic">knows_it</text>
+  <text x="612" y="322" fill="#34d399" font-size="15" font-style="italic">partial · new_topic</text>
+</svg>
+<div class="small" style="margin-top:6px">
+  Структура — дамп скомпилированного графа (<span class="mono">draw_mermaid()</span>) ·
+  решение через structured output: <span class="mono">RouteDecision</span> (ADR-005) ·
+  knows_it → квиз сразу · partial → урок по пробелам · new_topic → урок с нуля ·
+  низкая уверенность → уточняющий цикл</div><div class="slide-num">4 / 10</div></div><div class="slide" id="slide-5"><div class="slide-tag">демо · run A</div>
+<h2>Один сеанс — от калибровки до зачёта</h2>
+<div style="flex:1; display:flex; flex-direction:column; gap:12px; justify-content:center">
+  <div><div class="who">🦊 Тренер · калибровочный вопрос</div>
+    <div class="bubble bubble-trainer">Опиши своими словами, что такое OpenSpec: зачем в репозитории папки specs/ и changes/ и чем change proposal отличается от стабильной спецификации. Если тема незнакома — так и скажи, это нормально.</div></div>
+  <div><div class="who" style="text-align:right">Ученик</div>
+    <div class="bubble bubble-student">Видел проект с OpenSpec: в specs/ лежат стабильные спецификации требований, в changes/ — предложения изменений. Но устройство change proposal (proposal.md, design.md, tasks.md) не разбирал, на практи…</div></div>
+  <div class="card" style="display:flex; align-items:center; gap:22px; padding:16px 24px">
+    <span class="badge" style="border-color:var(--accent); color:var(--accent)">Вердикт: partial</span>
+    <span class="body-text" style="font-size:18px">уверенность <b>0.85</b></span>
+    <div class="bar" style="flex:1; max-width:260px"><div style="width:85%"></div></div>
+    <span class="small" style="flex-basis:100%; font-size:15px">Маршрут: partial — Ученик демонстрирует общее понимание различий между папками и статусами спецификаций, но признаёт пробелы в деталях cha…</span>
+  </div>
+  <div class="card" style="border-color:var(--green); background:rgba(76,175,125,.08); padding:16px 24px">
+    <span class="badge" style="border-color:var(--green); color:var(--green)">Квиз зачтён</span>
+    <span class="body-text" style="font-size:18px; margin-left:14px">
+      F1-счёт <b>1.00 (порог 0.60)</b> · зачтён</span>
+    <div class="small" style="margin-top:6px; font-size:15px">Прогресс записан: · openspec-basics: счёт 1.00, серия 7, уроков завершено 7</div>
+  </div>
+</div>
+<div class="small" style="margin-top:6px">Дословный транскрипт живого прогона 03.11.2026 · MCP stdio · GigaChat-3-Pro</div><div class="slide-num">5 / 10</div></div><div class="slide" id="slide-6"><div class="slide-tag">критерии 1–5</div>
+<h2>Критерии курса 1–5 — закрыты кодом</h2>
+<table style="flex:1; align-self:stretch">
+  <tr><th style="width:44px">№</th><th style="width:250px">Критерий</th><th style="width:230px">Где живёт</th><th>Доказательство</th></tr>
+  <tr><td>1</td><td>GigaChat (cloud.ru)</td><td class="mono" style="font-size:15px">core/llm_manager.py</td>
+      <td>OpenAI-совместимый API, structured output, fallback-модель</td></tr>
+  <tr><td>2</td><td>LangGraph</td><td class="mono" style="font-size:15px">core/graph.py</td>
+      <td>StateGraph, условные рёбра, компиляция с чекпоинтером</td></tr>
+  <tr><td>3</td><td>≥ 2 инструмента</td><td class="mono" style="font-size:15px">core/tools.py</td>
+      <td>search_sdd_docs (живой Tavily) + analyze_repo</td></tr>
+  <tr><td>4</td><td>Память</td><td class="mono" style="font-size:15px">core/memory.py</td>
+      <td>SqliteSaver + thread_id — рестарт ничего не теряет</td></tr>
+  <tr><td>5</td><td>Роутинг ≥ 3 путей</td><td class="mono" style="font-size:15px">core/graph.py</td>
+      <td><b style="color:var(--green)">4 маршрута</b>: knows_it · partial · new_topic · clarification</td></tr>
+</table>
+<div class="codeblock" style="margin-top:18px"><span class="kw"># ADR-005: ответ — только tool call, free-text не парсится</span>
+        tool = self._structure_tool(structure)
+        completion = self._complete(
+            messages=messages,
+            tools=[tool],
+            tool_choice={
+                &quot;type&quot;: &quot;function&quot;,
+                &quot;function&quot;: {&quot;name&quot;: tool[&quot;function&quot;][&quot;name&quot;]},
+            },</div>
+<div class="small" style="margin-top:10px">Фрагменты дословные, с номерами строк — на дашборде «Код по критериям»</div><div class="slide-num">6 / 10</div></div><div class="slide" id="slide-7"><div class="slide-tag">критерий 6 · mcp</div>
+<h2>MCP-слой: один вызов = один шаг графа</h2>
+<div style="display:flex; align-items:center; gap:14px; margin:10px 0 22px">
+  <div class="chip" style="flex:1; justify-content:center">MCP-клиент<br><span class="small" style="font-size:14px">Claude · пробник · любой хост</span></div>
+  <div class="arrow">→</div>
+  <div class="chip" style="flex:1; justify-content:center; border-color:var(--primary)">stdio · JSON-RPC<br><span class="small" style="font-size:14px">ADR-010 · FastMCP</span></div>
+  <div class="arrow">→</div>
+  <div class="chip" style="flex:1.2; justify-content:center">Сервер: <b>7 инструментов</b><br>
+    <span class="small" style="font-size:14px">start_session · answer_calibration · answer_clarification · answer_quiz_question · analyze_repo · search_docs · get_progress</span></div>
+  <div class="arrow">→</div>
+  <div class="chip" style="flex:1; justify-content:center">Граф + чекпоинт<br><span class="small" style="font-size:14px">SqliteSaver · thread_id</span></div>
+</div>
+<div class="grid2" style="flex:1; align-content:start">
+  <div class="codeblock">result = graph.invoke(Command(resume=answer), config)
+<span class="kw"># шаг графа до следующего interrupt —
+# payload возвращается клиенту</span></div>
+  <div class="card">
+    <h3>Почему это не «обёртка ради обёртки»</h3>
+    <div class="small" style="margin-top:10px; font-size:17px; line-height:1.5">
+      Инструменты <b>stateless</b>: student — единственный ключ, чекпоинт — единственное состояние.
+      Рестарт сервера ничего не теряет. stdout чист — принты только в stderr
+      (канарейка — реальный stdio-subprocess в интеграционном тесте).</div>
+  </div>
+</div><div class="slide-num">7 / 10</div></div><div class="slide" id="slide-8"><div class="slide-tag">доказательство · run B</div>
+<h2>Сервер убит посреди квиза — сессия выжила</h2>
+<div class="grid2" style="flex:1; align-content:start; gap:28px">
+  <div class="term" style="font-size:15.5px"><span class="cmd">$ python mcp_probe.py --student verify-m3b</span>  <span class="dim"># часть 1</span>
+[клиент] start_session(student=&quot;verify-m3b&quot;)
+<span class="dim">…калибровка → partial → урок → q1 ✓ → q2 ✓…</span>
+<span style="color:#E58B6D">[тренер] Из каких элементов состоит требование в спецификации OpenSpec? Назови ключевые слова формата.</span>  <span class="dim">← q3, здесь клиент вышел</span>
+<span class="dim">✖ сервер-субпроцесс умер вместе с клиентом</span>
+
+<span class="cmd">$ python mcp_probe.py --student verify-m3b</span>  <span class="dim"># часть 2: НОВЫЙ процесс</span>
+<span class="ok">&lt;&lt;&lt; type=question · resumed=True · kind=quiz</span>
+<span style="color:#E58B6D">[тренер] Из каких элементов состоит требование в спецификации OpenSpec? Назови ключевые слова формата.</span>  <span class="dim">← ТОТ ЖЕ вопрос</span>
+<span class="ok">=== Вердикт квиза: openspec-basics — счёт 1.00 (порог 0.60), зачтён ===</span>
+<span class="dim">· openspec-basics: счёт 1.00, серия 8, уроков завершено 8</span></div>
+  <div style="display:flex; flex-direction:column; gap:12px">
+    <div class="card" style="padding:16px 20px"><b style="color:var(--red)">✖ Kill</b>
+      <span class="small" style="font-size:16px"> — сервер-субпроцесс умирает вместе с клиентом</span></div>
+    <div class="card" style="padding:16px 20px"><b style="color:var(--accent)">Restart</b>
+      <span class="small" style="font-size:16px"> — новый сервер + новый клиент, тот же ученик</span></div>
+    <div class="card" style="padding:16px 20px; border-color:var(--green); background:rgba(76,175,125,.08)">
+      <b style="color:var(--green)">resumed=True</b>
+      <span class="small" style="font-size:16px"> — граф вернул тот же вопрос q3, доквиз до зачёта</span></div>
+    <div class="small" style="font-size:15px; line-height:1.5">Чекпоинт — <b>единственное</b> состояние (ADR-008).
+      Это дословные строки живых логов 03.11.2026, не сгенерированный сценарий.</div>
+  </div>
+</div><div class="slide-num">8 / 10</div></div><div class="slide" id="slide-9"><div class="slide-tag">рекурсия</div>
+<h2>Тренер учит SDD — и построен по SDD</h2>
+<div style="display:flex; align-items:center; gap:10px; margin:14px 0 26px; flex-wrap:wrap">
+  <div class="chip">proposal</div><div class="arrow">→</div>
+  <div class="chip">спека + дельты</div><div class="arrow">→</div>
+  <div class="chip">тикеты #2–#11</div><div class="arrow">→</div>
+  <div class="chip">implement (TDD)</div><div class="arrow">→</div>
+  <div class="chip">независимая проверка</div><div class="arrow">→</div>
+  <div class="chip" style="border-color:var(--green)">archive ✓</div>
+</div>
+<div class="grid3">
+  <div class="card"><div style="font-size:38px; font-weight:800; color:var(--accent)">3</div>
+    <div class="small">change в openspec/changes/ — skeleton, console, mcp (архивирован 03.11)</div></div>
+  <div class="card"><div style="font-size:38px; font-weight:800; color:var(--accent)">10</div>
+    <div class="small">тикетов закрыты полным циклом: работа → проверка владельцем → пуш</div></div>
+  <div class="card"><div style="font-size:38px; font-weight:800; color:var(--accent)">3/3</div>
+    <div class="small">openspec validate — спеки живые, критерии приёмки формализованы</div></div>
+</div>
+<div class="body-text" style="margin-top:26px; border-top:1px solid var(--border); padding-top:20px; font-size:19px">
+  На защите проверяющие видят системный подход <b style="color:var(--accent)">в самом репозитории</b>:
+  спеки → тикеты → коммиты — SDD не только предмет тренера, но и способ его постройки.</div><div class="slide-num">9 / 10</div></div><div class="slide" id="slide-10"><div class="slide-tag">итоги</div>
+<h2>Что сделано — и что дальше</h2>
+<div class="grid2" style="flex:1; align-content:start">
+  <div class="card">
+    <h3>Сделано</h3>
+    <div class="small" style="margin-top:12px; font-size:17px; line-height:1.75">
+      ✅ Фаза 1 — консольный тренер (T1–T7)<br>
+      ✅ Фаза 2 — MCP-прототип: M1 сервер · M2 7 инструментов · M3 смоук+сценарий<br>
+      ✅ 226 тестов · coverage 76.89% (гейт 40%)<br>
+      ✅ Живые прогоны: полный сеанс + рестарт-резюм
+    </div>
+  </div>
+  <div class="card">
+    <h3>Дальше</h3>
+    <div class="small" style="margin-top:12px; font-size:17px; line-height:1.75">
+      🎥 Скринкаст ≤10 мин — сценарий готов (docs/screencast-mcp.md)<br>
+      📤 Сдача: git.standard-data.ru · main · 13.11.2026<br>
+      🧭 Кандидаты Фазы 3: resume-aware демо-клиент, GitHub API tool
+    </div>
+  </div>
+</div>
+<div style="border-top:1px solid var(--border); padding-top:18px; display:flex; justify-content:space-between; align-items:center">
+  <div class="body-text" style="font-size:19px">Разработка: <span class="mono" style="color:var(--accent)">github.com/Alex-Kul777/sdd-trainer</span></div>
+  <div class="body-text" style="font-size:22px; font-weight:700; color:var(--primary)">SDD Trainer · спасибо!</div>
+</div><div class="slide-num">10 / 10</div></div>
+</div>
+<div class="slide-nav"><button onclick="go(0)">1</button><button onclick="go(1)">2</button><button onclick="go(2)">3</button><button onclick="go(3)">4</button><button onclick="go(4)">5</button><button onclick="go(5)">6</button><button onclick="go(6)">7</button><button onclick="go(7)">8</button><button onclick="go(8)">9</button><button onclick="go(9)">10</button></div>
+<script>
+let cur = 0;
+function go(i) {
+  cur = Math.max(0, Math.min(9, i));
+  document.getElementById('slide-' + (cur + 1)).scrollIntoView({behavior: 'instant'});
+  document.querySelectorAll('.slide-nav button').forEach((b, n) =>
+    b.classList.toggle('active', n === cur));
+}
+document.addEventListener('keydown', e => {
+  if (['ArrowRight','ArrowDown','PageDown'].includes(e.key)) { go(cur + 1); e.preventDefault(); }
+  if (['ArrowLeft','ArrowUp','PageUp'].includes(e.key)) { go(cur - 1); e.preventDefault(); }
+});
+</script>
+</body>
+</html>

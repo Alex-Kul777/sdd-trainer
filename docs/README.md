@@ -8,6 +8,9 @@ Planned (later phases):
 - API guide (endpoints, streaming, HITL resume) — phase 2
 - MCP integration guide (OpenClaw skill, transports) — phase 3
 
+Defense materials — slides, speaker notes, and live dashboards:
+[presentation/](presentation/)
+
 The domain glossary ([GLOSSARY.md](../GLOSSARY.md)) and architecture decisions
 ([DECISIONS.md](../DECISIONS.md)) live in the repo root (drone_interception
 convention).

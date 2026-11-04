@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Диалог с тренером@ · SDD Trainer</title>
+<script src="https://cdn.tailwindcss.com"></script>
+
+<style>
+.badge{display:inline-flex;align-items:center;gap:.35rem;padding:.2rem .7rem;border-radius:9999px;font-size:.72rem;font-weight:600;letter-spacing:.02em}
+.badge-info{background:#eef2ff;color:#4338ca;border:1px solid #c7d2fe}
+.badge-ok{background:#ecfdf5;color:#047857;border:1px solid #a7f3d0}
+.badge-warn{background:#fffbeb;color:#b45309;border:1px solid #fde68a}
+.badge-slate{background:#f8fafc;color:#475569;border:1px solid #e2e8f0}
+.card{background:#fff;border:1px solid #e2e8f0;border-radius:.9rem}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+/* code viewer */
+.codewrap{background:#0f172a;color:#e2e8f0;border-radius:.75rem;overflow:auto}
+.cl{display:flex;white-space:pre;font-size:.78rem;line-height:1.55}
+.cl .ln{flex:0 0 3.2rem;text-align:right;padding-right:1rem;color:#475569;user-select:none}
+.cl .cd{flex:1;padding-right:1.5rem}
+/* terminal */
+.term{background:#0b1120;color:#cbd5e1;border-radius:.75rem;padding:1rem 1.25rem;font-size:.75rem;line-height:1.6;max-height:30rem;overflow:auto}
+.tl{white-space:pre-wrap;word-break:break-word}
+.hl-ok{color:#34d399;font-weight:700}
+.hl-info{color:#818cf8}
+.hl-dim{color:#475569}
+@keyframes fadein{to{opacity:1}}
+/* chat */
+.bubble{max-width:46rem;padding:.9rem 1.1rem;border-radius:1rem;border:1px solid #e2e8f0;background:#fff;box-shadow:0 1px 2px rgb(0 0 0 / .04)}
+.bubble-trainer{background:#eef2ff;border-color:#c7d2fe;border-top-left-radius:.25rem}
+.bubble-student{background:#fff;border-top-right-radius:.25rem;margin-left:auto}
+.who{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#64748b;margin-bottom:.35rem}
+</style>
+</head>
+<body class="bg-stone-50 text-slate-900 font-sans antialiased">
+<main class="max-w-6xl mx-auto px-6 py-10 space-y-8">
+<header class="flex flex-wrap items-center gap-3 border-b border-slate-200 pb-6">
+  <div class="text-2xl font-serif font-bold tracking-tight">🦊 SDD Trainer</div>
+  <span class="badge badge-slate">Диалог с тренером@</span>
+  <span class="badge badge-info">Фаза 2 · MCP</span>
+  <span class="badge badge-ok">Реальные данные · прогон 03.11.2026</span>
+</header>
+<div class="space-y-4"><div class="card p-4 flex flex-wrap gap-x-8 gap-y-2 text-sm"><div><span class="who">Ученик</span>verify-m3-owner</div><div><span class="who">thread_id</span><span class="mono">student:verify-m3-owner</span></div><div><span class="who">Домен</span>openspec-basics</div><div><span class="who">Транспорт</span>MCP · stdio (ADR-010)</div><div><span class="who">Сервер</span><span class="mono">python -m sdd_trainer.mcp</span></div></div><div class="space-y-1"><div class="who">🦊 Тренер · калибровочный вопрос</div><div class="bubble bubble-trainer whitespace-pre-wrap">Опиши своими словами, что такое OpenSpec: зачем в репозитории папки specs/ и changes/ и чем change proposal отличается от стабильной спецификации. Если тема незнакома — так и скажи, это нормально.</div></div><div class="space-y-1 text-right"><div class="who">Ученик</div><div class="bubble bubble-student whitespace-pre-wrap text-left">Видел проект с OpenSpec: в specs/ лежат стабильные спецификации требований, в changes/ — предложения изменений. Но устройство change proposal (proposal.md, design.md, tasks.md) не разбирал, на практике не применял.</div></div><div class="card border-amber-200 bg-amber-50 p-4 space-y-2"><div class="flex items-center gap-3"><span class="badge badge-warn">Вердикт оценки</span><span class="badge badge-slate">Уровень: partial</span><span class="text-sm text-slate-600">Уверенность: <b>0.85</b></span><div class="flex-1 max-w-xs h-2 bg-amber-100 rounded-full overflow-hidden"><div class="h-full bg-amber-500" style="width:85%"></div></div></div><p class="text-sm text-slate-700">Ученик понятно описал назначение папок specs/ и changes/ и различие между стабильной спецификацией и change proposal в общем виде, однако признал, что не разбирался подробно со структурой change proposal и не имел практического опыта. Это указывает на частичное понимание темы.</p><p class="text-sm text-slate-600 border-t border-amber-100 pt-2">partial — Ученик демонстрирует общее понимание различий между папками и статусами спецификаций, но признаёт пробелы в деталях change proposal и практическом опыте. Достаточно направить на разбор темы (partial).</p></div><details class="card p-4"><summary class="cursor-pointer font-semibold text-sm">📚 Урок · <span class="text-slate-500">скелет openspec-basics развёрнут под partial · 4875 символов — раскройте для полного текста</span></summary><div class="mono text-xs whitespace-pre-wrap text-slate-700 mt-3 max-h-96 overflow-y-auto"># OpenSpec-основы (openspec-basics) — partial
+## Goal
+После урока ты закроешь пробелы в понимании структуры change proposal и цикла работы OpenSpec. Сможешь описать анатомию change proposal: proposal.md (зачем) → design.md (как) → tasks.md (чек-лист) и объяснить, что происходит с дельтой спецификации после apply. Также ты научишься читать требования и сценарии спеки (SHALL/WHEN/THEN).
+## Key concepts (с фокусом на твоих пробелах)
+- **OpenSpec** — не фреймворк для кода, а фреймворк для управления требованиями. Основа — структура `openspec/` в репозитории плюс CLI (`openspec`, v1.14.0), документация актуальна на 2025 год.
+- **Спецификация** — `openspec/specs/&lt;capability&gt;/spec.md`. Фиксирует «как есть» текущее инвариантное поведение: `## Purpose` + `### Requirement: ... SHALL ...` + `#### Scenario: WHEN ... THEN ...`.
+  - *Почему*: с формулировкой **SHALL** мы задаём инвариант — правило, которое не должно меняться; **WHEN/THEN** даёт верную/неверную проверку, по спеке можно писать тесты и запускать `openspec validate`.
+- **Изменение (change proposal)** — `openspec/changes/&lt;kebab-case&gt;/` (например, `add-console-trainer/`). Это предложение изменений, а не истина. Анатомия change:
+  - `proposal.md` — описание проблемы, решения и границ (scope).
+  - `design.md` — технические решения; если не нужно — артефакт можно не создавать (достаточно задач).
+  - `tasks.md` — чек-лист реализации. Без него нельзя начинать apply.
+  - `specs/` — дельта требований (ADDED/MODIFIED) именно для этого change.
+    - *Зачем дельта*: так мы фиксируем, что изменилось в поведении, и после apply переносим эти правки в `specs/`, в основную спеку.
+- **Жизненный цикл**: explore (читаем/проверяем спеку) → propose (создаём change с дельтой) → apply (реализуем по tasks, переносим дельту в `specs/`) → archive (сие change уходит в `changes/archive/`)
+- *Строгий формат* требования/кейса нужен для однозначности проверки и возможности авто-тестирования каждого шага: нельзя просто написать «требование», важно явно указать «SHALL», нельзя просто написать «кейс», нужно разбить на WHEN и THEN.
+## Socratic questions (разбор твоих пробелов)
+- **Что содержится в каждом из файлов change proposal (proposal.md, design.md, tasks.md, specs/)?**
+  - proposal.md — суть изменения и зачем оно нужно.
+  - design.md — как планируется реализовать (опционально для сложных изменений).
+  - tasks.md — список задач для выполнения.
+  - specs/ — delta-спека, что именно поменялось в поведении (ADDED/MODIFIED).
+- **Почему именно чек-лист tasks.md обязателен для apply?**
+  - apply начинает изменения только когда задачи определены, чтобы процесс был контролируемым.
+- **Если в change есть tasks.md, зачем ещё дельта спеки specs/?**
+  - tasks.md — набор шагов, звёздочки минусуются; дельта-спека spec сохраняет знания о том, как изменились требования, и становится «истиной» в specs/ после apply.
+- **Что произойдёт с папкой change после apply?**
+  - Она переместится в changes/archive/; её дельта-спека будет перенесена в specs/console-trainer/spec.md и помечена как ADDED/MODIFIED.
+## Examples (разбавим сухость)
+1. Читаю спеку из capability `console-trainer`:
+   ```
+   ### Requirement: Routing With At Least Three Paths
+   The routing node SHALL select между knows_it, partial, new_topic, плюс clarification
+   #### Scenario: Route selected by assessment
+   WHEN assess производит уровень уровня
+   THEN route выбирает ровно один путь и это видно в логах сессии
+   ```
+   Здесь _инвариант_: выбор всегда ровно одного пути (**SHALL**); проверка — _WHEN/THEN_.
+2. Живой change proposal этого репозитория — `add-console-trainer`:
+   - `proposal.md`: «скелет тренера без поведения, решение — вертикальный срез».
+   - `design.md`: шиты на ADR-005/006/008/009, тестовый шов.
+   - `tasks.md`: 7 групп задач с чекбоксами (знаем, что делать).
+   - `specs/console-trainer/spec.md`: дельта с ADDED (добавлено новое требование).
+## Quiz ref — мини-квиз для самопроверки
+Вопросы, на которые важно ответить:
+- Какие 3-4 файла лежат в change proposal? Зачем нужен каждый?
+- В чём разница между `specs/` и `changes/`?
+- Что делает `openspec apply`? Куда уходит архивная папка?
+- Почему формат требования должен содержать SHALL, а сценария — WHEN/THEN?
+- Привёл ли я практический пример применения change pipeline?
+## Итог
+Ты уже понимаешь разницу между specs и changes; теперь закрепил структуру change proposal (proposal → design → tasks → delta-specs), цикл работы и практическую пользу инструментов (openspec apply, archive). Если что-то непонятно в разнице между tasks и delta-specs, перечитай этот урок.
+Проверить себя квизом сможешь с помощью quiz-json!Processing request of type CallToolRequest
+Processing request of type CallToolRequest
+Processing request of type CallToolRequest
+Processing request of type CallToolRequest
+Processing request of type CallToolRequest
+Processing request of type CallToolRequest</div></details><div class="space-y-1"><div class="who">🦊 Тренер · вопрос квиза</div><div class="bubble bubble-trainer whitespace-pre-wrap">Что такое Spec-Driven Development? Что в этой методологии объявлено источником истины и почему?</div></div><div class="space-y-1 text-right"><div class="who">Ученик</div><div class="bubble bubble-student whitespace-pre-wrap text-left">Методология, в которой спецификация, а не код — источник истины: план составляется до кода, спека остаётся контрактом, с которым сверяется каждая строка кода.</div></div><div class="space-y-1"><div class="who">🦊 Тренер · вопрос квиза</div><div class="bubble bubble-trainer whitespace-pre-wrap">Из каких двух директорий состоит openspec/ в репозитории и что в каждой из них лежит?</div></div><div class="space-y-1 text-right"><div class="who">Ученик</div><div class="bubble bubble-student whitespace-pre-wrap text-left">specs — стабильные спецификации, описывают текущее поведение «как есть»; changes — change proposals, предложения «как будет».</div></div><div class="space-y-1"><div class="who">🦊 Тренер · вопрос квиза</div><div class="bubble bubble-trainer whitespace-pre-wrap">Из каких элементов состоит требование в спецификации OpenSpec? Назови ключевые слова формата.</div></div><div class="space-y-1 text-right"><div class="who">Ученик</div><div class="bubble bubble-student whitespace-pre-wrap text-left">Requirement с SHALL задаёт инвариант; Scenario с WHEN THEN — проверяемый пример поведения.</div></div><div class="space-y-1"><div class="who">🦊 Тренер · вопрос квиза</div><div class="bubble bubble-trainer whitespace-pre-wrap">Опиши анатомию change proposal: какие файлы входят в него и за что каждый отвечает?</div></div><div class="space-y-1 text-right"><div class="who">Ученик</div><div class="bubble bubble-student whitespace-pre-wrap text-left">proposal.md — зачем: проблема и решение; design.md — как: ключевые решения и ADR; tasks.md — чек-лист реализации; specs — дельта требований ADDED MODIFIED.</div></div><div class="space-y-1"><div class="who">🦊 Тренер · вопрос квиза</div><div class="bubble bubble-trainer whitespace-pre-wrap">Опиши цикл работы с change proposal в OpenSpec — от изучения репозитория до архивации.</div></div><div class="space-y-1 text-right"><div class="who">Ученик</div><div class="bubble bubble-student whitespace-pre-wrap text-left">explore — изучение текущих спецификаций; propose — новый change с дельтой; apply — реализация и перенос дельты в specs; archive — change уходит в архив.</div></div><div class="card border-emerald-200 bg-emerald-50 p-4 space-y-2"><div class="flex flex-wrap items-center gap-3"><span class="badge badge-ok">Вердикт квиза · F1 (ADR-009)</span><span class="badge badge-slate">openspec-basics</span><span class="text-sm">Счёт: <b>1.00 (порог 0.60)</b></span><span class="badge badge-ok">зачтён</span></div><p class="text-sm text-slate-700">F1 по вопросам: q1=1.00, q2=1.00, q3=1.00, q4=1.00, q5=1.00. Итог: 1.00 — зачёт (порог 0.60)</p></div><details class="card p-4"><summary class="cursor-pointer font-semibold text-sm">🛠 Журнал сеанса — <span class="text-slate-500">внутренние события графа: вызов инструмента search_sdd_docs (живой Tavily, 5 результатов), F1 по вопросам</span></summary><div class="term mt-3"><div class="tl ">· Оценка: partial (уверенность 0.85) — Ученик понятно описал назначение папок specs/ и changes/ и различие между стабильной спецификацией и change proposal в общем виде, однако признал, что не разбирался подробно со структурой change proposal и не имел практического опыта. Это указывает на частичное понимание темы.</div><div class="tl ">  · Маршрут: partial — Ученик демонстрирует общее понимание различий между папками и статусами спецификаций, но признаёт пробелы в деталях change proposal и практическом опыте. Достаточно направить на разбор темы (partial).</div><div class="tl ">  · Материалы: нужен свежий поиск — Ученик имеет частичное понимание структуры change proposal и не обладает практическим опытом. Скелет содержит хорошую основу, но для развертывания полноценного урока необходимы свежие примеры структуры, практические инструкции или актуальные сведения о workflow change proposal из OpenSpec.</div><div class="tl hl-ok">  · Инструмент search_sdd_docs(&quot;OpenSpec change proposal workflow and structure documentation&quot;): 5 результат(ов) — OpenSpec/docs/opsx.md at main · Fission-AI/OpenSpec · GitHub — https://github.com/Fission-AI/OpenSpec/blob/main/docs/opsx.md; OpenSpec Propose - Generate Planning Artifacts | Get Claude Skills — https://www.getclaudeskills.com/skills/openspec-propose-fission-ai; OpenSpec Deep Dive: Spec-Driven Development Architecture &amp; Practice in AI-Assisted Programming — https://redreamality.com/garden/notes/openspec-guide; OpenSpec Quickstart: Install, Workflow, and Common Pitfalls - Rost Glukhov | AI Systems &amp; Infrastructure — https://www.glukhov.org/ai-devtools/openspec; spec-driven | OpenSpec — https://openspec.dev/docs/schemas/spec-driven</div><div class="tl ">  · Урок готов: скелет openspec-basics развёрнут под уровень partial</div><div class="tl ">  · Проверка знаний: 5 вопрос(ов) по домену openspec-basics</div><div class="tl ">  · Вопрос q1: F1 = 1.00</div><div class="tl ">  · Вопрос q2: F1 = 1.00</div><div class="tl ">  · Вопрос q3: F1 = 1.00</div><div class="tl ">  · Вопрос q4: F1 = 1.00</div><div class="tl ">  · Вопрос q5: F1 = 1.00</div><div class="tl hl-ok">  · Квиз зачтён: 1.00 (порог 0.60)</div><div class="tl ">  · Прогресс (training-state.json): openspec-basics — счёт 1.00, серия 7, уроков завершено 7</div></div></details><div class="card border-indigo-200 bg-indigo-50 p-4 flex flex-wrap items-center gap-3"><span class="badge badge-info">Прогресс · training-state.json</span><span class="text-sm">· openspec-basics: счёт 1.00, серия 7, уроков завершено 7</span></div></div>
+<footer class="text-xs text-slate-400 border-t border-slate-200 pt-4 leading-relaxed">
+  Источники: /tmp/m3_runA.log — дословный транскрипт полного сеанса (калибровка → урок → квиз → зачёт), прогон владельца 03.11.2026 23:12 MSK через MCP stdio<br>
+  Дашборд сгенерирован из живых артефактов — не макет и не сгенерированный сценарий.
+</footer>
+</main>
+</body>
+</html>

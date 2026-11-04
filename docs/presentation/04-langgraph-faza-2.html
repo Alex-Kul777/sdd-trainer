@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LangGraph + MCP Фазы 2@ · SDD Trainer</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script type="module">
+import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({ startOnLoad: true, theme: "neutral", securityLevel: "loose" });
+</script>
+<style>
+.badge{display:inline-flex;align-items:center;gap:.35rem;padding:.2rem .7rem;border-radius:9999px;font-size:.72rem;font-weight:600;letter-spacing:.02em}
+.badge-info{background:#eef2ff;color:#4338ca;border:1px solid #c7d2fe}
+.badge-ok{background:#ecfdf5;color:#047857;border:1px solid #a7f3d0}
+.badge-warn{background:#fffbeb;color:#b45309;border:1px solid #fde68a}
+.badge-slate{background:#f8fafc;color:#475569;border:1px solid #e2e8f0}
+.card{background:#fff;border:1px solid #e2e8f0;border-radius:.9rem}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+/* code viewer */
+.codewrap{background:#0f172a;color:#e2e8f0;border-radius:.75rem;overflow:auto}
+.cl{display:flex;white-space:pre;font-size:.78rem;line-height:1.55}
+.cl .ln{flex:0 0 3.2rem;text-align:right;padding-right:1rem;color:#475569;user-select:none}
+.cl .cd{flex:1;padding-right:1.5rem}
+/* terminal */
+.term{background:#0b1120;color:#cbd5e1;border-radius:.75rem;padding:1rem 1.25rem;font-size:.75rem;line-height:1.6;max-height:30rem;overflow:auto}
+.tl{white-space:pre-wrap;word-break:break-word}
+.hl-ok{color:#34d399;font-weight:700}
+.hl-info{color:#818cf8}
+.hl-dim{color:#475569}
+@keyframes fadein{to{opacity:1}}
+/* chat */
+.bubble{max-width:46rem;padding:.9rem 1.1rem;border-radius:1rem;border:1px solid #e2e8f0;background:#fff;box-shadow:0 1px 2px rgb(0 0 0 / .04)}
+.bubble-trainer{background:#eef2ff;border-color:#c7d2fe;border-top-left-radius:.25rem}
+.bubble-student{background:#fff;border-top-right-radius:.25rem;margin-left:auto}
+.who{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#64748b;margin-bottom:.35rem}
+</style>
+</head>
+<body class="bg-stone-50 text-slate-900 font-sans antialiased">
+<main class="max-w-6xl mx-auto px-6 py-10 space-y-8">
+<header class="flex flex-wrap items-center gap-3 border-b border-slate-200 pb-6">
+  <div class="text-2xl font-serif font-bold tracking-tight">🦊 SDD Trainer</div>
+  <span class="badge badge-slate">LangGraph + MCP Фазы 2@</span>
+  <span class="badge badge-info">Фаза 2 · MCP</span>
+  <span class="badge badge-ok">Реальные данные · прогон 03.11.2026</span>
+</header>
+<div class="card p-5 space-y-3"><div class="font-serif text-lg font-bold">Граф тренера — дамп из скомпилированного LangGraph</div><div class="text-sm text-slate-500">Получено <span class="mono text-xs">graph.get_graph().draw_mermaid()</span> из реально собранного графа — структура дословная, добавлена только раскраска узлов.</div><div class="rounded-xl border border-slate-200 bg-white p-4 flex justify-center"><pre class="mermaid">---
+config:
+  flowchart:
+    curve: linear
+---
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	assess(assess)
+	route(route)
+	clarify(clarify)
+	teach(teach)
+	quiz(quiz)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> assess;
+	assess --> route;
+	clarify --> route;
+	route -. &nbsp;clarification&nbsp; .-> clarify;
+	route -. &nbsp;knows_it&nbsp; .-> quiz;
+	route -. &nbsp;new_topic&nbsp; .-> teach;
+	teach --> quiz;
+	quiz --> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2
+	classDef first fill-opacity:0
+	classDef last fill:#bfb6fc
+	classDef assessNode fill:#eef2ff,stroke:#6366f1,stroke-width:2px
+	classDef routeNode fill:#fef3c7,stroke:#d97706,stroke-width:2px
+	classDef clarifyNode fill:#ffedd5,stroke:#ea580c,stroke-width:2px
+	classDef teachNode fill:#ecfdf5,stroke:#059669,stroke-width:2px
+	classDef quizNode fill:#f5f3ff,stroke:#7c3aed,stroke-width:2px
+	class assess assessNode
+	class route routeNode
+	class clarify clarifyNode
+	class teach teachNode
+	class quiz quizNode</pre></div><div class="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3"><b>Честная аннотация:</b> LangGraph дедуплицирует рёбра в один target, поэтому route→teach на схеме — одна стрелка (new_topic). Реальных путей четыре: clarification→clarify · <b>partial→teach</b> · knows_it→quiz · new_topic→teach. Критерий 5 (роутинг ≥ 3 путей) закрыт с запасом.</div></div><div class="card p-5 space-y-3"><div class="font-serif text-lg font-bold">Слой MCP Фазы 2 — тот же граф, новый шов</div><div class="grid md:grid-cols-3 gap-3 text-center text-sm"><div class="rounded-xl border border-slate-200 bg-white p-3"><div class="who">Клиент</div>MCP-хост<br><span class="text-xs text-slate-400">пробник / Claude / любой клиент</span></div><div class="rounded-xl border border-indigo-200 bg-indigo-50 p-3"><div class="who">Транспорт</div>stdio · JSON-RPC<br><span class="text-xs text-slate-400">ADR-010, FastMCP</span></div><div class="rounded-xl border border-slate-200 bg-white p-3"><div class="who">Сервер</div>7 инструментов<br><span class="text-xs text-slate-400">stateless, student — единственный ключ</span></div></div><div class="text-center text-xs text-slate-500">принцип: <b>один вызов = один шаг графа</b> — Command(resume=ответ) → события до следующего interrupt → payload клиенту</div><div class="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-center text-sm"><b>Чекпоинт-слой (ADR-008):</b> SqliteSaver · data/checkpoints.sqlite · thread_id = student:&lt;имя&gt; — чекпоинт <b>единственное</b> состояние: рестарт сервера ничего не теряет (доказано на дашборде 3)</div></div><div class="grid md:grid-cols-4 gap-3"><div class="card p-3" style="border-color:#ffedd5"><div class="font-semibold text-sm" style="color:#ea580c">clarification</div><div class="text-xs text-slate-500 mt-1">уверенность < 0.5 → уточняющий вопрос, цикл обратно в route</div></div><div class="card p-3" style="border-color:#ecfdf5"><div class="font-semibold text-sm" style="color:#059669">partial</div><div class="text-xs text-slate-500 mt-1">тема знакома частично → урок из скелета с фокусом на пробелах</div></div><div class="card p-3" style="border-color:#f5f3ff"><div class="font-semibold text-sm" style="color:#7c3aed">knows_it</div><div class="text-xs text-slate-500 mt-1">уверенное владение → сразу квиз, без урока</div></div><div class="card p-3" style="border-color:#ecfdf5"><div class="font-semibold text-sm" style="color:#059669">new_topic</div><div class="text-xs text-slate-500 mt-1">тема незнакома → полный урок с нуля</div></div></div>
+<footer class="text-xs text-slate-400 border-t border-slate-200 pt-4 leading-relaxed">
+  Источники: graph.get_graph().draw_mermaid() скомпилированного build_graph · ADR-006/008/010 · структура графа не редактировалась<br>
+  Дашборд сгенерирован из живых артефактов — не макет и не сгенерированный сценарий.
+</footer>
+</main>
+</body>
+</html>

@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Презентация@ · SDD Trainer</title>
+<script src="https://cdn.tailwindcss.com"></script>
+
+<style>
+.badge{display:inline-flex;align-items:center;gap:.35rem;padding:.2rem .7rem;border-radius:9999px;font-size:.72rem;font-weight:600;letter-spacing:.02em}
+.badge-info{background:#eef2ff;color:#4338ca;border:1px solid #c7d2fe}
+.badge-ok{background:#ecfdf5;color:#047857;border:1px solid #a7f3d0}
+.badge-warn{background:#fffbeb;color:#b45309;border:1px solid #fde68a}
+.badge-slate{background:#f8fafc;color:#475569;border:1px solid #e2e8f0}
+.card{background:#fff;border:1px solid #e2e8f0;border-radius:.9rem}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+/* code viewer */
+.codewrap{background:#0f172a;color:#e2e8f0;border-radius:.75rem;overflow:auto}
+.cl{display:flex;white-space:pre;font-size:.78rem;line-height:1.55}
+.cl .ln{flex:0 0 3.2rem;text-align:right;padding-right:1rem;color:#475569;user-select:none}
+.cl .cd{flex:1;padding-right:1.5rem}
+/* terminal */
+.term{background:#0b1120;color:#cbd5e1;border-radius:.75rem;padding:1rem 1.25rem;font-size:.75rem;line-height:1.6;max-height:30rem;overflow:auto}
+.tl{white-space:pre-wrap;word-break:break-word}
+.hl-ok{color:#34d399;font-weight:700}
+.hl-info{color:#818cf8}
+.hl-dim{color:#475569}
+@keyframes fadein{to{opacity:1}}
+/* chat */
+.bubble{max-width:46rem;padding:.9rem 1.1rem;border-radius:1rem;border:1px solid #e2e8f0;background:#fff;box-shadow:0 1px 2px rgb(0 0 0 / .04)}
+.bubble-trainer{background:#eef2ff;border-color:#c7d2fe;border-top-left-radius:.25rem}
+.bubble-student{background:#fff;border-top-right-radius:.25rem;margin-left:auto}
+.who{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#64748b;margin-bottom:.35rem}
+</style>
+</head>
+<body class="bg-stone-50 text-slate-900 font-sans antialiased">
+<main class="max-w-6xl mx-auto px-6 py-10 space-y-8">
+<header class="flex flex-wrap items-center gap-3 border-b border-slate-200 pb-6">
+  <div class="text-2xl font-serif font-bold tracking-tight">🦊 SDD Trainer</div>
+  <span class="badge badge-slate">Презентация@</span>
+  <span class="badge badge-info">Фаза 2 · MCP</span>
+  <span class="badge badge-ok">Реальные данные · прогон 03.11.2026</span>
+</header>
+<div class="text-sm text-slate-500 max-w-3xl">Четыре дашборда для финальной презентации проектной работы. Все данные — дословные артефакты живых прогонов 03.11.2026 и кода репозитория: это не макеты и не сгенерированные сценарии.</div><div class="grid md:grid-cols-2 gap-5"><a href="01-chat-trenera.html" class="card p-5 block hover:border-indigo-300 transition"><div class="text-3xl">💬</div><div class="font-serif text-lg font-bold mt-2">Диалог с тренером</div><div class="text-sm text-slate-500 mt-1">Полный сеанс: калибровка → вердикт partial 0.85 → урок → квиз 5/5 → F1 1.00 → прогресс. Живой транскрипт, журнал графа с вызовом search_sdd_docs.</div></a><a href="02-kod-po-kriteriyam.html" class="card p-5 block hover:border-indigo-300 transition"><div class="text-3xl">🧩</div><div class="font-serif text-lg font-bold mt-2">Код по критериям курса</div><div class="text-sm text-slate-500 mt-1">6 критериев → дословные фрагменты кода с номерами строк и ADR: GigaChat, LangGraph, tools, память, роутинг, MCP.</div></a><a href="03-zhivoj-log.html" class="card p-5 block hover:border-indigo-300 transition"><div class="text-3xl">📺</div><div class="font-serif text-lg font-bold mt-2">Живой лог (антифейк)</div><div class="text-sm text-slate-500 mt-1">Рестарт-эксперимент: сервер убит посреди квиза, новый процесс продолжил с чекпоинта (resumed=True). Кнопка replay, реальные HTTP-вызовы, suite 226 passed.</div></a><a href="04-langgraph-faza-2.html" class="card p-5 block hover:border-indigo-300 transition"><div class="text-3xl">🕸</div><div class="font-serif text-lg font-bold mt-2">LangGraph + MCP</div><div class="text-sm text-slate-500 mt-1">Настоящий mermaid-дамп скомпилированного графа + слой MCP Фазы 2 + 4 маршрута роутинга.</div></a><a href="deck/presentation.html" class="card p-5 block hover:border-indigo-300 transition"><div class="text-3xl">🎯</div><div class="font-serif text-lg font-bold mt-2">Презентация (deck) — 10 слайдов</div><div class="text-sm text-slate-500 mt-1">Защита проектной работы: hook → проблема → решение → критерии → антифейк → итоги. Рядом: speaker_notes.html, presentation.pdf и PNG-слайды (deck/shots/).</div></a></div><div class="card p-4 text-xs text-slate-500">Для слайдов: откройте дашборд в браузере на весь экран (F11) — каждая секция самодостаточна для скриншота. Для живой защиты: дашборд 3 имеет кнопку replay, дашборд 1 раскрывает журнал внутренних событий графа.</div>
+<footer class="text-xs text-slate-400 border-t border-slate-200 pt-4 leading-relaxed">
+  Источники: сгенерировано gen_dashboards.py 03.11.2026 из артефактов Фазы 2 (MCP)<br>
+  Дашборд сгенерирован из живых артефактов — не макет и не сгенерированный сценарий.
+</footer>
+</main>
+</body>
+</html>
