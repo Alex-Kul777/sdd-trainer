@@ -1,20 +1,21 @@
-"""Lesson content for the 6 SDD domains — the trainer's curriculum.
+"""Lesson content for the SDD trainer's curriculum.
 
-Domains (PLAN-FINAL-PROJECT.md, section 2):
+``LESSON_DOMAINS`` reflects reality: it lists exactly the domains that
+have authored content (an ADR-009 skeleton in ``prompts/lessons/`` plus
+a quiz in ``data/quizzes/``). Today that is the single content slice
+``openspec-basics`` (issue #5, task 5.1).
 
-1. ``sdd-fundamentals`` — spec as the source of truth, plan before code;
-2. ``openspec-structure`` — specs/ vs changes/;
-3. ``requirement-writing`` — SHALL requirements + WHEN/THEN scenarios;
-4. ``change-proposals`` — proposal -> design -> tasks;
-5. ``openspec-workflow`` — explore -> propose -> apply -> archive;
-6. ``brownfield-sdd`` — incremental changes in a live project.
+The six roadmap domains of the original plan (``sdd-fundamentals``,
+``openspec-structure``, ``requirement-writing``, ``change-proposals``,
+``openspec-workflow``, ``brownfield-sdd``) have no content yet — they
+live in ``docs/roadmap.md`` as the Phase 3 curriculum roadmap, not in
+this constant (finding 4b of the 04.11 review).
 
 Lesson skeletons (few-shot prompts) live in ``prompts/lessons/<domain>.md``
 with fixed ADR-009 sections; quizzes with reference answers live in
 ``data/quizzes/<domain>.json`` (hybrid authorship, grilling Q10). The loader
 below enforces the fixed-sections contract of ADR-009 — a skeleton without
-every section is a content bug and fails loudly. The first content slice —
-``openspec-basics`` — landed in T4 (issue #5, task 5.1).
+every section is a content bug and fails loudly.
 """
 from __future__ import annotations
 
@@ -24,13 +25,12 @@ from typing import Optional
 from sdd_trainer.config import trainer_config
 from sdd_trainer.models import Quiz
 
+#: Domains with authored content (ADR-009 skeleton + quiz). The roadmap
+#: domains of PLAN-FINAL-PROJECT.md moved to docs/roadmap.md (Phase 3
+#: curriculum) — this constant must never advertise domains that have
+#: no content (finding 4b).
 LESSON_DOMAINS: list[str] = [
-    "sdd-fundamentals",
-    "openspec-structure",
-    "requirement-writing",
-    "change-proposals",
-    "openspec-workflow",
-    "brownfield-sdd",
+    "openspec-basics",
 ]
 
 #: Fixed skeleton sections — the stable unfolding contract (ADR-009):

@@ -31,9 +31,13 @@ def test_module_imports_cleanly(module_name: str) -> None:
     importlib.import_module(module_name)
 
 
-def test_six_lesson_domains() -> None:
-    """The curriculum covers exactly the 6 SDD domains."""
+def test_single_lesson_domain() -> None:
+    """The curriculum lists exactly the domains with authored content.
+
+    Roadmap domains (Phase 3 curriculum) live in ``docs/roadmap.md``,
+    not in the code constant — LESSON_DOMAINS reflects reality.
+    """
     from sdd_trainer.lessons import LESSON_DOMAINS
 
-    assert len(LESSON_DOMAINS) == 6
-    assert "requirement-writing" in LESSON_DOMAINS
+    assert len(LESSON_DOMAINS) == 1
+    assert "openspec-basics" in LESSON_DOMAINS

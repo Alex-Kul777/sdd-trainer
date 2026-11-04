@@ -9,8 +9,9 @@
 
 **SDD Trainer** — персональный ИИ-агент-тренер, который обучает методологии
 **Spec-Driven Development (SDD)** и работе с **OpenSpec**: диалоговые уроки,
-квизы с human-in-the-loop, сократические вопросы и память прогресса по
-6 доменам SDD.
+квизы с human-in-the-loop, сократические вопросы и память прогресса по доменам SDD
+(сейчас — openspec-basics; роадмап остальных доменов —
+[docs/roadmap.md](docs/roadmap.md)).
 
 Тренер построен на **GigaChat** (OpenAI-совместимый API cloud.ru, ADR-005) и
 **LangGraph**. Мета-идея проекта: он сам разрабатывается по OpenSpec — в
@@ -47,7 +48,7 @@
 │   ├── config.py           # GigaChatConfig: cloud.ru API (ADR-005)
 │   ├── models.py           # Pydantic-схемы (AIA_02)
 │   ├── core/               # llm_manager, graph, tools, memory
-│   ├── lessons/            # 6 доменов SDD
+│   ├── lessons/            # домены с контентом (roadmap — в docs/roadmap.md)
 │   ├── console/            # фаза 1: CLI
 │   ├── api/                # фаза 2: FastAPI
 │   └── mcp/                # фаза 3: MCP-эндпоинт
