@@ -20,7 +20,7 @@ MODULES = [
     "sdd_trainer.core.memory",
     "sdd_trainer.lessons",
     "sdd_trainer.console",
-    "sdd_trainer.api",
+    "sdd_trainer.app",
     "sdd_trainer.mcp",
 ]
 

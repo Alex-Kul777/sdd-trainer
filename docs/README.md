@@ -2,13 +2,12 @@
 
 Project documentation: guides, architecture notes, and course materials.
 
-Planned (later phases):
+Guides:
 
-- Graph description (nodes, routing paths) — phase 1
-- API guide (endpoints, streaming, HITL resume) — phase 2
-- MCP integration guide (OpenClaw skill, transports) — phase 3
-- Curriculum roadmap (six future lesson domains) —
-  [roadmap.md](roadmap.md), phase 3
+- [api.md](api.md) — REST + SSE + MCP `/mcp` endpoints, HITL resume, curl examples (PSA-T2)
+- [screencast-mcp.md](screencast-mcp.md) — submission video scenario
+- [mcp-smoke-checklist.md](mcp-smoke-checklist.md) / [smoke-checklist.md](smoke-checklist.md) — manual smoke runs
+- Curriculum roadmap (six future lesson domains) — [roadmap.md](roadmap.md), phase 3
 
 Defense materials — slides, speaker notes, and live dashboards:
 [presentation/](presentation/)

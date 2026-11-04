@@ -23,8 +23,8 @@
 | Фаза | Форма | Что умеет |
 |------|-------|-----------|
 | **1. Консоль** | Python CLI-агент | Диалоговое обучение: урок → квиз → сократический вопрос; память прогресса |
-| **2. FastAPI** | REST-сервис | Тот же граф по HTTP: стриминг (ndjson), квизы через interrupt/HITL |
-| **3. FastAPI + MCP** | Сервис + эндпоинт `/mcp` | Двунаправленная интеграция с OpenClaw: Telegram и дашборды — инфраструктура OpenClaw |
+| **2. FastAPI** | REST-сервис | Тот же граф по HTTP: REST + SSE-стриминг, квизы через interrupt/HITL — **готово** (PSA-T2) |
+| **3. FastAPI + MCP** | Сервис + эндпоинт `/mcp` | MCP смонтирован в тот же процесс (Streamable HTTP, ADR-001), stdio — fallback; Telegram и дашборды — инфраструктура OpenClaw |
 
 Принцип: один LangGraph-граф — нарастающий транспорт (консоль → HTTP → MCP).
 
@@ -37,7 +37,7 @@
 | 3 | ≥2 tools внешних API | `search_sdd_docs` (Tavily), `read_openspec_examples` (GitHub API), `get_student_history` (OpenClaw) |
 | 4 | Состояние/memory | SqliteSaver-чекпоинтер + `data/training-state.json` (ADR-008) |
 | 5 | Роутинг ≥3 путей | routing node: knows_it / partial / new_topic (+ clarification) |
-| 6 | FastAPI | REST + стриминг, фаза 2 (ADR-008) |
+| 6 | FastAPI | REST + SSE + MCP `/mcp` в одном процессе — **готово** (ADR-001, PSA-T2) |
 
 ## 📁 Структура проекта
 
@@ -50,7 +50,7 @@
 │   ├── core/               # llm_manager, graph, tools, memory
 │   ├── lessons/            # домены с контентом (roadmap — в docs/roadmap.md)
 │   ├── console/            # фаза 1: CLI
-│   ├── api/                # фаза 2: FastAPI
+│   ├── app.py             # фаза 2: FastAPI (REST + SSE + /mcp)
 │   └── mcp/                # фаза 3: MCP-эндпоинт
 ├── prompts/                # few-shot скелеты уроков
 ├── data/                   # training-state.json, чекпоинты
@@ -58,7 +58,7 @@
 ├── backlog/                # BKL-конвенция задач
 ├── docs/
 ├── .github/workflows/      # CI: tests.yml
-├── app.py                  # точка входа CLI
+├── app.py                  # шим REST-сервера (python app.py); CLI: python -m sdd_trainer
 └── Makefile, Dockerfile, docker-compose.yml, pytest.ini, setup.py, ...
 ```
 

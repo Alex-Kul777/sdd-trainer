@@ -88,6 +88,14 @@ minutes**. Bracketed numbers are the course criteria each frame proves.
    tool 2 (criterion 3). If the lesson in frame 4 already logged
    `Инструмент search_sdd_docs(…)` (the graph's own tool fired), say so —
    that is the same Tavily seam from inside the graph.
+5b. **HTTP insert — same core, third entrance (30 s) [6].** In a second
+   terminal: `python -m sdd_trainer.app` (uvicorn on localhost:8000), then
+   `curl -s localhost:8000/health` and `curl -N "localhost:8000/sessions/<student>/stream"`
+   — the lesson streams over SSE while the terminal shows `event: node` lines
+   (assess → route → teach). Point at the `/mcp` mount note in the startup
+   log: "the same FastAPI process also serves MCP over Streamable HTTP —
+   ADR-001 literally; stdio is the fallback". Ctrl-C the server.
+
 6. **THE RESTART — the strongest frame (1.5 min) [4].**
    - Start a session and kill it mid-quiz (client exit kills the stdio
      server subprocess):
