@@ -91,7 +91,7 @@ td { padding: 10px 12px; border-bottom: 1px solid var(--border); line-height: 1.
     <div class="card"><div style="font-size:44px; font-weight:800; color:var(--accent)">78.35%</div>
       <div class="small">coverage (гейт курса — 40%)</div></div>
     <div class="card"><div style="font-size:44px; font-weight:800; color:var(--accent)">7</div>
-      <div class="small">MCP-инструментов · stdio + Streamable HTTP</div></div>
+      <div class="small">MCP-инструментов<br><span style="opacity:.75">stdio + Streamable HTTP</span></div></div>
   </div>
   <div class="small" style="margin-top:22px">Алекс · дедлайн сдачи — 13 ноября 2026</div>
 </div><div class="slide-num">2 / 11</div></div><div class="slide" id="slide-3"><div class="slide-tag">проблема</div>
@@ -143,9 +143,10 @@ td { padding: 10px 12px; border-bottom: 1px solid var(--border); line-height: 1.
   <line x1="755" y1="350" x2="755" y2="82" stroke="#A8B8CC" stroke-width="2" marker-end="url(#ah)"/>
   <path d="M830,60 C900,90 950,150 980,183" fill="none" stroke="#A8B8CC" stroke-width="2" marker-end="url(#ah)"/>
 
-  <text x="430" y="140" text-anchor="end" fill="#fb923c" font-size="15" font-style="italic">clarification</text>
-  <text x="620" y="118" fill="#a78bfa" font-size="15" font-style="italic">knows_it</text>
-  <text x="612" y="322" fill="#34d399" font-size="15" font-style="italic">partial · new_topic</text>
+  <text x="430" y="140" text-anchor="end" fill="#fb923c" font-size="16" font-style="italic">clarification</text>
+  <text x="620" y="118" fill="#a78bfa" font-size="16" font-style="italic">knows_it</text>
+  <text x="560" y="308" fill="#34d399" font-size="16" font-style="italic">partial</text>
+  <text x="648" y="338" fill="#34d399" font-size="16" font-style="italic">new_topic</text>
 </svg>
 <div class="small" style="margin-top:6px">
   Структура — дамп скомпилированного графа (<span class="mono">draw_mermaid()</span>) ·
@@ -161,7 +162,7 @@ td { padding: 10px 12px; border-bottom: 1px solid var(--border); line-height: 1.
   <b style="color:var(--accent)">④</b> память ·
   <b style="color:var(--accent)">⑤</b> роутинг ≥3 путей ·
   <b style="color:var(--accent)">⑥</b> MCP — критерии курса на компонентах</div>
-<div class="small" style="border-top:1px solid var(--border); padding-top:8px; margin-top:auto">
+<div class="small" style="border-top:1px solid var(--border); padding-top:8px; margin-top:auto; font-size:15px">
   Один уровень абстракции (C4 container) · стрелки подписаны протоколами · stdio — fallback (ADR-010) ·
   цвета: <span style="color:#818cf8">интерфейс</span> / <span style="color:#E58B6D">транспорт</span> /
   <span style="color:#D66A49">ядро</span> / <span style="color:#4CAF7D">хранение</span> /
@@ -178,6 +179,7 @@ td { padding: 10px 12px; border-bottom: 1px solid var(--border); line-height: 1.
     <div class="bar" style="flex:1; max-width:260px"><div style="width:85%"></div></div>
     <span class="small" style="flex-basis:100%; font-size:15px">Маршрут: partial — Ученик демонстрирует общее понимание различий между папками и статусами спецификаций, но признаёт пробелы в деталях cha…</span>
   </div>
+  <div class="small" style="opacity:.65; font-size:13.5px; text-align:right">цитаты дословные из транскрипта; длинные сокращены (…)</div>
   <div class="card" style="border-color:var(--green); background:rgba(76,175,125,.08); padding:16px 24px">
     <span class="badge" style="border-color:var(--green); color:var(--green)">Квиз зачтён</span>
     <span class="body-text" style="font-size:18px; margin-left:14px">
@@ -325,147 +327,321 @@ td { padding: 10px 12px; border-bottom: 1px solid var(--border); line-height: 1.
   <tr><td><b>AIA_08</b> (PDF) · Архитектура agent harnesses</td>
       <td>MCP stdio как harness-протокол (ADR-010)</td></tr>
 </table>
-<div class="small" style="border-top:1px solid var(--border); padding-top:10px; margin-top:12px; font-size:14px">
+<div class="small" style="border-top:1px solid var(--border); padding-top:10px; margin-top:12px; font-size:15px">
   План (29.10) → реализация: ReAct-цикл заменён детерминированным роутингом — воспроизводимость вердиктов ·
   GigaSearch не понадобился — хватило Tavily · REST+SSE реализованы, MCP смонтирован в тот же процесс —
   не замена, а второй шов; паттерн interrupt/Command сохранён.<br>
-  Основа карты — PLAN-FINAL-PROJECT.md §3, сверено с кодом репозитория.</div><div class="slide-num">Приложение · A1</div></div><div class="slide" id="slide-13"><div class="slide-tag">приложение</div>
+  Честно не перенесено из курса: реранкер, pass@k, субагенты, CoT-критик — осознанный выбор, а не пробел.</div><div class="slide-num">Приложение · A1</div></div><div class="slide" id="slide-13"><div class="slide-tag">приложение</div>
 <h2>Ноутбук AIA_01 → SDD Trainer</h2>
-<div style="flex:1; display:flex; align-items:center; gap:26px">
-  <div class="card" style="flex:1.1; height:100%; max-height:420px; display:flex; flex-direction:column; justify-content:center; gap:14px">
-    <div class="small" style="letter-spacing:.12em; text-transform:uppercase; font-weight:700">Ноутбук курса</div>
-    <div style="font-size:30px; font-weight:800; line-height:1.2"><span>AIA_01</span> · Введение в ИИ агентов</div>
-    <div class="small" style="font-size:17px">Разделы: Вызов API GigaChat · диалоговый формат</div>
-  </div>
-  <div class="arrow" style="font-size:44px">→</div>
-  <div class="card" style="flex:1.3; height:100%; max-height:420px; display:flex; flex-direction:column; justify-content:center; gap:14px; border-color:#D66A49">
-    <div class="small" style="letter-spacing:.12em; text-transform:uppercase; font-weight:700; color:#D66A49">В SDD Trainer</div>
-    <div class="body-text" style="font-size:20px; line-height:1.45">OpenAI-совместимый клиент cloud.ru — единая точка всех вызовов модели</div>
-    <div class="mono small" style="font-size:15px">core/llm_manager.py</div>
-  </div>
+<div style="display:flex; align-items:baseline; gap:14px; margin:2px 0 10px">
+  <div style="font-size:21px; font-weight:800"><span>AIA_01</span> · Введение в ИИ агентов</div>
+  <span class="badge">ADR-005 · КРИТЕРИЙ 1</span>
 </div>
-<div style="display:flex; justify-content:center; margin-top:6px">
-  <span class="badge">ADR-005</span>
-</div><div class="slide-num">Приложение · A2</div></div><div class="slide" id="slide-14"><div class="slide-tag">приложение</div>
+<div style="display:flex; gap:12px; margin-bottom:2px">
+  <div class="small" style="flex:1; letter-spacing:.1em; text-transform:uppercase; font-weight:700; opacity:.7">Ноутбук курса</div>
+  <div style="width:20px"></div>
+  <div class="small" style="flex:1.12; letter-spacing:.1em; text-transform:uppercase; font-weight:700; color:#D66A49">В SDD Trainer</div>
+</div>
+<div style="flex:1; display:flex; flex-direction:column; justify-content:center">
+  <div style="display:flex; align-items:stretch; gap:12px; margin:7px 0">
+  <div class="card" style="flex:1; padding:9px 14px; display:flex; align-items:center">
+    <div class="small" style="font-size:14.5px; line-height:1.35">OpenAI-клиент: api_key + base_url</div></div>
+  <div style="display:flex; align-items:center; font-size:20px; color:var(--accent)">→</div>
+  <div class="card" style="flex:1.12; padding:9px 14px; display:flex; align-items:center; border-color:#D66A49">
+    <div class="small" style="font-size:14.5px; line-height:1.35"><span class="mono" style="color:#D66A49">llm_manager.py: LLMManager.client (lazy)</span></div></div>
+</div><div style="display:flex; align-items:stretch; gap:12px; margin:7px 0">
+  <div class="card" style="flex:1; padding:9px 14px; display:flex; align-items:center">
+    <div class="small" style="font-size:14.5px; line-height:1.35">chat.completions.create(model, messages)</div></div>
+  <div style="display:flex; align-items:center; font-size:20px; color:var(--accent)">→</div>
+  <div class="card" style="flex:1.12; padding:9px 14px; display:flex; align-items:center; border-color:#D66A49">
+    <div class="small" style="font-size:14.5px; line-height:1.35"><span class="mono" style="color:#D66A49">llm_manager.py: _complete() — единая точка вызовов</span></div></div>
+</div><div style="display:flex; align-items:stretch; gap:12px; margin:7px 0">
+  <div class="card" style="flex:1; padding:9px 14px; display:flex; align-items:center">
+    <div class="small" style="font-size:14.5px; line-height:1.35">Роли system / user / assistant</div></div>
+  <div style="display:flex; align-items:center; font-size:20px; color:var(--accent)">→</div>
+  <div class="card" style="flex:1.12; padding:9px 14px; display:flex; align-items:center; border-color:#D66A49">
+    <div class="small" style="font-size:14.5px; line-height:1.35"><span class="mono" style="color:#D66A49">llm_manager.py: chat() — сборка сообщений</span></div></div>
+</div><div style="display:flex; align-items:stretch; gap:12px; margin:7px 0">
+  <div class="card" style="flex:1; padding:9px 14px; display:flex; align-items:center">
+    <div class="small" style="font-size:14.5px; line-height:1.35">LLM stateless — история на клиенте</div></div>
+  <div style="display:flex; align-items:center; font-size:20px; color:var(--accent)">→</div>
+  <div class="card" style="flex:1.12; padding:9px 14px; display:flex; align-items:center; border-color:#D66A49">
+    <div class="small" style="font-size:14.5px; line-height:1.35"><span class="mono" style="color:#D66A49">llm_manager.py: LLMManager.history (in-memory)</span></div></div>
+</div>
+</div>
+<div class="small" style="opacity:.6; font-size:12.5px; text-align:center">каждая строка проверена по коду репозитория (факт-чек: блок → файл/функция)</div><div class="slide-num">Приложение · A2</div></div><div class="slide" id="slide-14"><div class="slide-tag">приложение</div>
 <h2>Ноутбук AIA_02 → SDD Trainer</h2>
-<div style="flex:1; display:flex; align-items:center; gap:26px">
-  <div class="card" style="flex:1.1; height:100%; max-height:420px; display:flex; flex-direction:column; justify-content:center; gap:14px">
-    <div class="small" style="letter-spacing:.12em; text-transform:uppercase; font-weight:700">Ноутбук курса</div>
-    <div style="font-size:30px; font-weight:800; line-height:1.2"><span>AIA_02</span> · Инструменты и структурная генерация</div>
-    <div class="small" style="font-size:17px">Разделы: Pydantic · tools / tool_choice</div>
-  </div>
-  <div class="arrow" style="font-size:44px">→</div>
-  <div class="card" style="flex:1.3; height:100%; max-height:420px; display:flex; flex-direction:column; justify-content:center; gap:14px; border-color:#D66A49">
-    <div class="small" style="letter-spacing:.12em; text-transform:uppercase; font-weight:700; color:#D66A49">В SDD Trainer</div>
-    <div class="body-text" style="font-size:20px; line-height:1.45">Pydantic-схемы вердиктов (Assessment, RouteDecision) — structured output без парсинга текста</div>
-    <div class="mono small" style="font-size:15px">core/schemas.py · tool_choice</div>
-  </div>
-</div>
-<div style="display:flex; justify-content:center; margin-top:6px">
+<div style="display:flex; align-items:baseline; gap:14px; margin:2px 0 10px">
+  <div style="font-size:21px; font-weight:800"><span>AIA_02</span> · Инструменты и структурная генерация</div>
   <span class="badge">ADR-005</span>
-</div><div class="slide-num">Приложение · A3</div></div><div class="slide" id="slide-15"><div class="slide-tag">приложение</div>
+</div>
+<div style="display:flex; gap:12px; margin-bottom:2px">
+  <div class="small" style="flex:1; letter-spacing:.1em; text-transform:uppercase; font-weight:700; opacity:.7">Ноутбук курса</div>
+  <div style="width:20px"></div>
+  <div class="small" style="flex:1.12; letter-spacing:.1em; text-transform:uppercase; font-weight:700; color:#D66A49">В SDD Trainer</div>
+</div>
+<div style="flex:1; display:flex; flex-direction:column; justify-content:center">
+  <div style="display:flex; align-items:stretch; gap:12px; margin:7px 0">
+  <div class="card" style="flex:1; padding:9px 14px; display:flex; align-items:center">
+    <div class="small" style="font-size:14.5px; line-height:1.35">Pydantic-модель → JSON-схема (tools)</div></div>
+  <div style="display:flex; align-items:center; font-size:20px; color:var(--accent)">→</div>
+  <div class="card" style="flex:1.12; padding:9px 14px; display:flex; align-items:center; border-color:#D66A49">
+    <div class="small" style="font-size:14.5px; line-height:1.35"><span class="mono" style="color:#D66A49">llm_manager.py: _structure_tool() — схема как tool</span></div></div>
+</div><div style="display:flex; align-items:stretch; gap:12px; margin:7px 0">
+  <div class="card" style="flex:1; padding:9px 14px; display:flex; align-items:center">
+    <div class="small" style="font-size:14.5px; line-height:1.35">tool_choice: форсированный вызов функции</div></div>
+  <div style="display:flex; align-items:center; font-size:20px; color:var(--accent)">→</div>
+  <div class="card" style="flex:1.12; padding:9px 14px; display:flex; align-items:center; border-color:#D66A49">
+    <div class="small" style="font-size:14.5px; line-height:1.35"><span class="mono" style="color:#D66A49">llm_manager.py: llm_call() — structured output</span></div></div>
+</div><div style="display:flex; align-items:stretch; gap:12px; margin:7px 0">
+  <div class="card" style="flex:1; padding:9px 14px; display:flex; align-items:center">
+    <div class="small" style="font-size:14.5px; line-height:1.35">model_validate_json + ValidationError</div></div>
+  <div style="display:flex; align-items:center; font-size:20px; color:var(--accent)">→</div>
+  <div class="card" style="flex:1.12; padding:9px 14px; display:flex; align-items:center; border-color:#D66A49">
+    <div class="small" style="font-size:14.5px; line-height:1.35"><span class="mono" style="color:#D66A49">llm_manager.py: llm_call() — валидация против схемы</span></div></div>
+</div><div style="display:flex; align-items:stretch; gap:12px; margin:7px 0">
+  <div class="card" style="flex:1; padding:9px 14px; display:flex; align-items:center">
+    <div class="small" style="font-size:14.5px; line-height:1.35">Инструмент = описание + реализация</div></div>
+  <div style="display:flex; align-items:center; font-size:20px; color:var(--accent)">→</div>
+  <div class="card" style="flex:1.12; padding:9px 14px; display:flex; align-items:center; border-color:#D66A49">
+    <div class="small" style="font-size:14.5px; line-height:1.35"><span class="mono" style="color:#D66A49">tools.py: search_sdd_docs / analyze_student_repo</span></div></div>
+</div>
+</div>
+<div class="small" style="opacity:.6; font-size:12.5px; text-align:center">каждая строка проверена по коду репозитория (факт-чек: блок → файл/функция)</div><div class="slide-num">Приложение · A3</div></div><div class="slide" id="slide-15"><div class="slide-tag">приложение</div>
 <h2>Ноутбук AIA_03 → SDD Trainer</h2>
-<div style="flex:1; display:flex; align-items:center; gap:26px">
-  <div class="card" style="flex:1.1; height:100%; max-height:420px; display:flex; flex-direction:column; justify-content:center; gap:14px">
-    <div class="small" style="letter-spacing:.12em; text-transform:uppercase; font-weight:700">Ноутбук курса</div>
-    <div style="font-size:30px; font-weight:800; line-height:1.2"><span>AIA_03</span> · LangGraph</div>
-    <div class="small" style="font-size:17px">Разделы: Графы · human-in-the-loop</div>
-  </div>
-  <div class="arrow" style="font-size:44px">→</div>
-  <div class="card" style="flex:1.3; height:100%; max-height:420px; display:flex; flex-direction:column; justify-content:center; gap:14px; border-color:#D66A49">
-    <div class="small" style="letter-spacing:.12em; text-transform:uppercase; font-weight:700; color:#D66A49">В SDD Trainer</div>
-    <div class="body-text" style="font-size:20px; line-height:1.45">Граф assess → route → teach → quiz; interrupt-паузы = диалог с учеником</div>
-    <div class="mono small" style="font-size:15px">core/graph.py</div>
-  </div>
+<div style="display:flex; align-items:baseline; gap:14px; margin:2px 0 10px">
+  <div style="font-size:21px; font-weight:800"><span>AIA_03</span> · LangGraph</div>
+  <span class="badge">КРИТЕРИЙ 2</span>
 </div>
-<div style="display:flex; justify-content:center; margin-top:6px">
-  <span class="badge">критерий 2</span>
-</div><div class="slide-num">Приложение · A4</div></div><div class="slide" id="slide-16"><div class="slide-tag">приложение</div>
+<div style="display:flex; gap:12px; margin-bottom:2px">
+  <div class="small" style="flex:1; letter-spacing:.1em; text-transform:uppercase; font-weight:700; opacity:.7">Ноутбук курса</div>
+  <div style="width:20px"></div>
+  <div class="small" style="flex:1.12; letter-spacing:.1em; text-transform:uppercase; font-weight:700; color:#D66A49">В SDD Trainer</div>
+</div>
+<div style="flex:1; display:flex; flex-direction:column; justify-content:center">
+  <div style="display:flex; align-items:stretch; gap:12px; margin:7px 0">
+  <div class="card" style="flex:1; padding:9px 14px; display:flex; align-items:center">
+    <div class="small" style="font-size:14.5px; line-height:1.35">StateGraph(TypedDict) + add_node/add_edge</div></div>
+  <div style="display:flex; align-items:center; font-size:20px; color:var(--accent)">→</div>
+  <div class="card" style="flex:1.12; padding:9px 14px; display:flex; align-items:center; border-color:#D66A49">
+    <div class="small" style="font-size:14.5px; line-height:1.35"><span class="mono" style="color:#D66A49">graph.py: build_graph() — 5 узлов assess/route/…</span></div></div>
+</div><div style="display:flex; align-items:stretch; gap:12px; margin:7px 0">
+  <div class="card" style="flex:1; padding:9px 14px; display:flex; align-items:center">
+    <div class="small" style="font-size:14.5px; line-height:1.35">add_conditional_edges + словарь переходов</div></div>
+  <div style="display:flex; align-items:center; font-size:20px; color:var(--accent)">→</div>
+  <div class="card" style="flex:1.12; padding:9px 14px; display:flex; align-items:center; border-color:#D66A49">
+    <div class="small" style="font-size:14.5px; line-height:1.35"><span class="mono" style="color:#D66A49">graph.py: route_after_route — knows_it/partial/…</span></div></div>
+</div><div style="display:flex; align-items:stretch; gap:12px; margin:7px 0">
+  <div class="card" style="flex:1; padding:9px 14px; display:flex; align-items:center">
+    <div class="small" style="font-size:14.5px; line-height:1.35">compile() графа</div></div>
+  <div style="display:flex; align-items:center; font-size:20px; color:var(--accent)">→</div>
+  <div class="card" style="flex:1.12; padding:9px 14px; display:flex; align-items:center; border-color:#D66A49">
+    <div class="small" style="font-size:14.5px; line-height:1.35"><span class="mono" style="color:#D66A49">graph.py: build_graph() — компиляция с checkpointer</span></div></div>
+</div><div style="display:flex; align-items:stretch; gap:12px; margin:7px 0">
+  <div class="card" style="flex:1; padding:9px 14px; display:flex; align-items:center">
+    <div class="small" style="font-size:14.5px; line-height:1.35">HITL-узлы: hitl_need → hitl_feedback</div></div>
+  <div style="display:flex; align-items:center; font-size:20px; color:var(--accent)">→</div>
+  <div class="card" style="flex:1.12; padding:9px 14px; display:flex; align-items:center; border-color:#D66A49">
+    <div class="small" style="font-size:14.5px; line-height:1.35"><span class="mono" style="color:#D66A49">graph.py: clarify_node — interrupt-уточнение</span></div></div>
+</div><div style="display:flex; align-items:stretch; gap:12px; margin:7px 0">
+  <div class="card" style="flex:1; padding:9px 14px; display:flex; align-items:center">
+    <div class="small" style="font-size:14.5px; line-height:1.35">llm_call(dialog, structure=…)</div></div>
+  <div style="display:flex; align-items:center; font-size:20px; color:var(--accent)">→</div>
+  <div class="card" style="flex:1.12; padding:9px 14px; display:flex; align-items:center; border-color:#D66A49">
+    <div class="small" style="font-size:14.5px; line-height:1.35"><span class="mono" style="color:#D66A49">llm_manager.py: llm_call(messages, structure)</span></div></div>
+</div>
+</div>
+<div class="small" style="opacity:.6; font-size:12.5px; text-align:center">каждая строка проверена по коду репозитория (факт-чек: блок → файл/функция)</div><div class="slide-num">Приложение · A4</div></div><div class="slide" id="slide-16"><div class="slide-tag">приложение</div>
 <h2>Ноутбук AIA_04 → SDD Trainer</h2>
-<div style="flex:1; display:flex; align-items:center; gap:26px">
-  <div class="card" style="flex:1.1; height:100%; max-height:420px; display:flex; flex-direction:column; justify-content:center; gap:14px">
-    <div class="small" style="letter-spacing:.12em; text-transform:uppercase; font-weight:700">Ноутбук курса</div>
-    <div style="font-size:30px; font-weight:800; line-height:1.2"><span>AIA_04</span> · Состояние и память</div>
-    <div class="small" style="font-size:17px">Разделы: Чекпоинтер LangGraph</div>
-  </div>
-  <div class="arrow" style="font-size:44px">→</div>
-  <div class="card" style="flex:1.3; height:100%; max-height:420px; display:flex; flex-direction:column; justify-content:center; gap:14px; border-color:#D66A49">
-    <div class="small" style="letter-spacing:.12em; text-transform:uppercase; font-weight:700; color:#D66A49">В SDD Trainer</div>
-    <div class="body-text" style="font-size:20px; line-height:1.45">SqliteSaver + thread_id student:&lt;name&gt; — фича рестарта: kill посреди квиза → resumed=True</div>
-    <div class="mono small" style="font-size:15px">core/memory.py</div>
-  </div>
+<div style="display:flex; align-items:baseline; gap:14px; margin:2px 0 10px">
+  <div style="font-size:21px; font-weight:800"><span>AIA_04</span> · Состояние и память ИИ агентов</div>
+  <span class="badge">ADR-008 · КРИТЕРИЙ 4</span>
 </div>
-<div style="display:flex; justify-content:center; margin-top:6px">
-  <span class="badge">ADR-008 · критерий 4</span>
-</div><div class="slide-num">Приложение · A5</div></div><div class="slide" id="slide-17"><div class="slide-tag">приложение</div>
+<div style="display:flex; gap:12px; margin-bottom:2px">
+  <div class="small" style="flex:1; letter-spacing:.1em; text-transform:uppercase; font-weight:700; opacity:.7">Ноутбук курса</div>
+  <div style="width:20px"></div>
+  <div class="small" style="flex:1.12; letter-spacing:.1em; text-transform:uppercase; font-weight:700; color:#D66A49">В SDD Trainer</div>
+</div>
+<div style="flex:1; display:flex; flex-direction:column; justify-content:center">
+  <div style="display:flex; align-items:stretch; gap:12px; margin:7px 0">
+  <div class="card" style="flex:1; padding:9px 14px; display:flex; align-items:center">
+    <div class="small" style="font-size:14.5px; line-height:1.35">TypedDict-состояние графа</div></div>
+  <div style="display:flex; align-items:center; font-size:20px; color:var(--accent)">→</div>
+  <div class="card" style="flex:1.12; padding:9px 14px; display:flex; align-items:center; border-color:#D66A49">
+    <div class="small" style="font-size:14.5px; line-height:1.35"><span class="mono" style="color:#D66A49">graph.py: TrainerState — 12 каналов</span></div></div>
+</div><div style="display:flex; align-items:stretch; gap:12px; margin:7px 0">
+  <div class="card" style="flex:1; padding:9px 14px; display:flex; align-items:center">
+    <div class="small" style="font-size:14.5px; line-height:1.35">Reducer: Annotated[List, add]</div></div>
+  <div style="display:flex; align-items:center; font-size:20px; color:var(--accent)">→</div>
+  <div class="card" style="flex:1.12; padding:9px 14px; display:flex; align-items:center; border-color:#D66A49">
+    <div class="small" style="font-size:14.5px; line-height:1.35"><span class="mono" style="color:#D66A49">graph.py: log, clarification_answers — накопление</span></div></div>
+</div><div style="display:flex; align-items:stretch; gap:12px; margin:7px 0">
+  <div class="card" style="flex:1; padding:9px 14px; display:flex; align-items:center">
+    <div class="small" style="font-size:14.5px; line-height:1.35">Чекпойнтер + thread_id</div></div>
+  <div style="display:flex; align-items:center; font-size:20px; color:var(--accent)">→</div>
+  <div class="card" style="flex:1.12; padding:9px 14px; display:flex; align-items:center; border-color:#D66A49">
+    <div class="small" style="font-size:14.5px; line-height:1.35"><span class="mono" style="color:#D66A49">memory.py: SqliteSaver + thread_id student:&lt;name&gt;</span></div></div>
+</div><div style="display:flex; align-items:stretch; gap:12px; margin:7px 0">
+  <div class="card" style="flex:1; padding:9px 14px; display:flex; align-items:center">
+    <div class="small" style="font-size:14.5px; line-height:1.35">Долгосрочная память между сессиями</div></div>
+  <div style="display:flex; align-items:center; font-size:20px; color:var(--accent)">→</div>
+  <div class="card" style="flex:1.12; padding:9px 14px; display:flex; align-items:center; border-color:#D66A49">
+    <div class="small" style="font-size:14.5px; line-height:1.35"><span class="mono" style="color:#D66A49">memory.py: TrainingStateStore.record_quiz_result()</span></div></div>
+</div><div style="display:flex; align-items:stretch; gap:12px; margin:7px 0">
+  <div class="card" style="flex:1; padding:9px 14px; display:flex; align-items:center">
+    <div class="small" style="font-size:14.5px; line-height:1.35">Краткосрочная история диалога</div></div>
+  <div style="display:flex; align-items:center; font-size:20px; color:var(--accent)">→</div>
+  <div class="card" style="flex:1.12; padding:9px 14px; display:flex; align-items:center; border-color:#D66A49">
+    <div class="small" style="font-size:14.5px; line-height:1.35"><span class="mono" style="color:#D66A49">llm_manager.py: LLMManager.history</span></div></div>
+</div>
+</div>
+<div class="small" style="opacity:.6; font-size:12.5px; text-align:center">каждая строка проверена по коду репозитория (факт-чек: блок → файл/функция)</div><div class="slide-num">Приложение · A5</div></div><div class="slide" id="slide-17"><div class="slide-tag">приложение</div>
 <h2>Ноутбук AIA_05 → SDD Trainer</h2>
-<div style="flex:1; display:flex; align-items:center; gap:26px">
-  <div class="card" style="flex:1.1; height:100%; max-height:420px; display:flex; flex-direction:column; justify-content:center; gap:14px">
-    <div class="small" style="letter-spacing:.12em; text-transform:uppercase; font-weight:700">Ноутбук курса</div>
-    <div style="font-size:30px; font-weight:800; line-height:1.2"><span>AIA_05</span> · Поиск в LLM-агентах и LangGraph</div>
-    <div class="small" style="font-size:17px">Разделы: Tavily · поиск как инструмент</div>
-  </div>
-  <div class="arrow" style="font-size:44px">→</div>
-  <div class="card" style="flex:1.3; height:100%; max-height:420px; display:flex; flex-direction:column; justify-content:center; gap:14px; border-color:#D66A49">
-    <div class="small" style="letter-spacing:.12em; text-transform:uppercase; font-weight:700; color:#D66A49">В SDD Trainer</div>
-    <div class="body-text" style="font-size:20px; line-height:1.45">search_sdd_docs — живой поиск в уроках и MCP-tool</div>
-    <div class="mono small" style="font-size:15px">core/tools.py</div>
-  </div>
+<div style="display:flex; align-items:baseline; gap:14px; margin:2px 0 10px">
+  <div style="font-size:21px; font-weight:800"><span>AIA_05</span> · Поиск в LLM-агентах и LangGraph</div>
+  <span class="badge">ADR-006 · КРИТЕРИЙ 3</span>
 </div>
-<div style="display:flex; justify-content:center; margin-top:6px">
-  <span class="badge">ADR-006 · критерий 3</span>
-</div><div class="slide-num">Приложение · A6</div></div><div class="slide" id="slide-18"><div class="slide-tag">приложение</div>
-<h2>Ноутбук AIA_06 → SDD Trainer</h2>
-<div style="flex:1; display:flex; align-items:center; gap:26px">
-  <div class="card" style="flex:1.1; height:100%; max-height:420px; display:flex; flex-direction:column; justify-content:center; gap:14px">
-    <div class="small" style="letter-spacing:.12em; text-transform:uppercase; font-weight:700">Ноутбук курса</div>
-    <div style="font-size:30px; font-weight:800; line-height:1.2"><span style="color:var(--primary)">AIA_06</span> · Практика разработки ИИ агентов ⭐</div>
-    <div class="small" style="font-size:17px">Разделы: Агент со сложным роутингом</div>
-  </div>
-  <div class="arrow" style="font-size:44px">→</div>
-  <div class="card" style="flex:1.3; height:100%; max-height:420px; display:flex; flex-direction:column; justify-content:center; gap:14px; border-color:#D66A49">
-    <div class="small" style="letter-spacing:.12em; text-transform:uppercase; font-weight:700; color:#D66A49">В SDD Trainer</div>
-    <div class="body-text" style="font-size:20px; line-height:1.45">Прямой шаблон графа: 4 маршрута — knows_it · partial · new_topic · clarification</div>
-    <div class="mono small" style="font-size:15px">core/graph.py</div>
-  </div>
+<div style="display:flex; gap:12px; margin-bottom:2px">
+  <div class="small" style="flex:1; letter-spacing:.1em; text-transform:uppercase; font-weight:700; opacity:.7">Ноутбук курса</div>
+  <div style="width:20px"></div>
+  <div class="small" style="flex:1.12; letter-spacing:.1em; text-transform:uppercase; font-weight:700; color:#D66A49">В SDD Trainer</div>
 </div>
-<div style="display:flex; justify-content:center; margin-top:6px">
-  <span class="badge">критерий 5</span>
-</div><div class="slide-num">Приложение · A7</div></div><div class="slide" id="slide-19"><div class="slide-tag">приложение</div>
+<div style="flex:1; display:flex; flex-direction:column; justify-content:center">
+  <div style="display:flex; align-items:stretch; gap:12px; margin:7px 0">
+  <div class="card" style="flex:1; padding:9px 14px; display:flex; align-items:center">
+    <div class="small" style="font-size:14.5px; line-height:1.35">tavily_client.search(query, max_results)</div></div>
+  <div style="display:flex; align-items:center; font-size:20px; color:var(--accent)">→</div>
+  <div class="card" style="flex:1.12; padding:9px 14px; display:flex; align-items:center; border-color:#D66A49">
+    <div class="small" style="font-size:14.5px; line-height:1.35"><span class="mono" style="color:#D66A49">tools.py: search_sdd_docs() — POST api.tavily.com/search</span></div></div>
+</div><div style="display:flex; align-items:stretch; gap:12px; margin:7px 0">
+  <div class="card" style="flex:1; padding:9px 14px; display:flex; align-items:center">
+    <div class="small" style="font-size:14.5px; line-height:1.35">Нормализация выдачи к единому виду</div></div>
+  <div style="display:flex; align-items:center; font-size:20px; color:var(--accent)">→</div>
+  <div class="card" style="flex:1.12; padding:9px 14px; display:flex; align-items:center; border-color:#D66A49">
+    <div class="small" style="font-size:14.5px; line-height:1.35"><span class="mono" style="color:#D66A49">tools.py: _search_via() — [{title, url, content}]</span></div></div>
+</div><div style="display:flex; align-items:stretch; gap:12px; margin:7px 0">
+  <div class="card" style="flex:1; padding:9px 14px; display:flex; align-items:center">
+    <div class="small" style="font-size:14.5px; line-height:1.35">Поиск как узел графа: need → search</div></div>
+  <div style="display:flex; align-items:center; font-size:20px; color:var(--accent)">→</div>
+  <div class="card" style="flex:1.12; padding:9px 14px; display:flex; align-items:center; border-color:#D66A49">
+    <div class="small" style="font-size:14.5px; line-height:1.35"><span class="mono" style="color:#D66A49">graph.py: teach_node — DocsDecision → docs_search</span></div></div>
+</div>
+</div>
+<div class="small" style="opacity:.6; font-size:12.5px; text-align:center">каждая строка проверена по коду репозитория (факт-чек: блок → файл/функция)</div><div class="slide-num">Приложение · A6</div></div><div class="slide" id="slide-18"><div class="slide-tag">приложение</div>
+<h2>Ноутбук AIA_06 ⭐ → SDD Trainer</h2>
+<div style="display:flex; align-items:baseline; gap:14px; margin:2px 0 10px">
+  <div style="font-size:21px; font-weight:800"><span>AIA_06 ⭐</span> · Практика разработки ИИ агентов</div>
+  <span class="badge">КРИТЕРИЙ 5</span>
+</div>
+<div style="display:flex; gap:12px; margin-bottom:2px">
+  <div class="small" style="flex:1; letter-spacing:.1em; text-transform:uppercase; font-weight:700; opacity:.7">Ноутбук курса</div>
+  <div style="width:20px"></div>
+  <div class="small" style="flex:1.12; letter-spacing:.1em; text-transform:uppercase; font-weight:700; color:#D66A49">В SDD Trainer</div>
+</div>
+<div style="flex:1; display:flex; flex-direction:column; justify-content:center">
+  <div style="display:flex; align-items:stretch; gap:12px; margin:7px 0">
+  <div class="card" style="flex:1; padding:9px 14px; display:flex; align-items:center">
+    <div class="small" style="font-size:14.5px; line-height:1.35">Роутинг-агент: routing_node + переходы</div></div>
+  <div style="display:flex; align-items:center; font-size:20px; color:var(--accent)">→</div>
+  <div class="card" style="flex:1.12; padding:9px 14px; display:flex; align-items:center; border-color:#D66A49">
+    <div class="small" style="font-size:14.5px; line-height:1.35"><span class="mono" style="color:#D66A49">graph.py: route_node + add_conditional_edges</span></div></div>
+</div><div style="display:flex; align-items:stretch; gap:12px; margin:7px 0">
+  <div class="card" style="flex:1; padding:9px 14px; display:flex; align-items:center">
+    <div class="small" style="font-size:14.5px; line-height:1.35">HITL-уточнение запроса</div></div>
+  <div style="display:flex; align-items:center; font-size:20px; color:var(--accent)">→</div>
+  <div class="card" style="flex:1.12; padding:9px 14px; display:flex; align-items:center; border-color:#D66A49">
+    <div class="small" style="font-size:14.5px; line-height:1.35"><span class="mono" style="color:#D66A49">graph.py: clarify_node — interrupt</span></div></div>
+</div><div style="display:flex; align-items:stretch; gap:12px; margin:7px 0">
+  <div class="card" style="flex:1; padding:9px 14px; display:flex; align-items:center">
+    <div class="small" style="font-size:14.5px; line-height:1.35">Bounded loop — цикл уточнений ограничен</div></div>
+  <div style="display:flex; align-items:center; font-size:20px; color:var(--accent)">→</div>
+  <div class="card" style="flex:1.12; padding:9px 14px; display:flex; align-items:center; border-color:#D66A49">
+    <div class="small" style="font-size:14.5px; line-height:1.35"><span class="mono" style="color:#D66A49">graph.py: MAX_CLARIFICATION_ROUNDS</span></div></div>
+</div><div style="display:flex; align-items:stretch; gap:12px; margin:7px 0">
+  <div class="card" style="flex:1; padding:9px 14px; display:flex; align-items:center">
+    <div class="small" style="font-size:14.5px; line-height:1.35">Инструменты в узлах агента</div></div>
+  <div style="display:flex; align-items:center; font-size:20px; color:var(--accent)">→</div>
+  <div class="card" style="flex:1.12; padding:9px 14px; display:flex; align-items:center; border-color:#D66A49">
+    <div class="small" style="font-size:14.5px; line-height:1.35"><span class="mono" style="color:#D66A49">graph.py: assess_node (repo_analyzer)</span></div></div>
+</div>
+</div>
+<div class="small" style="opacity:.6; font-size:12.5px; text-align:center">каждая строка проверена по коду репозитория (факт-чек: блок → файл/функция)</div><div class="slide-num">Приложение · A7</div></div><div class="slide" id="slide-19"><div class="slide-tag">приложение</div>
 <h2>Ноутбук AIA_07 → SDD Trainer</h2>
-<div style="flex:1; display:flex; align-items:center; gap:26px">
-  <div class="card" style="flex:1.1; height:100%; max-height:420px; display:flex; flex-direction:column; justify-content:center; gap:14px">
-    <div class="small" style="letter-spacing:.12em; text-transform:uppercase; font-weight:700">Ноутбук курса</div>
-    <div style="font-size:30px; font-weight:800; line-height:1.2"><span>AIA_07</span> · Сбор метрик и деплой ИИ агентов</div>
-    <div class="small" style="font-size:17px">Разделы: F1 · токенизация · interrupt + Command · деплой</div>
-  </div>
-  <div class="arrow" style="font-size:44px">→</div>
-  <div class="card" style="flex:1.3; height:100%; max-height:420px; display:flex; flex-direction:column; justify-content:center; gap:14px; border-color:#D66A49">
-    <div class="small" style="letter-spacing:.12em; text-transform:uppercase; font-weight:700; color:#D66A49">В SDD Trainer</div>
-    <div class="body-text" style="font-size:20px; line-height:1.45">Взвешенный токенный F1 квизов; Command(resume) в MCP; FastAPI REST+SSE деплой</div>
-    <div class="mono small" style="font-size:15px">core/quiz.py · mcp/server.py · FastAPI</div>
-  </div>
+<div style="display:flex; align-items:baseline; gap:14px; margin:2px 0 10px">
+  <div style="font-size:21px; font-weight:800"><span>AIA_07</span> · Сбор метрик и деплой ИИ агентов</div>
+  <span class="badge">ADR-009 · КРИТЕРИЙ 6</span>
 </div>
-<div style="display:flex; justify-content:center; margin-top:6px">
-  <span class="badge">ADR-009 · PSA-T2 · критерий 6</span>
-</div><div class="slide-num">Приложение · A8</div></div><div class="slide" id="slide-20"><div class="slide-tag">приложение</div>
+<div style="display:flex; gap:12px; margin-bottom:2px">
+  <div class="small" style="flex:1; letter-spacing:.1em; text-transform:uppercase; font-weight:700; opacity:.7">Ноутбук курса</div>
+  <div style="width:20px"></div>
+  <div class="small" style="flex:1.12; letter-spacing:.1em; text-transform:uppercase; font-weight:700; color:#D66A49">В SDD Trainer</div>
+</div>
+<div style="flex:1; display:flex; flex-direction:column; justify-content:center">
+  <div style="display:flex; align-items:stretch; gap:12px; margin:7px 0">
+  <div class="card" style="flex:1; padding:9px 14px; display:flex; align-items:center">
+    <div class="small" style="font-size:14.5px; line-height:1.35">Токенизация + Precision/Recall/F1</div></div>
+  <div style="display:flex; align-items:center; font-size:20px; color:var(--accent)">→</div>
+  <div class="card" style="flex:1.12; padding:9px 14px; display:flex; align-items:center; border-color:#D66A49">
+    <div class="small" style="font-size:14.5px; line-height:1.35"><span class="mono" style="color:#D66A49">quiz.py: tokenize() + answer_f1() — SQuAD-style F1</span></div></div>
+</div><div style="display:flex; align-items:stretch; gap:12px; margin:7px 0">
+  <div class="card" style="flex:1; padding:9px 14px; display:flex; align-items:center">
+    <div class="small" style="font-size:14.5px; line-height:1.35">Деплой через FastAPI: POST /invoke</div></div>
+  <div style="display:flex; align-items:center; font-size:20px; color:var(--accent)">→</div>
+  <div class="card" style="flex:1.12; padding:9px 14px; display:flex; align-items:center; border-color:#D66A49">
+    <div class="small" style="font-size:14.5px; line-height:1.35"><span class="mono" style="color:#D66A49">app.py: /sessions/{student}/start, /answer (pydantic)</span></div></div>
+</div><div style="display:flex; align-items:stretch; gap:12px; margin:7px 0">
+  <div class="card" style="flex:1; padding:9px 14px; display:flex; align-items:center">
+    <div class="small" style="font-size:14.5px; line-height:1.35">graph.stream(stream_mode=updates)</div></div>
+  <div style="display:flex; align-items:center; font-size:20px; color:var(--accent)">→</div>
+  <div class="card" style="flex:1.12; padding:9px 14px; display:flex; align-items:center; border-color:#D66A49">
+    <div class="small" style="font-size:14.5px; line-height:1.35"><span class="mono" style="color:#D66A49">app.py: _sse_events() — SSE-стрим шагов</span></div></div>
+</div><div style="display:flex; align-items:stretch; gap:12px; margin:7px 0">
+  <div class="card" style="flex:1; padding:9px 14px; display:flex; align-items:center">
+    <div class="small" style="font-size:14.5px; line-height:1.35">interrupt + Command(resume=…)</div></div>
+  <div style="display:flex; align-items:center; font-size:20px; color:var(--accent)">→</div>
+  <div class="card" style="flex:1.12; padding:9px 14px; display:flex; align-items:center; border-color:#D66A49">
+    <div class="small" style="font-size:14.5px; line-height:1.35"><span class="mono" style="color:#D66A49">app.py: answer() — resume с чекпоинтом</span></div></div>
+</div>
+</div>
+<div class="small" style="opacity:.6; font-size:12.5px; text-align:center">каждая строка проверена по коду репозитория (факт-чек: блок → файл/функция)</div><div class="slide-num">Приложение · A8</div></div><div class="slide" id="slide-20"><div class="slide-tag">приложение</div>
 <h2>Ноутбук AIA_08 → SDD Trainer</h2>
-<div style="flex:1; display:flex; align-items:center; gap:26px">
-  <div class="card" style="flex:1.1; height:100%; max-height:420px; display:flex; flex-direction:column; justify-content:center; gap:14px">
-    <div class="small" style="letter-spacing:.12em; text-transform:uppercase; font-weight:700">Ноутбук курса</div>
-    <div style="font-size:30px; font-weight:800; line-height:1.2"><span>AIA_08</span> · Архитектура современных агентных harnesses (PDF)</div>
-    <div class="small" style="font-size:17px">Разделы: MCP stdio · Streamable HTTP</div>
-  </div>
-  <div class="arrow" style="font-size:44px">→</div>
-  <div class="card" style="flex:1.3; height:100%; max-height:420px; display:flex; flex-direction:column; justify-content:center; gap:14px; border-color:#D66A49">
-    <div class="small" style="letter-spacing:.12em; text-transform:uppercase; font-weight:700; color:#D66A49">В SDD Trainer</div>
-    <div class="body-text" style="font-size:20px; line-height:1.45">MCP stdio + Streamable HTTP /mcp — harness-протоколы тренера</div>
-    <div class="mono small" style="font-size:15px">mcp/server.py · FastAPI /mcp</div>
-  </div>
+<div style="display:flex; align-items:baseline; gap:14px; margin:2px 0 10px">
+  <div style="font-size:21px; font-weight:800"><span>AIA_08</span> · Архитектура современных harnesses (PDF)</div>
+  <span class="badge">ADR-010/001 · КРИТЕРИЙ 6</span>
 </div>
-<div style="display:flex; justify-content:center; margin-top:6px">
-  <span class="badge">ADR-010 / ADR-001</span>
-</div><div class="slide-num">Приложение · A9</div></div><div class="slide" id="slide-21"><div class="slide-tag">приложение</div>
+<div style="display:flex; gap:12px; margin-bottom:2px">
+  <div class="small" style="flex:1; letter-spacing:.1em; text-transform:uppercase; font-weight:700; opacity:.7">Ноутбук курса</div>
+  <div style="width:20px"></div>
+  <div class="small" style="flex:1.12; letter-spacing:.1em; text-transform:uppercase; font-weight:700; color:#D66A49">В SDD Trainer</div>
+</div>
+<div style="flex:1; display:flex; flex-direction:column; justify-content:center">
+  <div style="display:flex; align-items:stretch; gap:12px; margin:7px 0">
+  <div class="card" style="flex:1; padding:9px 14px; display:flex; align-items:center">
+    <div class="small" style="font-size:14.5px; line-height:1.35">MCP-сервер над агентом</div></div>
+  <div style="display:flex; align-items:center; font-size:20px; color:var(--accent)">→</div>
+  <div class="card" style="flex:1.12; padding:9px 14px; display:flex; align-items:center; border-color:#D66A49">
+    <div class="small" style="font-size:14.5px; line-height:1.35"><span class="mono" style="color:#D66A49">mcp/server.py: create_server() — FastMCP над графом</span></div></div>
+</div><div style="display:flex; align-items:stretch; gap:12px; margin:7px 0">
+  <div class="card" style="flex:1; padding:9px 14px; display:flex; align-items:center">
+    <div class="small" style="font-size:14.5px; line-height:1.35">@mcp.tool — типизированные инструменты</div></div>
+  <div style="display:flex; align-items:center; font-size:20px; color:var(--accent)">→</div>
+  <div class="card" style="flex:1.12; padding:9px 14px; display:flex; align-items:center; border-color:#D66A49">
+    <div class="small" style="font-size:14.5px; line-height:1.35"><span class="mono" style="color:#D66A49">mcp/server.py: start_session / answer_* (7 шт.)</span></div></div>
+</div><div style="display:flex; align-items:stretch; gap:12px; margin:7px 0">
+  <div class="card" style="flex:1; padding:9px 14px; display:flex; align-items:center">
+    <div class="small" style="font-size:14.5px; line-height:1.35">Локальный MCP через stdio</div></div>
+  <div style="display:flex; align-items:center; font-size:20px; color:var(--accent)">→</div>
+  <div class="card" style="flex:1.12; padding:9px 14px; display:flex; align-items:center; border-color:#D66A49">
+    <div class="small" style="font-size:14.5px; line-height:1.35"><span class="mono" style="color:#D66A49">mcp/__main__.py: python -m sdd_trainer.mcp</span></div></div>
+</div><div style="display:flex; align-items:stretch; gap:12px; margin:7px 0">
+  <div class="card" style="flex:1; padding:9px 14px; display:flex; align-items:center">
+    <div class="small" style="font-size:14.5px; line-height:1.35">Streamable HTTP рядом с REST</div></div>
+  <div style="display:flex; align-items:center; font-size:20px; color:var(--accent)">→</div>
+  <div class="card" style="flex:1.12; padding:9px 14px; display:flex; align-items:center; border-color:#D66A49">
+    <div class="small" style="font-size:14.5px; line-height:1.35"><span class="mono" style="color:#D66A49">app.py: mount /mcp — один процесс, второй шов</span></div></div>
+</div>
+</div>
+<div class="small" style="opacity:.6; font-size:12.5px; text-align:center">каждая строка проверена по коду репозитория (факт-чек: блок → файл/функция)</div><div class="slide-num">Приложение · A9</div></div><div class="slide" id="slide-21"><div class="slide-tag">приложение</div>
 <h2>Три прямых наследования</h2>
 <div class="grid3" style="flex:1; align-content:start">
   <div class="card">
@@ -492,7 +668,7 @@ td { padding: 10px 12px; border-bottom: 1px solid var(--border); line-height: 1.
 </div>
 <div class="body-text" style="border-top:1px solid var(--border); padding-top:16px; font-size:20px; text-align:center">
   Курс не остался теорией: <b style="color:var(--primary)">каждый паттерн из ноутбуков — строка в коде тренажёра</b></div><div class="slide-num">Приложение · A10</div></div><div class="slide" id="slide-22"><div class="slide-tag">приложение</div>
-<h2>Бюджет работы агента</h2>
+<h2>Бюджет разработки агентом</h2>
 <div style="flex:1; display:flex; flex-direction:column; justify-content:center">
   <div style="display:flex; align-items:center; gap:16px; margin:9px 0">
   <div class="small" style="flex:0 0 380px; font-size:16px; text-align:right">Фаза 1 · T1–T7 — консольный тренер</div>
@@ -528,9 +704,27 @@ td { padding: 10px 12px; border-bottom: 1px solid var(--border); line-height: 1.
     <div class="body-text" style="font-size:22px">весь проект разработан ИИ-агентом — 17 сессий, in 2.55M + out 0.75M</div>
   </div>
 </div>
-<div class="small" style="font-size:13.5px; line-height:1.45">Источник: кумулятивные счётчики OpenClaw session_status по 17 сессиям, 04.11.2026 · Тариф cloud.ru (GLM-5.3): 173.15 ₽/1M входных · 606.05 ₽/1M генерируемых · Кэш: 86–97% hit (~55M попаданий) — тарифицируется отдельно, дешевле · API предоставлен в рамках курса — фактических списаний нет.</div><div class="slide-num">Приложение · A11</div></div>
+<div class="small" style="font-size:13.5px; line-height:1.45">Источник: кумулятивные счётчики OpenClaw session_status по 17 сессиям, 04.11.2026 · Тариф cloud.ru (GLM-5.3): 173.15 ₽/1M входных · 606.05 ₽/1M генерируемых · Кэш: 86–97% hit (~55M попаданий) — тарифицируется отдельно, дешевле · API предоставлен в рамках курса — фактических списаний нет.</div><div class="slide-num">Приложение · A11</div></div><div class="slide" id="slide-23"><div class="slide-tag">приложение</div>
+<h2>Стоимость обучения: один сеанс ≈ 1 ₽</h2>
+<div style="flex:1; display:flex; flex-direction:column; justify-content:center">
+  <div style="display:flex; align-items:center; gap:16px; margin:9px 0">
+  <div class="small" style="flex:0 0 380px; font-size:16px; text-align:right">Сеанс A · уверенный ученик (knows_it → квиз)</div>
+  <div class="bar" style="flex:1; height:14px"><div style="width:86%; background:#4CAF7D"></div></div>
+  <div class="mono small" style="flex:0 0 150px; font-size:15px">12 932 · ≈1.10 ₽</div>
+</div><div style="display:flex; align-items:center; gap:16px; margin:9px 0">
+  <div class="small" style="flex:0 0 380px; font-size:16px; text-align:right">Сеанс B · слабый (partial → урок → квиз)</div>
+  <div class="bar" style="flex:1; height:14px"><div style="width:100%; background:#4CAF7D"></div></div>
+  <div class="mono small" style="flex:0 0 150px; font-size:15px">15 035 · ≈1.27 ₽</div>
 </div>
-<div class="slide-nav"><button onclick="go(0)">1</button><button onclick="go(1)">2</button><button onclick="go(2)">3</button><button onclick="go(3)">4</button><button onclick="go(4)">5</button><button onclick="go(5)">6</button><button onclick="go(6)">7</button><button onclick="go(7)">8</button><button onclick="go(8)">9</button><button onclick="go(9)">10</button><button onclick="go(10)">11</button><button onclick="go(11)">A1</button><button onclick="go(12)">A2</button><button onclick="go(13)">A3</button><button onclick="go(14)">A4</button><button onclick="go(15)">A5</button><button onclick="go(16)">A6</button><button onclick="go(17)">A7</button><button onclick="go(18)">A8</button><button onclick="go(19)">A9</button><button onclick="go(20)">A10</button><button onclick="go(21)">A11</button></div>
+  <div style="display:flex; align-items:baseline; gap:24px; border-top:1px solid var(--border); margin-top:18px; padding-top:16px">
+    <div style="font-size:48px; font-weight:800; color:var(--green)">≈1.2 ₽</div>
+    <div class="body-text" style="font-size:22px">за сеанс — ~14k токенов GigaChat-3-Pro, 4–5 вызовов</div>
+  </div>
+  <div class="body-text" style="font-size:19px; margin-top:10px">Весь бюджет разработки (≈900 ₽) — это <b style="color:var(--primary)">≈750 сеансов обучения</b></div>
+</div>
+<div class="small" style="font-size:13.5px; line-height:1.45">Живой замер 05.11.2026: два полных сеанса через граф (калибровка → маршрут → квиз → вердикт), живой Tavily в уроке · Тариф cloud.ru GigaChat-3-Pro: 73.03 ₽/1M входных · 176.39 ₽/1M генерируемых · API в рамках курса — фактических списаний нет.</div><div class="slide-num">Приложение · A12</div></div>
+</div>
+<div class="slide-nav"><button onclick="go(0)">1</button><button onclick="go(1)">2</button><button onclick="go(2)">3</button><button onclick="go(3)">4</button><button onclick="go(4)">5</button><button onclick="go(5)">6</button><button onclick="go(6)">7</button><button onclick="go(7)">8</button><button onclick="go(8)">9</button><button onclick="go(9)">10</button><button onclick="go(10)">11</button><button onclick="go(11)">A1</button><button onclick="go(12)">A2</button><button onclick="go(13)">A3</button><button onclick="go(14)">A4</button><button onclick="go(15)">A5</button><button onclick="go(16)">A6</button><button onclick="go(17)">A7</button><button onclick="go(18)">A8</button><button onclick="go(19)">A9</button><button onclick="go(20)">A10</button><button onclick="go(21)">A11</button><button onclick="go(22)">A12</button></div>
 <script>
 let cur = 0;
 function go(i) {
