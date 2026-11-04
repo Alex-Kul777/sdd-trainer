@@ -8,7 +8,8 @@ Registered as LangGraph tools (AIA_02/AIA_05 patterns):
 - ``read_openspec_examples(repo)`` — live spec examples via the GitHub API
   (guaranteed second external API, grilling Q3) — later in phase 1;
 - ``get_student_history(query)`` — the student's OpenSpec dialogue history via
-  the ``openclaw sessions`` CLI subprocess (ADR-007, pull model) — phase 3;
+  the ``openclaw sessions`` CLI subprocess (ADR-007, pull model; implemented
+  in T3, issue #14) — graceful degradation when the CLI is missing;
 - ``analyze_student_repo(repo_path)`` — passive assessment of the student's
   repository (specs/changes structure, SHALL and WHEN/THEN usage) — task
   2.2, T6 (issue #7). A local filesystem scan: no network, no LLM — the
@@ -20,6 +21,8 @@ real Tavily endpoint and are skipped without ``TAVILY_API_KEY``.
 """
 from __future__ import annotations
 
+import json
+import subprocess
 from pathlib import Path
 from typing import Optional
 
@@ -97,9 +100,115 @@ def read_openspec_examples(repo: str) -> list[dict]:
     pass
 
 
-def get_student_history(query: str = "") -> list[dict]:
-    """Extract the student's OpenSpec history via the OpenClaw CLI (phase 3)."""
-    pass
+def get_student_history(query: str = "") -> dict:
+    """Pull the student's OpenSpec dialogue history via the OpenClaw CLI (ADR-007).
+
+    Runs ``openclaw sessions --json --limit 100`` as a subprocess (pull
+    model: the trainer fetches the data itself; the CLI command is pinned
+    explicitly — ADR-007 "pin the version, parse carefully") and normalizes
+    each session record to the fields the lesson prompts consume:
+    ``key / label / status / updatedAt / kind / agentId / model``.
+
+    Defensive parsing throughout: the CLI output format may change between
+    versions, so every field is read with ``.get()`` defaults, non-dict
+    session entries are skipped, and a payload without a ``"sessions"``
+    list degrades gracefully.
+
+    Graceful degradation (the trainer must not crash because of the
+    environment): CLI missing (``FileNotFoundError``), non-zero exit,
+    timeout, non-JSON stdout, or an unexpected JSON shape all return
+    ``{"sessions": [], "note": <explanation>}`` instead of raising.
+
+    Args:
+        query: optional case-insensitive substring filter over the session
+            ``label`` and ``key`` (e.g. ``"openspec"``); empty — no filter.
+
+    Returns:
+        ``{"sessions": [records...], "note": str}`` — parsed records with
+        an empty ``note`` on success; on degradation an empty ``sessions``
+        list with an explanatory ``note``.
+    """
+    command = ["openclaw", "sessions", "--json", "--limit", "100"]
+    try:
+        completed = subprocess.run(
+            command,
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+        )
+    except FileNotFoundError:
+        return {
+            "sessions": [],
+            "note": (
+                "openclaw CLI не найден в PATH — история диалогов ученика "
+                "недоступна; тренер продолжает работу без неё (ADR-007)"
+            ),
+        }
+    except subprocess.TimeoutExpired:
+        return {
+            "sessions": [],
+            "note": (
+                "openclaw sessions не ответил за 30 с — история диалогов "
+                "ученика недоступна (ADR-007)"
+            ),
+        }
+
+    if completed.returncode != 0:
+        stderr = (completed.stderr or "").strip()
+        detail = ": " + stderr[:200] if stderr else ""
+        return {
+            "sessions": [],
+            "note": (
+                "openclaw sessions завершился с кодом {}{} — история "
+                "диалогов ученика недоступна".format(completed.returncode, detail)
+            ),
+        }
+
+    try:
+        payload = json.loads(completed.stdout)
+    except json.JSONDecodeError:
+        return {
+            "sessions": [],
+            "note": (
+                "openclaw sessions вернул не-JSON вывод — формат CLI не "
+                "распознан, история недоступна (ADR-007: парсить аккуратно)"
+            ),
+        }
+
+    raw_sessions = payload.get("sessions") if isinstance(payload, dict) else None
+    if not isinstance(raw_sessions, list):
+        return {
+            "sessions": [],
+            "note": (
+                "JSON openclaw sessions не содержит список 'sessions' — "
+                "формат CLI изменился? История недоступна (ADR-007)"
+            ),
+        }
+
+    sessions = [
+        {
+            "key": str(entry.get("key", "")),
+            "label": str(entry.get("label", "")),
+            "status": str(entry.get("status", "")),
+            "updatedAt": entry.get("updatedAt"),
+            "kind": str(entry.get("kind", "")),
+            "agentId": str(entry.get("agentId", "")),
+            "model": str(entry.get("model", "")),
+        }
+        for entry in raw_sessions
+        if isinstance(entry, dict)
+    ]
+
+    if query:
+        needle = query.lower()
+        sessions = [
+            record
+            for record in sessions
+            if needle in record["label"].lower() or needle in record["key"].lower()
+        ]
+
+    return {"sessions": sessions, "note": ""}
 
 
 def analyze_student_repo(repo_path: str) -> RepoAnalysis:
