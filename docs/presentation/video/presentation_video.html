@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SDD Trainer — защита проектной работы</title>
+<style>
+:root {
+  --bg: #1B2F4C; --bg2: #243B5C; --primary: #D66A49; --accent: #E58B6D;
+  --text: #FFFFFF; --muted: #A8B8CC; --border: #324B6D;
+  --green: #4CAF7D; --red: #E5535B;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #0e1c30; font-family: -apple-system, 'Segoe UI', Roboto, 'PT Sans', sans-serif; color: var(--text); }
+.deck { display: flex; flex-direction: column; align-items: center; gap: 28px; padding: 28px 0 90px; }
+.slide {
+  width: 1280px; height: 720px; flex: 0 0 auto; background: var(--bg);
+  padding: 50px 60px; position: relative; overflow: hidden;
+  display: flex; flex-direction: column; box-shadow: 0 8px 30px rgba(0,0,0,.45);
+}
+.slide-tag { position: absolute; top: 22px; right: 28px; font-size: 13px; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--muted); border: 1px solid var(--border);
+  border-radius: 999px; padding: 4px 14px; background: rgba(36,59,92,.6); }
+.slide-num { position: absolute; bottom: 18px; right: 28px; font-size: 14px; color: var(--muted);
+  font-variant-numeric: tabular-nums; }
+h1 { font-size: 48px; font-weight: 800; line-height: 1.12; }
+h2 { font-size: 36px; font-weight: 700; color: var(--primary); line-height: 1.15; margin-bottom: 18px; }
+h3 { font-size: 24px; font-weight: 600; color: var(--accent); }
+.body-text { font-size: 20px; line-height: 1.45; }
+.small { font-size: 16px; color: var(--muted); line-height: 1.4; }
+.card { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 22px 24px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+table { width: 100%; border-collapse: collapse; font-size: 18px; }
+th { text-align: left; color: var(--accent); padding: 10px 12px; border-bottom: 2px solid var(--border); font-size: 16px; letter-spacing: .04em; text-transform: uppercase; }
+td { padding: 10px 12px; border-bottom: 1px solid var(--border); line-height: 1.3; }
+.mono { font-family: ui-monospace, 'Cascadia Code', Menlo, Consolas, monospace; }
+.codeblock { background: #0e1c30; border: 1px solid var(--border); border-radius: 10px;
+  padding: 16px 20px; font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: 16px; line-height: 1.5; color: #d7e3f4; white-space: pre; overflow: hidden; }
+.codeblock .kw { color: var(--accent); }
+.term { background: #0a1626; border: 1px solid var(--border); border-radius: 10px; padding: 18px 22px;
+  font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 15.5px; line-height: 1.65;
+  color: #c3d2e5; white-space: pre-wrap; }
+.term .ok { color: #4CAF7D; font-weight: 700; }
+.term .cmd { color: #E58B6D; }
+.term .dim { color: #64748b; }
+.badge { display: inline-block; border: 1px solid var(--primary); color: var(--primary);
+  border-radius: 999px; padding: 6px 18px; font-size: 15px; letter-spacing: .14em;
+  text-transform: uppercase; font-weight: 700; }
+.bubble { max-width: 900px; padding: 14px 20px; border-radius: 14px; font-size: 18px; line-height: 1.4; }
+.bubble-trainer { background: var(--bg2); border: 1px solid #3d5a8a; border-top-left-radius: 4px; }
+.bubble-student { background: #1d3557; border: 1px solid #35507f; border-top-right-radius: 4px; margin-left: auto; }
+.who { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin-bottom: 4px; }
+.bar { height: 10px; background: #0e1c30; border-radius: 999px; overflow: hidden; }
+.bar > div { height: 100%; background: var(--primary); border-radius: 999px; }
+.chip { display: inline-flex; align-items: center; gap: 10px; background: var(--bg2);
+  border: 1px solid var(--border); border-radius: 10px; padding: 12px 18px; font-size: 17px; }
+.chip b { color: var(--accent); }
+.arrow { color: var(--muted); font-size: 20px; }
+.slide-nav { position: fixed; bottom: 0; left: 0; right: 0; display: flex; justify-content: center;
+  gap: 4px; padding: 8px; z-index: 100; background: rgba(14,28,48,.85); }
+.slide-nav button { width: 30px; height: 30px; border: 1px solid var(--border);
+  background: var(--bg2); color: var(--muted); border-radius: 6px; cursor: pointer; font-size: 13px; }
+.slide-nav button.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+@media print {
+  body { background: #fff; }
+  .deck { gap: 0; padding: 0; }
+  .slide { box-shadow: none; page-break-after: always; }
+  .slide-nav { display: none; }
+}
+</style>
+</head>
+<body>
+<div class="deck">
+<div class="slide" id="slide-1"><div class="slide-tag">hook</div>
+<div style="flex:1; display:flex; flex-direction:column; justify-content:center; gap:26px">
+  <div class="body-text" style="font-size:30px; color:var(--muted)">Как учат разработке?</div>
+  <h1 style="font-size:64px">Показывают код.</h1>
+  <h1 style="font-size:64px; color:var(--primary)">А спецификации?</h1>
+  <div class="small" style="margin-top:30px">SDD Trainer — защита проектной работы · курс «ИИ-агенты» · Standard Data · 13.11.2026</div>
+</div><div class="slide-num">1 / 12</div></div><div class="slide" id="slide-2"><div class="slide-tag">cover</div>
+<div style="flex:1; display:flex; flex-direction:column; justify-content:center; gap:26px">
+  <div><span class="badge">Проектная работа · Фаза 2 завершена</span></div>
+  <h1>SDD Trainer</h1>
+  <div class="body-text" style="font-size:26px; color:var(--muted)">
+    ИИ-тренер по Spec-Driven Development — GigaChat · LangGraph · MCP</div>
+  <div class="grid3" style="margin-top:26px">
+    <div class="card"><div style="font-size:44px; font-weight:800; color:var(--accent)">249</div>
+      <div class="small">тестов — suite green</div></div>
+    <div class="card"><div style="font-size:44px; font-weight:800; color:var(--accent)">78.35%</div>
+      <div class="small">coverage (гейт курса — 40%)</div></div>
+    <div class="card"><div style="font-size:44px; font-weight:800; color:var(--accent)">7</div>
+      <div class="small">MCP-инструментов<br><span style="opacity:.75">stdio + Streamable HTTP</span></div></div>
+  </div>
+  <div class="small" style="margin-top:22px">Алекс · дедлайн сдачи — 13 ноября 2026</div>
+</div><div class="slide-num">2 / 12</div></div><div class="slide" id="slide-3"><div class="slide-tag">проблема</div>
+<h2>SDD — методология без тренера</h2>
+<div class="body-text" style="margin-bottom:24px">
+  Spec-Driven Development: спецификация — <b>источник истины</b> (план, дельты, критерии приёмки).
+  Учить её приходится по документации — и это не работает:</div>
+<div class="grid3" style="flex:1; align-content:start">
+  <div class="card"><h3>Нет калибровки</h3>
+    <div class="small" style="margin-top:10px; font-size:17px">Курс не знает, что ученик уже умеет, —
+    все проходят одно и то же</div></div>
+  <div class="card"><h3>Нет обратной связи</h3>
+    <div class="small" style="margin-top:10px; font-size:17px">Непонятно, где именно пробелы, —
+    доки не отвечают на вопросы</div></div>
+  <div class="card"><h3>Нет проверки</h3>
+    <div class="small" style="margin-top:10px; font-size:17px">«Прочитал» не значит «понял», —
+    понимание никто не проверяет</div></div>
+</div>
+<div class="body-text" style="margin-top:8px; border-top:1px solid var(--border); padding-top:20px">
+  Нужен тренер, который <b style="color:var(--accent)">адаптируется под уровень</b> и
+  <b style="color:var(--accent)">проверяет понимание</b>.</div><div class="slide-num">3 / 12</div></div><div class="slide" id="slide-4"><div class="slide-tag">решение</div>
+<h2>LangGraph-граф с четырьмя маршрутами</h2>
+<svg viewBox="0 0 1160 430" style="width:100%; flex:1" font-family="ui-monospace,Menlo,Consolas,monospace">
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#A8B8CC"/></marker>
+  </defs>
+  <rect x="10" y="187" width="110" height="56" rx="28" fill="#243B5C" stroke="#324B6D"/>
+  <text x="65" y="221" text-anchor="middle" fill="#A8B8CC" font-size="17">__start__</text>
+  <rect x="180" y="187" width="150" height="56" rx="10" fill="rgba(129,140,248,.14)" stroke="#818cf8" stroke-width="2"/>
+  <text x="255" y="221" text-anchor="middle" fill="#fff" font-size="19">assess</text>
+  <rect x="400" y="187" width="150" height="56" rx="10" fill="rgba(251,191,36,.13)" stroke="#fbbf24" stroke-width="2"/>
+  <text x="475" y="221" text-anchor="middle" fill="#fff" font-size="19">route</text>
+  <rect x="400" y="22" width="150" height="56" rx="10" fill="rgba(251,146,60,.13)" stroke="#fb923c" stroke-width="2"/>
+  <text x="475" y="56" text-anchor="middle" fill="#fff" font-size="19">clarify</text>
+  <rect x="680" y="352" width="150" height="56" rx="10" fill="rgba(52,211,153,.13)" stroke="#34d399" stroke-width="2"/>
+  <text x="755" y="386" text-anchor="middle" fill="#fff" font-size="19">teach</text>
+  <rect x="680" y="22" width="150" height="56" rx="10" fill="rgba(167,139,250,.15)" stroke="#a78bfa" stroke-width="2"/>
+  <text x="755" y="56" text-anchor="middle" fill="#fff" font-size="19">quiz</text>
+  <rect x="960" y="187" width="110" height="56" rx="28" fill="#243B5C" stroke="#324B6D"/>
+  <text x="1015" y="221" text-anchor="middle" fill="#A8B8CC" font-size="17">__end__</text>
+
+  <line x1="120" y1="215" x2="176" y2="215" stroke="#A8B8CC" stroke-width="2" marker-end="url(#ah)"/>
+  <line x1="330" y1="215" x2="396" y2="215" stroke="#A8B8CC" stroke-width="2" marker-end="url(#ah)"/>
+  <line x1="458" y1="185" x2="458" y2="82" stroke="#fb923c" stroke-width="2" stroke-dasharray="7 6" marker-end="url(#ah)"/>
+  <line x1="492" y1="82" x2="492" y2="183" stroke="#fb923c" stroke-width="2" stroke-dasharray="7 6" marker-end="url(#ah)"/>
+  <path d="M550,196 C620,150 640,110 676,80" fill="none" stroke="#a78bfa" stroke-width="2" stroke-dasharray="7 6" marker-end="url(#ah)"/>
+  <path d="M550,234 C620,280 640,330 676,362" fill="none" stroke="#34d399" stroke-width="2" stroke-dasharray="7 6" marker-end="url(#ah)"/>
+  <line x1="755" y1="350" x2="755" y2="82" stroke="#A8B8CC" stroke-width="2" marker-end="url(#ah)"/>
+  <path d="M830,60 C900,90 950,150 980,183" fill="none" stroke="#A8B8CC" stroke-width="2" marker-end="url(#ah)"/>
+
+  <text x="430" y="140" text-anchor="end" fill="#fb923c" font-size="16" font-style="italic">clarification</text>
+  <text x="620" y="118" fill="#a78bfa" font-size="16" font-style="italic">knows_it</text>
+  <text x="560" y="308" fill="#34d399" font-size="16" font-style="italic">partial</text>
+  <text x="648" y="338" fill="#34d399" font-size="16" font-style="italic">new_topic</text>
+</svg>
+<div class="small" style="margin-top:6px">
+  Структура — дамп скомпилированного графа (<span class="mono">draw_mermaid()</span>) ·
+  решение через structured output: <span class="mono">RouteDecision</span> (ADR-005) ·
+  knows_it → квиз сразу · partial → урок по пробелам · new_topic → урок с нуля ·
+  низкая уверенность → уточняющий цикл</div><div class="slide-num">4 / 12</div></div><div class="slide" id="slide-5"><div class="slide-tag">архитектура</div>
+<h2>Одно ядро — три входа</h2>
+<svg viewBox="0 0 1160 472" style="width:100%; flex:1"><defs><marker id="aha" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#A8B8CC"/></marker></defs><rect x="20" y="0" width="310" height="84" rx="10" fill="#818cf8" fill-opacity="0.12" stroke="#818cf8" stroke-width="2"/><text x="175.0" y="31" text-anchor="middle" font-size="19" font-weight="700" fill="#fff">Консольный CLI</text><text x="175.0" y="53" text-anchor="middle" font-size="14" fill="#A8B8CC">Фаза 1 · python -m sdd_trainer</text><rect x="425" y="0" width="310" height="84" rx="10" fill="#818cf8" fill-opacity="0.12" stroke="#818cf8" stroke-width="2"/><text x="580.0" y="31" text-anchor="middle" font-size="19" font-weight="700" fill="#fff">FastAPI-процесс</text><text x="580.0" y="53" text-anchor="middle" font-size="14" fill="#A8B8CC">REST + SSE · /health · /sessions/{student}</text><text x="580.0" y="71" text-anchor="middle" font-size="14" fill="#A8B8CC">PSA-T2 · монтирует /mcp (ADR-001)</text><rect x="830" y="0" width="310" height="84" rx="10" fill="#818cf8" fill-opacity="0.12" stroke="#818cf8" stroke-width="2"/><text x="985.0" y="31" text-anchor="middle" font-size="19" font-weight="700" fill="#fff">MCP-хост</text><text x="985.0" y="53" text-anchor="middle" font-size="14" fill="#A8B8CC">Claude · пробник · любой клиент</text><line x1="175" y1="84" x2="175" y2="236" stroke="#A8B8CC" stroke-width="2" marker-end="url(#aha)"/><text x="189" y="160" font-size="13" font-style="italic" fill="#A8B8CC">stdin / stdout</text><line x1="580" y1="84" x2="580" y2="236" stroke="#A8B8CC" stroke-width="2" marker-end="url(#aha)"/><text x="594" y="160" font-size="13" font-style="italic" fill="#A8B8CC">REST + SSE</text><line x1="1060" y1="84" x2="1060" y2="116" stroke="#A8B8CC" stroke-width="2" marker-end="url(#aha)"/><text x="1048" y="104" text-anchor="end" font-size="13" font-style="italic" fill="#A8B8CC">Streamable HTTP · /mcp</text><line x1="870" y1="84" x2="820" y2="116" stroke="#A8B8CC" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#aha)"/><text x="808" y="104" text-anchor="end" font-size="13" font-style="italic" fill="#A8B8CC">stdio · fallback (ADR-010)</text><rect x="760" y="116" width="380" height="74" rx="10" fill="#E58B6D" fill-opacity="0.12" stroke="#E58B6D" stroke-width="2"/><text x="950.0" y="147" text-anchor="middle" font-size="19" font-weight="700" fill="#fff">FastMCP-сервер</text><text x="950.0" y="169" text-anchor="middle" font-size="14" fill="#A8B8CC">7 stateless-инструментов · ADR-010</text><circle cx="1118" cy="138" r="11.5" fill="#0e1c30" stroke="#E58B6D" stroke-width="1.6"/><text x="1118" y="142.5" text-anchor="middle" font-size="13.5" font-weight="700" fill="#E58B6D">6</text><line x1="950" y1="190" x2="950" y2="236" stroke="#A8B8CC" stroke-width="2" marker-end="url(#aha)"/><rect x="140" y="236" width="880" height="126" rx="10" fill="#D66A49" fill-opacity="0.12" stroke="#D66A49" stroke-width="2"/><text x="580.0" y="267" text-anchor="middle" font-size="21" font-weight="700" fill="#fff">Ядро — LangGraph-граф</text><circle cx="998" cy="258" r="11.5" fill="#0e1c30" stroke="#D66A49" stroke-width="1.6"/><text x="998" y="262.5" text-anchor="middle" font-size="13.5" font-weight="700" fill="#D66A49">2</text><text x="580" y="287" text-anchor="middle" font-size="14" fill="#A8B8CC">один и тот же граф — из консоли, по HTTP и из MCP</text><rect x="164" y="296" width="264" height="56" rx="8" fill="#0e1c30" stroke="#324B6D" stroke-width="1.5"/><text x="296.0" y="318" text-anchor="middle" font-size="14" fill="#d7e3f4" style="font-family:ui-monospace,Menlo,Consolas,monospace">assess → route → …</text><text x="296.0" y="337" text-anchor="middle" font-size="13" fill="#A8B8CC" style="font-family:ui-monospace,Menlo,Consolas,monospace">clarify · teach · quiz</text><circle cx="412" cy="311" r="11.5" fill="#0e1c30" stroke="#D66A49" stroke-width="1.6"/><text x="412" y="315.5" text-anchor="middle" font-size="13.5" font-weight="700" fill="#D66A49">5</text><rect x="448" y="296" width="264" height="56" rx="8" fill="#0e1c30" stroke="#324B6D" stroke-width="1.5"/><text x="580.0" y="318" text-anchor="middle" font-size="14" fill="#d7e3f4" style="font-family:ui-monospace,Menlo,Consolas,monospace">search_sdd_docs</text><text x="580.0" y="337" text-anchor="middle" font-size="13" fill="#A8B8CC" style="font-family:ui-monospace,Menlo,Consolas,monospace">analyze_repo</text><circle cx="696" cy="311" r="11.5" fill="#0e1c30" stroke="#D66A49" stroke-width="1.6"/><text x="696" y="315.5" text-anchor="middle" font-size="13.5" font-weight="700" fill="#D66A49">3</text><rect x="732" y="296" width="264" height="56" rx="8" fill="#0e1c30" stroke="#324B6D" stroke-width="1.5"/><text x="864.0" y="318" text-anchor="middle" font-size="14" fill="#d7e3f4" style="font-family:ui-monospace,Menlo,Consolas,monospace">structured output</text><text x="864.0" y="337" text-anchor="middle" font-size="13" fill="#A8B8CC" style="font-family:ui-monospace,Menlo,Consolas,monospace">+ fallback · ADR-005</text><circle cx="980" cy="311" r="11.5" fill="#0e1c30" stroke="#D66A49" stroke-width="1.6"/><text x="980" y="315.5" text-anchor="middle" font-size="13.5" font-weight="700" fill="#D66A49">1</text><line x1="400" y1="362" x2="400" y2="398" stroke="#A8B8CC" stroke-width="2" marker-end="url(#aha)"/><text x="414" y="384" font-size="13" font-style="italic" fill="#A8B8CC">чекпоинт после шага</text><line x1="760" y1="362" x2="760" y2="398" stroke="#A8B8CC" stroke-width="2" marker-end="url(#aha)"/><text x="774" y="384" font-size="13" font-style="italic" fill="#A8B8CC">HTTPS API</text><rect x="140" y="398" width="420" height="74" rx="10" fill="#4CAF7D" fill-opacity="0.12" stroke="#4CAF7D" stroke-width="2"/><text x="350.0" y="429" text-anchor="middle" font-size="19" font-weight="700" fill="#fff">SqliteSaver · thread_id</text><text x="350.0" y="451" text-anchor="middle" font-size="14" fill="#A8B8CC">ADR-008 · + training-state.json</text><circle cx="538" cy="420" r="11.5" fill="#0e1c30" stroke="#4CAF7D" stroke-width="1.6"/><text x="538" y="424.5" text-anchor="middle" font-size="13.5" font-weight="700" fill="#4CAF7D">4</text><rect x="580" y="398" width="440" height="74" rx="10" fill="#fbbf24" fill-opacity="0.12" stroke="#fbbf24" stroke-width="2"/><text x="800.0" y="429" text-anchor="middle" font-size="19" font-weight="700" fill="#fff">cloud.ru — GigaChat-3-Pro</text><text x="800.0" y="451" text-anchor="middle" font-size="14" fill="#A8B8CC">fallback-модель · Tavily API</text></svg>
+<div class="small" style="margin-top:8px">
+  <b style="color:var(--accent)">①</b> GigaChat ·
+  <b style="color:var(--accent)">②</b> LangGraph ·
+  <b style="color:var(--accent)">③</b> ≥2 инструмента ·
+  <b style="color:var(--accent)">④</b> память ·
+  <b style="color:var(--accent)">⑤</b> роутинг ≥3 путей ·
+  <b style="color:var(--accent)">⑥</b> MCP — критерии курса на компонентах</div>
+<div class="small" style="border-top:1px solid var(--border); padding-top:8px; margin-top:auto; font-size:15px">
+  Один уровень абстракции (C4 container) · стрелки подписаны протоколами · stdio — fallback (ADR-010) ·
+  цвета: <span style="color:#818cf8">интерфейс</span> / <span style="color:#E58B6D">транспорт</span> /
+  <span style="color:#D66A49">ядро</span> / <span style="color:#4CAF7D">хранение</span> /
+  <span style="color:#fbbf24">внешний мир</span></div><div class="slide-num">5 / 12</div></div><div class="slide" id="slide-6"><div class="slide-tag">демо · консоль</div>
+<h2>Живой сеанс в консоли</h2>
+<div class="liveterm" data-term='{"dur": 40}'>
+<div class="term-bar"><span class="td r"></span><span class="td y"></span><span class="td g"></span><span class="term-title">python -m sdd_trainer --session --student video_demo</span></div>
+<div class="term-body">
+<div class="tl cmd" style="--d:0.2s">$ python -m sdd_trainer --session --student video_demo</div>
+<div class="tl sys" style="--d:2.2s">SDD Trainer — сеанс на графе · Модель: GigaChat-3-Pro (ADR-005)</div>
+<div class="tl sys" style="--d:4.2s">Чекпоинтер: data/checkpoints.sqlite (SqliteSaver, ADR-008)</div>
+<div class="tl bot" style="--d:6.5s">[граф] Опиши своими словами, что такое OpenSpec: зачем папки specs/ и changes/?</div>
+<div class="tl usr" style="--d:9.5s">Вы: Ну, OpenSpec это вроде как про спецификации... точно не уверен.</div>
+<div class="tl ok" style="--d:13s">[граф] Оценка: partial (уверенность 0.70) — формулировки неуверенные, уровень частичный</div>
+<div class="tl warn" style="--d:17s">[граф] Маршрут: partial — нужен структурированный разбор темы</div>
+<div class="tl bot" style="--d:21s">[граф] Урок готов: скелет openspec-basics развёрнут под partial</div>
+<div class="tl bot" style="--d:25s">[граф] Что такое Spec-Driven Development? Что объявлено источником истины?</div>
+<div class="tl usr" style="--d:29s">Вы: Спецификация — контракт: код сверяется с ней, а не наоборот.</div>
+<div class="tl ok" style="--d:33s">[чекпоинт] Сеанс идёт — состояние сохраняется после каждого шага</div>
+</div>
+</div>
+<div class="small" style="margin-top:10px">Дословный живой лог: калибровка → вердикт GigaChat (structured output) → маршрут partial → урок → квиз с HITL-паузой</div>
+<div class="slide-num">6 / 12</div></div>
+<div class="slide" id="slide-7"><div class="slide-tag">демо · run A</div>
+<h2>Один сеанс — от калибровки до зачёта</h2>
+<div style="flex:1; display:flex; flex-direction:column; gap:12px; justify-content:center">
+  <div><div class="who">🦊 Тренер · калибровочный вопрос</div>
+    <div class="bubble bubble-trainer">Опиши своими словами, что такое OpenSpec: зачем в репозитории папки specs/ и changes/ и чем change proposal отличается от стабильной спецификации. Если тема незнакома — так и скажи, это нормально.</div></div>
+  <div><div class="who" style="text-align:right">Ученик</div>
+    <div class="bubble bubble-student">Видел проект с OpenSpec: в specs/ лежат стабильные спецификации требований, в changes/ — предложения изменений. Но устройство change proposal (proposal.md, design.md, tasks.md) не разбирал, на практи…</div></div>
+  <div class="card" style="display:flex; align-items:center; gap:22px; padding:16px 24px">
+    <span class="badge" style="border-color:var(--accent); color:var(--accent)">Вердикт: partial</span>
+    <span class="body-text" style="font-size:18px">уверенность <b>0.85</b></span>
+    <div class="bar" style="flex:1; max-width:260px"><div style="width:85%"></div></div>
+    <span class="small" style="flex-basis:100%; font-size:15px">Маршрут: partial — Ученик демонстрирует общее понимание различий между папками и статусами спецификаций, но признаёт пробелы в деталях cha…</span>
+  </div>
+  <div class="small" style="opacity:.65; font-size:13.5px; text-align:right">цитаты дословные из транскрипта; длинные сокращены (…)</div>
+  <div class="card" style="border-color:var(--green); background:rgba(76,175,125,.08); padding:16px 24px">
+    <span class="badge" style="border-color:var(--green); color:var(--green)">Квиз зачтён</span>
+    <span class="body-text" style="font-size:18px; margin-left:14px">
+      F1-счёт <b>1.00 (порог 0.60)</b> · зачтён</span>
+    <div class="small" style="margin-top:6px; font-size:15px">Прогресс записан: · openspec-basics: счёт 1.00, серия 7, уроков завершено 7</div>
+  </div>
+</div>
+<div class="small" style="margin-top:6px">Дословный транскрипт живого прогона 03.11.2026 · MCP stdio · GigaChat-3-Pro</div><div class="slide-num">7 / 12</div></div><div class="slide" id="slide-8"><div class="slide-tag">критерии 1–5</div>
+<h2>Критерии курса 1–5 — закрыты кодом</h2>
+<table style="flex:1; align-self:stretch">
+  <tr><th style="width:44px">№</th><th style="width:250px">Критерий</th><th style="width:230px">Где живёт</th><th>Доказательство</th></tr>
+  <tr><td>1</td><td>GigaChat (cloud.ru)</td><td class="mono" style="font-size:15px">core/llm_manager.py</td>
+      <td>OpenAI-совместимый API, structured output, fallback-модель</td></tr>
+  <tr><td>2</td><td>LangGraph</td><td class="mono" style="font-size:15px">core/graph.py</td>
+      <td>StateGraph, условные рёбра, компиляция с чекпоинтером</td></tr>
+  <tr><td>3</td><td>≥ 2 инструмента</td><td class="mono" style="font-size:15px">core/tools.py</td>
+      <td>search_sdd_docs (живой Tavily) + analyze_repo</td></tr>
+  <tr><td>4</td><td>Память</td><td class="mono" style="font-size:15px">core/memory.py</td>
+      <td>SqliteSaver + thread_id — рестарт ничего не теряет</td></tr>
+  <tr><td>5</td><td>Роутинг ≥ 3 путей</td><td class="mono" style="font-size:15px">core/graph.py</td>
+      <td><b style="color:var(--green)">4 маршрута</b>: knows_it · partial · new_topic · clarification</td></tr>
+</table>
+<div class="codeblock" style="margin-top:18px"><span class="kw"># ADR-005: ответ — только tool call, free-text не парсится</span>
+        tool = self._structure_tool(structure)
+        completion = self._complete(
+            messages=messages,
+            tools=[tool],
+            tool_choice={
+                &quot;type&quot;: &quot;function&quot;,
+                &quot;function&quot;: {&quot;name&quot;: tool[&quot;function&quot;][&quot;name&quot;]},
+            },</div>
+<div class="small" style="margin-top:10px">Фрагменты дословные, с номерами строк — на дашборде «Код по критериям»</div><div class="slide-num">8 / 12</div></div><div class="slide" id="slide-9"><div class="slide-tag">критерий 6 · mcp</div>
+<h2>MCP-слой: один вызов = один шаг графа</h2>
+<div style="display:flex; align-items:center; gap:14px; margin:10px 0 22px">
+  <div class="chip" style="flex:1; justify-content:center">MCP-клиент<br><span class="small" style="font-size:14px">Claude · пробник · любой хост</span></div>
+  <div class="arrow">→</div>
+  <div class="chip" style="flex:1; justify-content:center; border-color:var(--primary)">Streamable HTTP /mcp<br><span class="small" style="font-size:14px">ADR-001 · stdio — fallback (ADR-010)</span></div>
+  <div class="arrow">→</div>
+  <div class="chip" style="flex:1.2; justify-content:center">Сервер: <b>7 инструментов</b><br>
+    <span class="small" style="font-size:14px">start_session · answer_calibration · answer_clarification · answer_quiz_question · analyze_repo · search_docs · get_progress</span></div>
+  <div class="arrow">→</div>
+  <div class="chip" style="flex:1; justify-content:center">Граф + чекпоинт<br><span class="small" style="font-size:14px">SqliteSaver · thread_id</span></div>
+</div>
+<div class="grid2" style="flex:1; align-content:start">
+  <div class="codeblock">result = graph.invoke(Command(resume=answer), config)
+<span class="kw"># шаг графа до следующего interrupt —
+# payload возвращается клиенту</span></div>
+  <div class="card">
+    <h3>Почему это не «обёртка ради обёртки»</h3>
+    <div class="small" style="margin-top:10px; font-size:17px; line-height:1.5">
+      Инструменты <b>stateless</b>: student — единственный ключ, чекпоинт — единственное состояние.
+      Рестарт сервера ничего не теряет. stdout чист — принты только в stderr
+      (канарейка — реальный stdio-subprocess в интеграционном тесте).<br><br>
+      <b style="color:var(--green)">Критерий 6 закрыт буквально:</b> FastAPI-процесс с <span class="mono">/mcp</span>
+      (ADR-001) — REST, SSE и MCP в одном процессе; stdio — fallback.</div>
+  </div>
+</div><div class="slide-num">9 / 12</div></div><div class="slide" id="slide-10"><div class="slide-tag">доказательство · run B</div>
+<h2>Сервер убит посреди квиза — сессия выжила</h2>
+<div class="grid2" style="flex:1; align-content:start; gap:28px">
+  <div class="term" style="font-size:15.5px"><span class="cmd">$ python mcp_probe.py --student verify-m3b</span>  <span class="dim"># часть 1</span>
+[клиент] start_session(student=&quot;verify-m3b&quot;)
+<span class="dim">…калибровка → partial → урок → q1 ✓ → q2 ✓…</span>
+<span style="color:#E58B6D">[тренер] Из каких элементов состоит требование в спецификации OpenSpec? Назови ключевые слова формата.</span>  <span class="dim">← q3, здесь клиент вышел</span>
+<span class="dim">✖ сервер-субпроцесс умер вместе с клиентом</span>
+
+<span class="cmd">$ python mcp_probe.py --student verify-m3b</span>  <span class="dim"># часть 2: НОВЫЙ процесс</span>
+<span class="ok">&lt;&lt;&lt; type=question · resumed=True · kind=quiz</span>
+<span style="color:#E58B6D">[тренер] Из каких элементов состоит требование в спецификации OpenSpec? Назови ключевые слова формата.</span>  <span class="dim">← ТОТ ЖЕ вопрос</span>
+<span class="ok">=== Вердикт квиза: openspec-basics — счёт 1.00 (порог 0.60), зачтён ===</span>
+<span class="dim">· openspec-basics: счёт 1.00, серия 8, уроков завершено 8</span></div>
+  <div style="display:flex; flex-direction:column; gap:12px">
+    <div class="card" style="padding:16px 20px"><b style="color:var(--red)">✖ Kill</b>
+      <span class="small" style="font-size:16px"> — сервер-субпроцесс умирает вместе с клиентом</span></div>
+    <div class="card" style="padding:16px 20px"><b style="color:var(--accent)">Restart</b>
+      <span class="small" style="font-size:16px"> — новый сервер + новый клиент, тот же ученик</span></div>
+    <div class="card" style="padding:16px 20px; border-color:var(--green); background:rgba(76,175,125,.08)">
+      <b style="color:var(--green)">resumed=True</b>
+      <span class="small" style="font-size:16px"> — граф вернул тот же вопрос q3, доквиз до зачёта</span></div>
+    <div class="small" style="font-size:15px; line-height:1.5">Чекпоинт — <b>единственное</b> состояние (ADR-008).
+      Это дословные строки живых логов 03.11.2026, не сгенерированный сценарий.</div>
+  </div>
+</div><div class="slide-num">10 / 12</div></div><div class="slide" id="slide-11"><div class="slide-tag">рекурсия</div>
+<h2>Тренер учит SDD — и построен по SDD</h2>
+<div style="display:flex; align-items:center; gap:10px; margin:14px 0 26px; flex-wrap:wrap">
+  <div class="chip">proposal</div><div class="arrow">→</div>
+  <div class="chip">спека + дельты</div><div class="arrow">→</div>
+  <div class="chip">тикеты #2–#15</div><div class="arrow">→</div>
+  <div class="chip">implement (TDD)</div><div class="arrow">→</div>
+  <div class="chip">независимая проверка</div><div class="arrow">→</div>
+  <div class="chip" style="border-color:var(--green)">archive ✓</div>
+</div>
+<div class="grid3">
+  <div class="card"><div style="font-size:38px; font-weight:800; color:var(--accent)">4</div>
+    <div class="small">Четыре change (openspec/changes/): skeleton, console, mcp (архив), pre-submission-alignment</div></div>
+  <div class="card"><div style="font-size:38px; font-weight:800; color:var(--accent)">14</div>
+    <div class="small">тикетов закрыты полным циклом: работа → проверка владельцем → пуш</div></div>
+  <div class="card"><div style="font-size:38px; font-weight:800; color:var(--accent)">4/4</div>
+    <div class="small">openspec validate — спеки живые, критерии приёмки формализованы</div></div>
+</div>
+<div class="body-text" style="margin-top:26px; border-top:1px solid var(--border); padding-top:20px; font-size:19px">
+  На защите проверяющие видят системный подход <b style="color:var(--accent)">в самом репозитории</b>:
+  спеки → тикеты → коммиты — SDD не только предмет тренера, но и способ его постройки.</div><div class="slide-num">11 / 12</div></div><div class="slide" id="slide-12"><div class="slide-tag">итоги</div>
+<h2>Что сделано — и что дальше</h2>
+<div class="grid2" style="flex:1; align-content:start">
+  <div class="card">
+    <h3>Сделано</h3>
+    <div class="small" style="margin-top:12px; font-size:17px; line-height:1.75">
+      ✅ Фаза 1 — консольный тренер (T1–T7)<br>
+      ✅ Фаза 2 — MCP-прототип: M1 сервер · M2 7 инструментов · M3 смоук+сценарий<br>
+      ✅ FastAPI REST+SSE + /mcp в одном процессе (PSA-T2) · get_student_history (PSA-T3)<br>
+      ✅ 249 тестов · coverage 78.35% (гейт 40%)<br>
+      ✅ Живые прогоны: полный сеанс + рестарт-резюм
+    </div>
+  </div>
+  <div class="card">
+    <h3>Дальше</h3>
+    <div class="small" style="margin-top:12px; font-size:17px; line-height:1.75">
+      🎥 Скринкаст ≤10 мин — сценарий готов (docs/screencast-mcp.md)<br>
+      📤 Сдача: git.standard-data.ru · main · 13.11.2026<br>
+      🧭 Кандидаты Фазы 3: resume-aware демо-клиент, GitHub API tool
+    </div>
+  </div>
+</div>
+<div style="border-top:1px solid var(--border); padding-top:18px; display:flex; justify-content:space-between; align-items:center">
+  <div class="body-text" style="font-size:19px">Разработка: <span class="mono" style="color:var(--accent)">github.com/Alex-Kul777/sdd-trainer</span></div>
+  <div class="body-text" style="font-size:22px; font-weight:700; color:var(--primary)">SDD Trainer · спасибо!</div>
+</div><div class="slide-num">12 / 12</div></div><div class="slide" id="slide-13"><div class="slide-tag">приложение</div>
+<h2>Курс → проект: карта наследования</h2>
+<table style="flex:1; align-self:stretch; font-size:15px">
+  <tr><th style="width:400px; font-size:13px">Ноутбук курса · разделы</th><th style="font-size:13px">→ Где живёт в SDD Trainer (as-built)</th></tr>
+  <tr><td><b>AIA_01</b> · Вызов API GigaChat, диалоговый формат</td>
+      <td class="mono" style="font-size:14px">core/llm_manager.py</td></tr>
+  <tr><td><b>AIA_02</b> · Pydantic, структурная генерация, инструменты</td>
+      <td>Pydantic-схемы вердиктов, structured output + <span class="mono" style="font-size:14px">tool_choice</span> (ADR-005)</td></tr>
+  <tr><td><b>AIA_03</b> · LangGraph, human-in-the-loop</td>
+      <td>Граф assess → route → teach → quiz; interrupt-паузы = диалог с учеником</td></tr>
+  <tr><td><b>AIA_04</b> · Чекпоинтер LangGraph, память</td>
+      <td>SqliteSaver + <span class="mono" style="font-size:14px">thread_id student:&lt;name&gt;</span> (ADR-008)</td></tr>
+  <tr><td><b>AIA_05</b> · Tavily, поиск как инструмент, реранк</td>
+      <td><span class="mono" style="font-size:14px">search_docs</span> — живой поиск в уроках и MCP-tool</td></tr>
+  <tr><td><b style="color:var(--primary)">AIA_06 ⭐</b> · Агент со сложным роутингом</td>
+      <td><b style="color:var(--green)">Прямой шаблон графа</b>: 4 маршрута — knows_it · partial · new_topic · clarification</td></tr>
+  <tr><td><b>AIA_07</b> · F1, токенизация; interrupt + Command</td>
+      <td>Взвешенный токенный F1 квизов (ADR-009); <span class="mono" style="font-size:14px">Command(resume)</span> в MCP</td></tr>
+  <tr><td><b>AIA_08</b> (PDF) · Архитектура agent harnesses</td>
+      <td>MCP stdio как harness-протокол (ADR-010)</td></tr>
+</table>
+<div class="small" style="border-top:1px solid var(--border); padding-top:10px; margin-top:12px; font-size:15px">
+  План (29.10) → реализация: ReAct-цикл заменён детерминированным роутингом — воспроизводимость вердиктов ·
+  GigaSearch не понадобился — хватило Tavily · REST+SSE реализованы, MCP смонтирован в тот же процесс —
+  не замена, а второй шов; паттерн interrupt/Command сохранён.<br>
+  Честно не перенесено из курса: реранкер, pass@k, субагенты, CoT-критик — осознанный выбор, а не пробел.</div><div class="slide-num">Приложение · A1</div></div><div class="slide" id="slide-14"><div class="slide-tag">приложение</div>
+<h2>Ноутбук AIA_01 → SDD Trainer</h2>
+<div style="display:flex; align-items:baseline; gap:14px; margin:2px 0 10px">
+  <div style="font-size:21px; font-weight:800"><span>AIA_01</span> · Введение в ИИ агентов</div>
+  <span class="badge">ADR-005 · КРИТЕРИЙ 1</span>
+</div>
+<div style="display:flex; gap:12px; margin-bottom:2px">
+  <div class="small" style="flex:1; letter-spacing:.1em; text-transform:uppercase; font-weight:700; opacity:.7">Ноутбук курса</div>
+  <div style="width:20px"></div>
+  <div class="small" style="flex:1.12; letter-spacing:.1em; text-transform:uppercase; font-weight:700; color:#D66A49">В SDD Trainer</div>
+</div>
+<div style="flex:1; display:flex; flex-direction:column; justify-content:center">
+  <div style="display:flex; align-items:stretch; gap:12px; margin:7px 0">
+  <div class="card" style="flex:1; padding:9px 14px; display:flex; align-items:center">
+    <div class="small" style="font-size:14.5px; line-height:1.35">OpenAI-клиент: api_key + base_url</div></div>
+  <div style="display:flex; align-items:center; font-size:20px; color:var(--accent)">→</div>
+  <div class="card" style="flex:1.12; padding:9px 14px; display:flex; align-items:center; border-color:#D66A49">
+    <div class="small" style="font-size:14.5px; line-height:1.35"><span class="mono" style="color:#D66A49">llm_manager.py: LLMManager.client (lazy)</span></div></div>
+</div><div style="display:flex; align-items:stretch; gap:12px; margin:7px 0">
+  <div class="card" style="flex:1; padding:9px 14px; display:flex; align-items:center">
+    <div class="small" style="font-size:14.5px; line-height:1.35">chat.completions.create(model, messages)</div></div>
+  <div style="display:flex; align-items:center; font-size:20px; color:var(--accent)">→</div>
+  <div class="card" style="flex:1.12; padding:9px 14px; display:flex; align-items:center; border-color:#D66A49">
+    <div class="small" style="font-size:14.5px; line-height:1.35"><span class="mono" style="color:#D66A49">llm_manager.py: _complete() — единая точка вызовов</span></div></div>
+</div><div style="display:flex; align-items:stretch; gap:12px; margin:7px 0">
+  <div class="card" style="flex:1; padding:9px 14px; display:flex; align-items:center">
+    <div class="small" style="font-size:14.5px; line-height:1.35">Роли system / user / assistant</div></div>
+  <div style="display:flex; align-items:center; font-size:20px; color:var(--accent)">→</div>
+  <div class="card" style="flex:1.12; padding:9px 14px; display:flex; align-items:center; border-color:#D66A49">
+    <div class="small" style="font-size:14.5px; line-height:1.35"><span class="mono" style="color:#D66A49">llm_manager.py: chat() — сборка сообщений</span></div></div>
+</div><div style="display:flex; align-items:stretch; gap:12px; margin:7px 0">
+  <div class="card" style="flex:1; padding:9px 14px; display:flex; align-items:center">
+    <div class="small" style="font-size:14.5px; line-height:1.35">LLM stateless — история на клиенте</div></div>
+  <div style="display:flex; align-items:center; font-size:20px; color:var(--accent)">→</div>
+  <div class="card" style="flex:1.12; padding:9px 14px; display:flex; align-items:center; border-color:#D66A49">
+    <div class="small" style="font-size:14.5px; line-height:1.35"><span class="mono" style="color:#D66A49">llm_manager.py: LLMManager.history (in-memory)</span></div></div>
+</div>
+</div>
+<div class="small" style="opacity:.6; font-size:12.5px; text-align:center">каждая строка проверена по коду репозитория (факт-чек: блок → файл/функция)</div><div class="slide-num">Приложение · A2</div></div><div class="slide" id="slide-15"><div class="slide-tag">приложение</div>
+<h2>Ноутбук AIA_02 → SDD Trainer</h2>
+<div style="display:flex; align-items:baseline; gap:14px; margin:2px 0 10px">
+  <div style="font-size:21px; font-weight:800"><span>AIA_02</span> · Инструменты и структурная генерация</div>
+  <span class="badge">ADR-005</span>
+</div>
+<div style="display:flex; gap:12px; margin-bottom:2px">
+  <div class="small" style="flex:1; letter-spacing:.1em; text-transform:uppercase; font-weight:700; opacity:.7">Ноутбук курса</div>
+  <div style="width:20px"></div>
+  <div class="small" style="flex:1.12; letter-spacing:.1em; text-transform:uppercase; font-weight:700; color:#D66A49">В SDD Trainer</div>
+</div>
+<div style="flex:1; display:flex; flex-direction:column; justify-content:center">
+  <div style="display:flex; align-items:stretch; gap:12px; margin:7px 0">
+  <div class="card" style="flex:1; padding:9px 14px; display:flex; align-items:center">
+    <div class="small" style="font-size:14.5px; line-height:1.35">Pydantic-модель → JSON-схема (tools)</div></div>
+  <div style="display:flex; align-items:center; font-size:20px; color:var(--accent)">→</div>
+  <div class="card" style="flex:1.12; padding:9px 14px; display:flex; align-items:center; border-color:#D66A49">
+    <div class="small" style="font-size:14.5px; line-height:1.35"><span class="mono" style="color:#D66A49">llm_manager.py: _structure_tool() — схема как tool</span></div></div>
+</div><div style="display:flex; align-items:stretch; gap:12px; margin:7px 0">
+  <div class="card" style="flex:1; padding:9px 14px; display:flex; align-items:center">
+    <div class="small" style="font-size:14.5px; line-height:1.35">tool_choice: форсированный вызов функции</div></div>
+  <div style="display:flex; align-items:center; font-size:20px; color:var(--accent)">→</div>
+  <div class="card" style="flex:1.12; padding:9px 14px; display:flex; align-items:center; border-color:#D66A49">
+    <div class="small" style="font-size:14.5px; line-height:1.35"><span class="mono" style="color:#D66A49">llm_manager.py: llm_call() — structured output</span></div></div>
+</div><div style="display:flex; align-items:stretch; gap:12px; margin:7px 0">
+  <div class="card" style="flex:1; padding:9px 14px; display:flex; align-items:center">
+    <div class="small" style="font-size:14.5px; line-height:1.35">model_validate_json + ValidationError</div></div>
+  <div style="display:flex; align-items:center; font-size:20px; color:var(--accent)">→</div>
+  <div class="card" style="flex:1.12; padding:9px 14px; display:flex; align-items:center; border-color:#D66A49">
+    <div class="small" style="font-size:14.5px; line-height:1.35"><span class="mono" style="color:#D66A49">llm_manager.py: llm_call() — валидация против схемы</span></div></div>
+</div><div style="display:flex; align-items:stretch; gap:12px; margin:7px 0">
+  <div class="card" style="flex:1; padding:9px 14px; display:flex; align-items:center">
+    <div class="small" style="font-size:14.5px; line-height:1.35">Инструмент = описание + реализация</div></div>
+  <div style="display:flex; align-items:center; font-size:20px; color:var(--accent)">→</div>
+  <div class="card" style="flex:1.12; padding:9px 14px; display:flex; align-items:center; border-color:#D66A49">
+    <div class="small" style="font-size:14.5px; line-height:1.35"><span class="mono" style="color:#D66A49">tools.py: search_sdd_docs / analyze_student_repo</span></div></div>
+</div>
+</div>
+<div class="small" style="opacity:.6; font-size:12.5px; text-align:center">каждая строка проверена по коду репозитория (факт-чек: блок → файл/функция)</div><div class="slide-num">Приложение · A3</div></div><div class="slide" id="slide-16"><div class="slide-tag">приложение</div>
+<h2>Ноутбук AIA_03 → SDD Trainer</h2>
+<div style="display:flex; align-items:baseline; gap:14px; margin:2px 0 10px">
+  <div style="font-size:21px; font-weight:800"><span>AIA_03</span> · LangGraph</div>
+  <span class="badge">КРИТЕРИЙ 2</span>
+</div>
+<div style="display:flex; gap:12px; margin-bottom:2px">
+  <div class="small" style="flex:1; letter-spacing:.1em; text-transform:uppercase; font-weight:700; opacity:.7">Ноутбук курса</div>
+  <div style="width:20px"></div>
+  <div class="small" style="flex:1.12; letter-spacing:.1em; text-transform:uppercase; font-weight:700; color:#D66A49">В SDD Trainer</div>
+</div>
+<div style="flex:1; display:flex; flex-direction:column; justify-content:center">
+  <div style="display:flex; align-items:stretch; gap:12px; margin:7px 0">
+  <div class="card" style="flex:1; padding:9px 14px; display:flex; align-items:center">
+    <div class="small" style="font-size:14.5px; line-height:1.35">StateGraph(TypedDict) + add_node/add_edge</div></div>
+  <div style="display:flex; align-items:center; font-size:20px; color:var(--accent)">→</div>
+  <div class="card" style="flex:1.12; padding:9px 14px; display:flex; align-items:center; border-color:#D66A49">
+    <div class="small" style="font-size:14.5px; line-height:1.35"><span class="mono" style="color:#D66A49">graph.py: build_graph() — 5 узлов assess/route/…</span></div></div>
+</div><div style="display:flex; align-items:stretch; gap:12px; margin:7px 0">
+  <div class="card" style="flex:1; padding:9px 14px; display:flex; align-items:center">
+    <div class="small" style="font-size:14.5px; line-height:1.35">add_conditional_edges + словарь переходов</div></div>
+  <div style="display:flex; align-items:center; font-size:20px; color:var(--accent)">→</div>
+  <div class="card" style="flex:1.12; padding:9px 14px; display:flex; align-items:center; border-color:#D66A49">
+    <div class="small" style="font-size:14.5px; line-height:1.35"><span class="mono" style="color:#D66A49">graph.py: route_after_route — knows_it/partial/…</span></div></div>
+</div><div style="display:flex; align-items:stretch; gap:12px; margin:7px 0">
+  <div class="card" style="flex:1; padding:9px 14px; display:flex; align-items:center">
+    <div class="small" style="font-size:14.5px; line-height:1.35">compile() графа</div></div>
+  <div style="display:flex; align-items:center; font-size:20px; color:var(--accent)">→</div>
+  <div class="card" style="flex:1.12; padding:9px 14px; display:flex; align-items:center; border-color:#D66A49">
+    <div class="small" style="font-size:14.5px; line-height:1.35"><span class="mono" style="color:#D66A49">graph.py: build_graph() — компиляция с checkpointer</span></div></div>
+</div><div style="display:flex; align-items:stretch; gap:12px; margin:7px 0">
+  <div class="card" style="flex:1; padding:9px 14px; display:flex; align-items:center">
+    <div class="small" style="font-size:14.5px; line-height:1.35">HITL-узлы: hitl_need → hitl_feedback</div></div>
+  <div style="display:flex; align-items:center; font-size:20px; color:var(--accent)">→</div>
+  <div class="card" style="flex:1.12; padding:9px 14px; display:flex; align-items:center; border-color:#D66A49">
+    <div class="small" style="font-size:14.5px; line-height:1.35"><span class="mono" style="color:#D66A49">graph.py: clarify_node — interrupt-уточнение</span></div></div>
+</div><div style="display:flex; align-items:stretch; gap:12px; margin:7px 0">
+  <div class="card" style="flex:1; padding:9px 14px; display:flex; align-items:center">
+    <div class="small" style="font-size:14.5px; line-height:1.35">llm_call(dialog, structure=…)</div></div>
+  <div style="display:flex; align-items:center; font-size:20px; color:var(--accent)">→</div>
+  <div class="card" style="flex:1.12; padding:9px 14px; display:flex; align-items:center; border-color:#D66A49">
+    <div class="small" style="font-size:14.5px; line-height:1.35"><span class="mono" style="color:#D66A49">llm_manager.py: llm_call(messages, structure)</span></div></div>
+</div>
+</div>
+<div class="small" style="opacity:.6; font-size:12.5px; text-align:center">каждая строка проверена по коду репозитория (факт-чек: блок → файл/функция)</div><div class="slide-num">Приложение · A4</div></div><div class="slide" id="slide-17"><div class="slide-tag">приложение</div>
+<h2>Ноутбук AIA_04 → SDD Trainer</h2>
+<div style="display:flex; align-items:baseline; gap:14px; margin:2px 0 10px">
+  <div style="font-size:21px; font-weight:800"><span>AIA_04</span> · Состояние и память ИИ агентов</div>
+  <span class="badge">ADR-008 · КРИТЕРИЙ 4</span>
+</div>
+<div style="display:flex; gap:12px; margin-bottom:2px">
+  <div class="small" style="flex:1; letter-spacing:.1em; text-transform:uppercase; font-weight:700; opacity:.7">Ноутбук курса</div>
+  <div style="width:20px"></div>
+  <div class="small" style="flex:1.12; letter-spacing:.1em; text-transform:uppercase; font-weight:700; color:#D66A49">В SDD Trainer</div>
+</div>
+<div style="flex:1; display:flex; flex-direction:column; justify-content:center">
+  <div style="display:flex; align-items:stretch; gap:12px; margin:7px 0">
+  <div class="card" style="flex:1; padding:9px 14px; display:flex; align-items:center">
+    <div class="small" style="font-size:14.5px; line-height:1.35">TypedDict-состояние графа</div></div>
+  <div style="display:flex; align-items:center; font-size:20px; color:var(--accent)">→</div>
+  <div class="card" style="flex:1.12; padding:9px 14px; display:flex; align-items:center; border-color:#D66A49">
+    <div class="small" style="font-size:14.5px; line-height:1.35"><span class="mono" style="color:#D66A49">graph.py: TrainerState — 12 каналов</span></div></div>
+</div><div style="display:flex; align-items:stretch; gap:12px; margin:7px 0">
+  <div class="card" style="flex:1; padding:9px 14px; display:flex; align-items:center">
+    <div class="small" style="font-size:14.5px; line-height:1.35">Reducer: Annotated[List, add]</div></div>
+  <div style="display:flex; align-items:center; font-size:20px; color:var(--accent)">→</div>
+  <div class="card" style="flex:1.12; padding:9px 14px; display:flex; align-items:center; border-color:#D66A49">
+    <div class="small" style="font-size:14.5px; line-height:1.35"><span class="mono" style="color:#D66A49">graph.py: log, clarification_answers — накопление</span></div></div>
+</div><div style="display:flex; align-items:stretch; gap:12px; margin:7px 0">
+  <div class="card" style="flex:1; padding:9px 14px; display:flex; align-items:center">
+    <div class="small" style="font-size:14.5px; line-height:1.35">Чекпойнтер + thread_id</div></div>
+  <div style="display:flex; align-items:center; font-size:20px; color:var(--accent)">→</div>
+  <div class="card" style="flex:1.12; padding:9px 14px; display:flex; align-items:center; border-color:#D66A49">
+    <div class="small" style="font-size:14.5px; line-height:1.35"><span class="mono" style="color:#D66A49">memory.py: SqliteSaver + thread_id student:&lt;name&gt;</span></div></div>
+</div><div style="display:flex; align-items:stretch; gap:12px; margin:7px 0">
+  <div class="card" style="flex:1; padding:9px 14px; display:flex; align-items:center">
+    <div class="small" style="font-size:14.5px; line-height:1.35">Долгосрочная память между сессиями</div></div>
+  <div style="display:flex; align-items:center; font-size:20px; color:var(--accent)">→</div>
+  <div class="card" style="flex:1.12; padding:9px 14px; display:flex; align-items:center; border-color:#D66A49">
+    <div class="small" style="font-size:14.5px; line-height:1.35"><span class="mono" style="color:#D66A49">memory.py: TrainingStateStore.record_quiz_result()</span></div></div>
+</div><div style="display:flex; align-items:stretch; gap:12px; margin:7px 0">
+  <div class="card" style="flex:1; padding:9px 14px; display:flex; align-items:center">
+    <div class="small" style="font-size:14.5px; line-height:1.35">Краткосрочная история диалога</div></div>
+  <div style="display:flex; align-items:center; font-size:20px; color:var(--accent)">→</div>
+  <div class="card" style="flex:1.12; padding:9px 14px; display:flex; align-items:center; border-color:#D66A49">
+    <div class="small" style="font-size:14.5px; line-height:1.35"><span class="mono" style="color:#D66A49">llm_manager.py: LLMManager.history</span></div></div>
+</div>
+</div>
+<div class="small" style="opacity:.6; font-size:12.5px; text-align:center">каждая строка проверена по коду репозитория (факт-чек: блок → файл/функция)</div><div class="slide-num">Приложение · A5</div></div><div class="slide" id="slide-18"><div class="slide-tag">приложение</div>
+<h2>Ноутбук AIA_05 → SDD Trainer</h2>
+<div style="display:flex; align-items:baseline; gap:14px; margin:2px 0 10px">
+  <div style="font-size:21px; font-weight:800"><span>AIA_05</span> · Поиск в LLM-агентах и LangGraph</div>
+  <span class="badge">ADR-006 · КРИТЕРИЙ 3</span>
+</div>
+<div style="display:flex; gap:12px; margin-bottom:2px">
+  <div class="small" style="flex:1; letter-spacing:.1em; text-transform:uppercase; font-weight:700; opacity:.7">Ноутбук курса</div>
+  <div style="width:20px"></div>
+  <div class="small" style="flex:1.12; letter-spacing:.1em; text-transform:uppercase; font-weight:700; color:#D66A49">В SDD Trainer</div>
+</div>
+<div style="flex:1; display:flex; flex-direction:column; justify-content:center">
+  <div style="display:flex; align-items:stretch; gap:12px; margin:7px 0">
+  <div class="card" style="flex:1; padding:9px 14px; display:flex; align-items:center">
+    <div class="small" style="font-size:14.5px; line-height:1.35">tavily_client.search(query, max_results)</div></div>
+  <div style="display:flex; align-items:center; font-size:20px; color:var(--accent)">→</div>
+  <div class="card" style="flex:1.12; padding:9px 14px; display:flex; align-items:center; border-color:#D66A49">
+    <div class="small" style="font-size:14.5px; line-height:1.35"><span class="mono" style="color:#D66A49">tools.py: search_sdd_docs() — POST api.tavily.com/search</span></div></div>
+</div><div style="display:flex; align-items:stretch; gap:12px; margin:7px 0">
+  <div class="card" style="flex:1; padding:9px 14px; display:flex; align-items:center">
+    <div class="small" style="font-size:14.5px; line-height:1.35">Нормализация выдачи к единому виду</div></div>
+  <div style="display:flex; align-items:center; font-size:20px; color:var(--accent)">→</div>
+  <div class="card" style="flex:1.12; padding:9px 14px; display:flex; align-items:center; border-color:#D66A49">
+    <div class="small" style="font-size:14.5px; line-height:1.35"><span class="mono" style="color:#D66A49">tools.py: _search_via() — [{title, url, content}]</span></div></div>
+</div><div style="display:flex; align-items:stretch; gap:12px; margin:7px 0">
+  <div class="card" style="flex:1; padding:9px 14px; display:flex; align-items:center">
+    <div class="small" style="font-size:14.5px; line-height:1.35">Поиск как узел графа: need → search</div></div>
+  <div style="display:flex; align-items:center; font-size:20px; color:var(--accent)">→</div>
+  <div class="card" style="flex:1.12; padding:9px 14px; display:flex; align-items:center; border-color:#D66A49">
+    <div class="small" style="font-size:14.5px; line-height:1.35"><span class="mono" style="color:#D66A49">graph.py: teach_node — DocsDecision → docs_search</span></div></div>
+</div>
+</div>
+<div class="small" style="opacity:.6; font-size:12.5px; text-align:center">каждая строка проверена по коду репозитория (факт-чек: блок → файл/функция)</div><div class="slide-num">Приложение · A6</div></div><div class="slide" id="slide-19"><div class="slide-tag">приложение</div>
+<h2>Ноутбук AIA_06 ⭐ → SDD Trainer</h2>
+<div style="display:flex; align-items:baseline; gap:14px; margin:2px 0 10px">
+  <div style="font-size:21px; font-weight:800"><span>AIA_06 ⭐</span> · Практика разработки ИИ агентов</div>
+  <span class="badge">КРИТЕРИЙ 5</span>
+</div>
+<div style="display:flex; gap:12px; margin-bottom:2px">
+  <div class="small" style="flex:1; letter-spacing:.1em; text-transform:uppercase; font-weight:700; opacity:.7">Ноутбук курса</div>
+  <div style="width:20px"></div>
+  <div class="small" style="flex:1.12; letter-spacing:.1em; text-transform:uppercase; font-weight:700; color:#D66A49">В SDD Trainer</div>
+</div>
+<div style="flex:1; display:flex; flex-direction:column; justify-content:center">
+  <div style="display:flex; align-items:stretch; gap:12px; margin:7px 0">
+  <div class="card" style="flex:1; padding:9px 14px; display:flex; align-items:center">
+    <div class="small" style="font-size:14.5px; line-height:1.35">Роутинг-агент: routing_node + переходы</div></div>
+  <div style="display:flex; align-items:center; font-size:20px; color:var(--accent)">→</div>
+  <div class="card" style="flex:1.12; padding:9px 14px; display:flex; align-items:center; border-color:#D66A49">
+    <div class="small" style="font-size:14.5px; line-height:1.35"><span class="mono" style="color:#D66A49">graph.py: route_node + add_conditional_edges</span></div></div>
+</div><div style="display:flex; align-items:stretch; gap:12px; margin:7px 0">
+  <div class="card" style="flex:1; padding:9px 14px; display:flex; align-items:center">
+    <div class="small" style="font-size:14.5px; line-height:1.35">HITL-уточнение запроса</div></div>
+  <div style="display:flex; align-items:center; font-size:20px; color:var(--accent)">→</div>
+  <div class="card" style="flex:1.12; padding:9px 14px; display:flex; align-items:center; border-color:#D66A49">
+    <div class="small" style="font-size:14.5px; line-height:1.35"><span class="mono" style="color:#D66A49">graph.py: clarify_node — interrupt</span></div></div>
+</div><div style="display:flex; align-items:stretch; gap:12px; margin:7px 0">
+  <div class="card" style="flex:1; padding:9px 14px; display:flex; align-items:center">
+    <div class="small" style="font-size:14.5px; line-height:1.35">Bounded loop — цикл уточнений ограничен</div></div>
+  <div style="display:flex; align-items:center; font-size:20px; color:var(--accent)">→</div>
+  <div class="card" style="flex:1.12; padding:9px 14px; display:flex; align-items:center; border-color:#D66A49">
+    <div class="small" style="font-size:14.5px; line-height:1.35"><span class="mono" style="color:#D66A49">graph.py: MAX_CLARIFICATION_ROUNDS</span></div></div>
+</div><div style="display:flex; align-items:stretch; gap:12px; margin:7px 0">
+  <div class="card" style="flex:1; padding:9px 14px; display:flex; align-items:center">
+    <div class="small" style="font-size:14.5px; line-height:1.35">Инструменты в узлах агента</div></div>
+  <div style="display:flex; align-items:center; font-size:20px; color:var(--accent)">→</div>
+  <div class="card" style="flex:1.12; padding:9px 14px; display:flex; align-items:center; border-color:#D66A49">
+    <div class="small" style="font-size:14.5px; line-height:1.35"><span class="mono" style="color:#D66A49">graph.py: assess_node (repo_analyzer)</span></div></div>
+</div>
+</div>
+<div class="small" style="opacity:.6; font-size:12.5px; text-align:center">каждая строка проверена по коду репозитория (факт-чек: блок → файл/функция)</div><div class="slide-num">Приложение · A7</div></div><div class="slide" id="slide-20"><div class="slide-tag">приложение</div>
+<h2>Ноутбук AIA_07 → SDD Trainer</h2>
+<div style="display:flex; align-items:baseline; gap:14px; margin:2px 0 10px">
+  <div style="font-size:21px; font-weight:800"><span>AIA_07</span> · Сбор метрик и деплой ИИ агентов</div>
+  <span class="badge">ADR-009 · КРИТЕРИЙ 6</span>
+</div>
+<div style="display:flex; gap:12px; margin-bottom:2px">
+  <div class="small" style="flex:1; letter-spacing:.1em; text-transform:uppercase; font-weight:700; opacity:.7">Ноутбук курса</div>
+  <div style="width:20px"></div>
+  <div class="small" style="flex:1.12; letter-spacing:.1em; text-transform:uppercase; font-weight:700; color:#D66A49">В SDD Trainer</div>
+</div>
+<div style="flex:1; display:flex; flex-direction:column; justify-content:center">
+  <div style="display:flex; align-items:stretch; gap:12px; margin:7px 0">
+  <div class="card" style="flex:1; padding:9px 14px; display:flex; align-items:center">
+    <div class="small" style="font-size:14.5px; line-height:1.35">Токенизация + Precision/Recall/F1</div></div>
+  <div style="display:flex; align-items:center; font-size:20px; color:var(--accent)">→</div>
+  <div class="card" style="flex:1.12; padding:9px 14px; display:flex; align-items:center; border-color:#D66A49">
+    <div class="small" style="font-size:14.5px; line-height:1.35"><span class="mono" style="color:#D66A49">quiz.py: tokenize() + answer_f1() — SQuAD-style F1</span></div></div>
+</div><div style="display:flex; align-items:stretch; gap:12px; margin:7px 0">
+  <div class="card" style="flex:1; padding:9px 14px; display:flex; align-items:center">
+    <div class="small" style="font-size:14.5px; line-height:1.35">Деплой через FastAPI: POST /invoke</div></div>
+  <div style="display:flex; align-items:center; font-size:20px; color:var(--accent)">→</div>
+  <div class="card" style="flex:1.12; padding:9px 14px; display:flex; align-items:center; border-color:#D66A49">
+    <div class="small" style="font-size:14.5px; line-height:1.35"><span class="mono" style="color:#D66A49">app.py: /sessions/{student}/start, /answer (pydantic)</span></div></div>
+</div><div style="display:flex; align-items:stretch; gap:12px; margin:7px 0">
+  <div class="card" style="flex:1; padding:9px 14px; display:flex; align-items:center">
+    <div class="small" style="font-size:14.5px; line-height:1.35">graph.stream(stream_mode=updates)</div></div>
+  <div style="display:flex; align-items:center; font-size:20px; color:var(--accent)">→</div>
+  <div class="card" style="flex:1.12; padding:9px 14px; display:flex; align-items:center; border-color:#D66A49">
+    <div class="small" style="font-size:14.5px; line-height:1.35"><span class="mono" style="color:#D66A49">app.py: _sse_events() — SSE-стрим шагов</span></div></div>
+</div><div style="display:flex; align-items:stretch; gap:12px; margin:7px 0">
+  <div class="card" style="flex:1; padding:9px 14px; display:flex; align-items:center">
+    <div class="small" style="font-size:14.5px; line-height:1.35">interrupt + Command(resume=…)</div></div>
+  <div style="display:flex; align-items:center; font-size:20px; color:var(--accent)">→</div>
+  <div class="card" style="flex:1.12; padding:9px 14px; display:flex; align-items:center; border-color:#D66A49">
+    <div class="small" style="font-size:14.5px; line-height:1.35"><span class="mono" style="color:#D66A49">app.py: answer() — resume с чекпоинтом</span></div></div>
+</div>
+</div>
+<div class="small" style="opacity:.6; font-size:12.5px; text-align:center">каждая строка проверена по коду репозитория (факт-чек: блок → файл/функция)</div><div class="slide-num">Приложение · A8</div></div><div class="slide" id="slide-21"><div class="slide-tag">приложение</div>
+<h2>Ноутбук AIA_08 → SDD Trainer</h2>
+<div style="display:flex; align-items:baseline; gap:14px; margin:2px 0 10px">
+  <div style="font-size:21px; font-weight:800"><span>AIA_08</span> · Архитектура современных harnesses (PDF)</div>
+  <span class="badge">ADR-010/001 · КРИТЕРИЙ 6</span>
+</div>
+<div style="display:flex; gap:12px; margin-bottom:2px">
+  <div class="small" style="flex:1; letter-spacing:.1em; text-transform:uppercase; font-weight:700; opacity:.7">Ноутбук курса</div>
+  <div style="width:20px"></div>
+  <div class="small" style="flex:1.12; letter-spacing:.1em; text-transform:uppercase; font-weight:700; color:#D66A49">В SDD Trainer</div>
+</div>
+<div style="flex:1; display:flex; flex-direction:column; justify-content:center">
+  <div style="display:flex; align-items:stretch; gap:12px; margin:7px 0">
+  <div class="card" style="flex:1; padding:9px 14px; display:flex; align-items:center">
+    <div class="small" style="font-size:14.5px; line-height:1.35">MCP-сервер над агентом</div></div>
+  <div style="display:flex; align-items:center; font-size:20px; color:var(--accent)">→</div>
+  <div class="card" style="flex:1.12; padding:9px 14px; display:flex; align-items:center; border-color:#D66A49">
+    <div class="small" style="font-size:14.5px; line-height:1.35"><span class="mono" style="color:#D66A49">mcp/server.py: create_server() — FastMCP над графом</span></div></div>
+</div><div style="display:flex; align-items:stretch; gap:12px; margin:7px 0">
+  <div class="card" style="flex:1; padding:9px 14px; display:flex; align-items:center">
+    <div class="small" style="font-size:14.5px; line-height:1.35">@mcp.tool — типизированные инструменты</div></div>
+  <div style="display:flex; align-items:center; font-size:20px; color:var(--accent)">→</div>
+  <div class="card" style="flex:1.12; padding:9px 14px; display:flex; align-items:center; border-color:#D66A49">
+    <div class="small" style="font-size:14.5px; line-height:1.35"><span class="mono" style="color:#D66A49">mcp/server.py: start_session / answer_* (7 шт.)</span></div></div>
+</div><div style="display:flex; align-items:stretch; gap:12px; margin:7px 0">
+  <div class="card" style="flex:1; padding:9px 14px; display:flex; align-items:center">
+    <div class="small" style="font-size:14.5px; line-height:1.35">Локальный MCP через stdio</div></div>
+  <div style="display:flex; align-items:center; font-size:20px; color:var(--accent)">→</div>
+  <div class="card" style="flex:1.12; padding:9px 14px; display:flex; align-items:center; border-color:#D66A49">
+    <div class="small" style="font-size:14.5px; line-height:1.35"><span class="mono" style="color:#D66A49">mcp/__main__.py: python -m sdd_trainer.mcp</span></div></div>
+</div><div style="display:flex; align-items:stretch; gap:12px; margin:7px 0">
+  <div class="card" style="flex:1; padding:9px 14px; display:flex; align-items:center">
+    <div class="small" style="font-size:14.5px; line-height:1.35">Streamable HTTP рядом с REST</div></div>
+  <div style="display:flex; align-items:center; font-size:20px; color:var(--accent)">→</div>
+  <div class="card" style="flex:1.12; padding:9px 14px; display:flex; align-items:center; border-color:#D66A49">
+    <div class="small" style="font-size:14.5px; line-height:1.35"><span class="mono" style="color:#D66A49">app.py: mount /mcp — один процесс, второй шов</span></div></div>
+</div>
+</div>
+<div class="small" style="opacity:.6; font-size:12.5px; text-align:center">каждая строка проверена по коду репозитория (факт-чек: блок → файл/функция)</div><div class="slide-num">Приложение · A9</div></div><div class="slide" id="slide-22"><div class="slide-tag">приложение</div>
+<h2>Три прямых наследования</h2>
+<div class="grid3" style="flex:1; align-content:start">
+  <div class="card">
+    <h3 style="font-size:20px">Роутинг → скелет тренажёра</h3>
+    <div class="small" style="margin-top:14px; font-size:15.5px; line-height:1.6">
+      <b style="color:var(--accent)">AIA_06</b>: knowledge_check → routing → clarification / knowledge<br><br>
+      <b>Проект</b>: assess → route → clarification / teach<br><br>
+      Узлы учебного агента стали ядром графа — критерий 5</div>
+  </div>
+  <div class="card">
+    <h3 style="font-size:20px">Чекпоинтер → фича рестарта</h3>
+    <div class="small" style="margin-top:14px; font-size:15.5px; line-height:1.6">
+      <b style="color:var(--accent)">AIA_04</b>: упражнение с чекпоинтером LangGraph<br><br>
+      <b>Проект</b>: SqliteSaver + thread_id — kill посреди квиза → <span style="color:var(--green); font-weight:700">resumed=True</span><br><br>
+      Упражнение стало фичей — слайд 9, ADR-008</div>
+  </div>
+  <div class="card">
+    <h3 style="font-size:20px">interrupt + Command → MCP</h3>
+    <div class="small" style="margin-top:14px; font-size:15.5px; line-height:1.6">
+      <b style="color:var(--accent)">AIA_07</b>: стриминг с HITL через interrupt и Command<br><br>
+      <b>Проект</b>: <span class="mono" style="font-size:14px">server.py:296 — Command(resume=answer)</span><br><br>
+      Каждое сообщение ученика продолжает прерванный граф; F1 → вердикт квиза</div>
+  </div>
+</div>
+<div class="body-text" style="border-top:1px solid var(--border); padding-top:16px; font-size:20px; text-align:center">
+  Курс не остался теорией: <b style="color:var(--primary)">каждый паттерн из ноутбуков — строка в коде тренажёра</b></div><div class="slide-num">Приложение · A10</div></div><div class="slide" id="slide-23"><div class="slide-tag">приложение</div>
+<h2>Бюджет разработки агентом</h2>
+<div style="flex:1; display:flex; flex-direction:column; justify-content:center">
+  <div style="display:flex; align-items:center; gap:16px; margin:9px 0">
+  <div class="small" style="flex:0 0 380px; font-size:16px; text-align:right">Фаза 1 · T1–T7 — консольный тренер</div>
+  <div class="bar" style="flex:1; height:14px"><div style="width:100%; background:#D66A49"></div></div>
+  <div class="mono small" style="flex:0 0 110px; font-size:15px">1 947 000 · ≈539 ₽</div>
+</div><div style="display:flex; align-items:center; gap:16px; margin:9px 0">
+  <div class="small" style="flex:0 0 380px; font-size:16px; text-align:right">Фаза 2 · M1–M3 — MCP-прототип</div>
+  <div class="bar" style="flex:1; height:14px"><div style="width:37%; background:#D66A49"></div></div>
+  <div class="mono small" style="flex:0 0 110px; font-size:15px">727 000 · ≈199 ₽</div>
+</div><div style="display:flex; align-items:center; gap:16px; margin:9px 0">
+  <div class="small" style="flex:0 0 380px; font-size:16px; text-align:right">PSA-пайплайн · T2–T4 — FastAPI  history  domains</div>
+  <div class="bar" style="flex:1; height:14px"><div style="width:16%; background:#D66A49"></div></div>
+  <div class="mono small" style="flex:0 0 110px; font-size:15px">323 500 · ≈87 ₽</div>
+</div><div style="display:flex; align-items:center; gap:16px; margin:9px 0">
+  <div class="small" style="flex:0 0 380px; font-size:16px; text-align:right">Ревью кода — независимый агент</div>
+  <div class="bar" style="flex:1; height:14px"><div style="width:6%; background:#D66A49"></div></div>
+  <div class="mono small" style="flex:0 0 110px; font-size:15px">123 000 · ≈27 ₽</div>
+</div><div style="display:flex; align-items:center; gap:16px; margin:9px 0">
+  <div class="small" style="flex:0 0 380px; font-size:16px; text-align:right">Deck v4 — субагент</div>
+  <div class="bar" style="flex:1; height:14px"><div style="width:4%; background:#D66A49"></div></div>
+  <div class="mono small" style="flex:0 0 110px; font-size:15px">93 000 · ≈23 ₽</div>
+</div><div style="display:flex; align-items:center; gap:16px; margin:9px 0">
+  <div class="small" style="flex:0 0 380px; font-size:16px; text-align:right">Ревью плана — 2 оси</div>
+  <div class="bar" style="flex:1; height:14px"><div style="width:2%; background:#D66A49"></div></div>
+  <div class="mono small" style="flex:0 0 110px; font-size:15px">57 000 · ≈12 ₽</div>
+</div><div style="display:flex; align-items:center; gap:16px; margin:9px 0">
+  <div class="small" style="flex:0 0 380px; font-size:16px; text-align:right">Координация — основная сессия</div>
+  <div class="bar" style="flex:1; height:14px"><div style="width:1%; background:#D66A49"></div></div>
+  <div class="mono small" style="flex:0 0 110px; font-size:15px">30 000 · ≈10 ₽</div>
+</div>
+  <div style="display:flex; align-items:baseline; gap:24px; border-top:1px solid var(--border); margin-top:18px; padding-top:16px">
+    <div style="font-size:48px; font-weight:800; color:var(--primary)">≈3.3M токенов · ≈900 ₽</div>
+    <div class="body-text" style="font-size:22px">весь проект разработан ИИ-агентом — 17 сессий, in 2.55M + out 0.75M</div>
+  </div>
+</div>
+<div class="small" style="font-size:13.5px; line-height:1.45">Источник: кумулятивные счётчики OpenClaw session_status по 17 сессиям, 04.11.2026 · Тариф cloud.ru (GLM-5.3): 173.15 ₽/1M входных · 606.05 ₽/1M генерируемых · Кэш: 86–97% hit (~55M попаданий) — тарифицируется отдельно, дешевле · API предоставлен в рамках курса — фактических списаний нет.</div><div class="slide-num">Приложение · A11</div></div><div class="slide" id="slide-24"><div class="slide-tag">приложение</div>
+<h2>Стоимость обучения: один сеанс ≈ 1 ₽</h2>
+<div style="flex:1; display:flex; flex-direction:column; justify-content:center">
+  <div style="display:flex; align-items:center; gap:16px; margin:9px 0">
+  <div class="small" style="flex:0 0 380px; font-size:16px; text-align:right">Сеанс A · уверенный ученик (knows_it → квиз)</div>
+  <div class="bar" style="flex:1; height:14px"><div style="width:86%; background:#4CAF7D"></div></div>
+  <div class="mono small" style="flex:0 0 150px; font-size:15px">12 932 · ≈1.10 ₽</div>
+</div><div style="display:flex; align-items:center; gap:16px; margin:9px 0">
+  <div class="small" style="flex:0 0 380px; font-size:16px; text-align:right">Сеанс B · слабый (partial → урок → квиз)</div>
+  <div class="bar" style="flex:1; height:14px"><div style="width:100%; background:#4CAF7D"></div></div>
+  <div class="mono small" style="flex:0 0 150px; font-size:15px">15 035 · ≈1.27 ₽</div>
+</div>
+  <div style="display:flex; align-items:baseline; gap:24px; border-top:1px solid var(--border); margin-top:18px; padding-top:16px">
+    <div style="font-size:48px; font-weight:800; color:var(--green)">≈1.2 ₽</div>
+    <div class="body-text" style="font-size:22px">за сеанс — ~14k токенов GigaChat-3-Pro, 4–5 вызовов</div>
+  </div>
+  <div class="body-text" style="font-size:19px; margin-top:10px">Весь бюджет разработки (≈900 ₽) — это <b style="color:var(--primary)">≈750 сеансов обучения</b></div>
+</div>
+<div class="small" style="font-size:13.5px; line-height:1.45">Живой замер 05.11.2026: два полных сеанса через граф (калибровка → маршрут → квиз → вердикт), живой Tavily в уроке · Тариф cloud.ru GigaChat-3-Pro: 73.03 ₽/1M входных · 176.39 ₽/1M генерируемых · API в рамках курса — фактических списаний нет.</div><div class="slide-num">Приложение · A12</div></div>
+</div>
+<div class="slide-nav"><button onclick="go(0)">1</button><button onclick="go(1)">2</button><button onclick="go(2)">3</button><button onclick="go(3)">4</button><button onclick="go(4)">5</button><button onclick="go(5)">6</button><button onclick="go(6)">7</button><button onclick="go(7)">8</button><button onclick="go(8)">9</button><button onclick="go(9)">10</button><button onclick="go(10)">11</button><button onclick="go(11)">A1</button><button onclick="go(12)">A2</button><button onclick="go(13)">A3</button><button onclick="go(14)">A4</button><button onclick="go(15)">A5</button><button onclick="go(16)">A6</button><button onclick="go(17)">A7</button><button onclick="go(18)">A8</button><button onclick="go(19)">A9</button><button onclick="go(20)">A10</button><button onclick="go(21)">A11</button><button onclick="go(22)">A12</button></div>
+<script>
+let cur = 0;
+function go(i) {
+  cur = Math.max(0, Math.min(23, i));
+  document.getElementById('slide-' + (cur + 1)).scrollIntoView({behavior: 'instant'});
+  document.querySelectorAll('.slide-nav button').forEach((b, n) =>
+    b.classList.toggle('active', n === cur));
+}
+document.addEventListener('keydown', e => {
+  if (['ArrowRight','ArrowDown','PageDown'].includes(e.key)) { go(cur + 1); e.preventDefault(); }
+  if (['ArrowLeft','ArrowUp','PageUp'].includes(e.key)) { go(cur - 1); e.preventDefault(); }
+});
+</script>
+<style>
+.liveterm { width: 100%; flex: 1; background: #0e1c30; border: 1px solid #324B6D; border-radius: 10px;
+  overflow: hidden; display: flex; flex-direction: column; font-family: ui-monospace, Menlo, Consolas, monospace; }
+.liveterm-bar { display: flex; align-items: center; gap: 8px; padding: 10px 16px; background: #16304f; border-bottom: 1px solid #324B6D; }
+.ltd { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+.ltd.r { background: #E5535B; } .ltd.y { background: #fbbf24; } .ltd.g { background: #4CAF7D; }
+.liveterm-title { color: #A8B8CC; font-size: 14px; margin-left: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.liveterm-body { flex: 1; padding: 14px 20px; font-size: 16.5px; line-height: 1.5; color: #d7e3f4; overflow: hidden; }
+.tl { opacity: 0; transform: translateY(5px); transition: opacity .3s, transform .3s; white-space: pre-wrap; }
+.liveterm.play .tl { opacity: 1; transform: none; transition-delay: var(--d); }
+.tl.cmd { color: #818cf8; } .tl.ok { color: #4CAF7D; } .tl.warn { color: #E58B6D; }
+.tl.usr { color: #c4b5fd; } .tl.sys { color: #A8B8CC; } .tl.bot { color: #d7e3f4; }
+</style>
+<script>
+window.__playTerm = function (slideIdx) {
+  document.querySelectorAll('.liveterm').forEach(function (t) { t.classList.remove('play'); });
+  var el = document.getElementById('slide-' + slideIdx);
+  var term = el && el.querySelector('.liveterm');
+  if (term) requestAnimationFrame(function () { requestAnimationFrame(function () { term.classList.add('play'); }); });
+};
+</script>
+</body>
+</html>
