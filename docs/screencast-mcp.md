@@ -1,5 +1,13 @@
 # Screencast Scenario — MCP Prototype (issue #11, task 3.2)
 
+> **Status: CLOSED — superseded by the defense screencast video**
+> (2026-11-05). The live-console demo this scenario describes was recorded
+> as an animated terminal inside the defense presentation video:
+> `docs/presentation/defense-screencast/sdd_trainer_defense_screencast_HQ.mp4`
+> (slide 6 «Живой сеанс в консоли», built from the real session logs of
+> 2026-11-05). This document is kept as the underlying scenario and the
+> gotchas reference; no separate recording is planned.
+
 Step-by-step recording scenario for the submission video of the Phase 2
 prototype: the SDD trainer driven by an MCP client over stdio. Modeled on
 the Phase 1 screencast scenario (inside

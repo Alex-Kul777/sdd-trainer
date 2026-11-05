@@ -5,7 +5,7 @@ Project documentation: guides, architecture notes, and course materials.
 Guides:
 
 - [api.md](api.md) — REST + SSE + MCP `/mcp` endpoints, HITL resume, curl examples (PSA-T2)
-- [screencast-mcp.md](screencast-mcp.md) — submission video scenario
+- [screencast-mcp.md](screencast-mcp.md) — submission video scenario (CLOSED 2026-11-05: superseded by [defense-screencast video](presentation/defense-screencast/sdd_trainer_defense_screencast_HQ.mp4))
 - [mcp-smoke-checklist.md](mcp-smoke-checklist.md) / [smoke-checklist.md](smoke-checklist.md) — manual smoke runs
 - Curriculum roadmap (six future lesson domains) — [roadmap.md](roadmap.md), phase 3
 
