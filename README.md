@@ -35,4 +35,17 @@ make test        # or: pytest -v
 - Full documentation (Russian): [README_RU.md](README_RU.md)
 - Architecture decisions: [DECISIONS.md](DECISIONS.md)
 - Domain glossary: [GLOSSARY.md](GLOSSARY.md)
-- Defense presentation (slides + live dashboards): [docs/presentation/](docs/presentation/)
+
+## Presentations & Videos
+
+All under [docs/presentation/](docs/presentation/):
+
+| Folder | What it is | Formats |
+|--------|------------|---------|
+| [deck/](docs/presentation/deck/) | Defense slides (deck v6, 23 slides + appendix) | HTML, PDF |
+| [product-overview/](docs/presentation/product-overview/) | Video: repository & product overview (16 slides, ~10 min, voiceover RU) | MP4 (HQ), HTML, PDF |
+| [defense-screencast/](docs/presentation/defense-screencast/) | Video: project defense screencast (deck v6 + live console session, 24 slides, 9:38, voiceover RU) | MP4 (HQ), HTML, PDF |
+
+The live MCP demo runs inside the defense screencast as an animated terminal
+slide (from real session logs); the original step-by-step scenario is kept in
+[docs/screencast-mcp.md](docs/screencast-mcp.md) (closed).
