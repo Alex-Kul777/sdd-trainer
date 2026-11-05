@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>SDD Trainer — видео-презентация</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="reset.css">
+<link rel="stylesheet" href="reveal.css">
+<link rel="stylesheet" href="black.css">
+<style>
+  :root {
+    --overlay-dark: rgba(0, 0, 0, 0.97);   /* тёмные фоны (Урок #16) */
+    --overlay-light: rgba(0, 0, 0, 0.95);  /* светлые фоны */
+    --accent: #5ec8f2;
+    --accent-2: #f2c86b;
+    --text: #f2f4f7;
+    --muted: #b8c0cc;
+    --card: rgba(255, 255, 255, 0.06);
+    --card-border: rgba(255, 255, 255, 0.16);
+  }
+  html body {
+    background: #0a0d12;
+    font-family: "Segoe UI", "PT Sans", "Helvetica Neue", Arial, sans-serif;
+    color: var(--text);
+  }
+  .reveal .slides { text-align: left; }
+  .reveal .slides section {
+    width: 1920px; height: 1080px;
+    padding: 70px 100px;
+    box-sizing: border-box;
+    background: linear-gradient(160deg, #0d1117 0%, #0a0d12 55%, #0c1420 100%);
+  }
+  .reveal h2 {
+    font-size: 56px;
+    font-weight: 700;
+    line-height: 1.15;
+    color: var(--text);
+    margin: 0 0 40px 0;
+    letter-spacing: 0.5px;
+  }
+  .reveal h2 .accent { color: var(--accent); }
+  .reveal .title-slide h2 {
+    font-size: 44px; color: var(--muted);
+    margin: 40px 0 0 0; font-weight: 600;
+  }
+  .reveal p, .reveal li, .reveal td, .reveal .label {
+    font-size: 30px;
+    line-height: 1.45;
+    color: var(--text);
+  }
+  .reveal .muted { color: var(--muted); }
+  .reveal .small { font-size: 24px; }
+  .slide-number {
+    position: absolute;
+    right: 48px; bottom: 36px;
+    font-size: 24px;
+    color: var(--muted);
+    font-family: "Consolas", monospace;
+    letter-spacing: 1px;
+  }
+  .overlay {
+    position: absolute;
+    inset: 0;
+    background: var(--overlay-dark);
+  }
+  .content { position: relative; z-index: 2; height: 100%; }
+
+  /* карточки */
+  .cards { display: flex; gap: 36px; margin-top: 20px; }
+  .card {
+    flex: 1;
+    background: var(--card);
+    border: 2px solid var(--card-border);
+    border-radius: 18px;
+    padding: 36px 40px;
+  }
+  .card .card-title {
+    font-size: 32px; font-weight: 700; color: var(--accent);
+    margin-bottom: 16px;
+  }
+  .card .card-title.gold { color: var(--accent-2); }
+  .card p, .card li { font-size: 26px; }
+  .card ul { margin: 0; padding-left: 34px; }
+
+  /* схемы */
+  .diagram { display: flex; align-items: center; justify-content: center; gap: 0; margin: 30px 0; }
+  .node {
+    background: var(--card);
+    border: 3px solid var(--card-border);
+    border-radius: 16px;
+    padding: 26px 34px;
+    text-align: center;
+    font-size: 28px;
+    font-weight: 600;
+  }
+  .node.hl { border-color: var(--accent); color: var(--accent); }
+  .node.gold { border-color: var(--accent-2); color: var(--accent-2); }
+  .arrow {
+    font-size: 34px; color: var(--muted);
+    padding: 0 22px; font-weight: 400;
+  }
+  .stack { display: flex; flex-direction: column; gap: 18px; }
+  .code {
+    font-family: "Consolas", "JetBrains Mono", monospace;
+    background: #10151d;
+    border: 2px solid var(--card-border);
+    border-radius: 14px;
+    padding: 30px 36px;
+    font-size: 27px;
+    line-height: 1.5;
+    color: #d7e0ea;
+    white-space: pre;
+    margin: 0;
+  }
+  .code .kw { color: #c792ea; }
+  .code .str { color: #a5e075; }
+  .code .fn { color: #82aaff; }
+  .code .cm { color: #6b7684; }
+
+  /* большие цифры */
+  .stats { display: flex; gap: 36px; margin-top: 30px; }
+  .stat {
+    flex: 1; text-align: center;
+    background: var(--card);
+    border: 2px solid var(--card-border);
+    border-radius: 18px;
+    padding: 44px 20px;
+  }
+  .stat .num {
+    font-size: 84px; font-weight: 800; color: var(--accent);
+    line-height: 1.05;
+  }
+  .stat .num.gold { color: var(--accent-2); }
+  .stat .cap { font-size: 26px; color: var(--muted); margin-top: 14px; }
+
+  /* плейсхолдеры врезок */
+  .video-slot {
+    width: 1520px; height: 855px; /* 16:9 */
+    background: #06080c;
+    border: 3px dashed #3a4656;
+    border-radius: 20px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 18px;
+    margin-top: 10px;
+  }
+  .video-slot .slot-label {
+    font-size: 34px; color: var(--muted);
+    font-family: "Consolas", monospace;
+  }
+  .video-slot .slot-sub { font-size: 24px; color: #5a6675; }
+
+  .title-slide { display: flex; flex-direction: column; justify-content: center; height: 100%; }
+  .title-slide .project {
+    font-size: 110px; font-weight: 800; color: var(--text);
+    letter-spacing: 1px;
+  }
+  .title-slide .project .accent { color: var(--accent); }
+  .title-slide .tagline {
+    font-size: 40px; color: var(--muted); margin-top: 36px;
+    max-width: 1400px; line-height: 1.35;
+  }
+  .title-slide .meta {
+    margin-top: 70px; font-size: 26px; color: #5a6675;
+    font-family: "Consolas", monospace;
+  }
+  .footer-note {
+    position: absolute; left: 100px; bottom: 36px;
+    font-size: 24px; color: #5a6675;
+  }
+</style>
+</head>
+<body>
+<div class="reveal"><div class="slides">
+
+<!-- ================= SLIDE 1 : SETUP — титул ================= -->
+<section>
+  <div class="overlay"></div>
+  <div class="content title-slide">
+    <div class="project">SDD <span class="accent">Trainer</span></div>
+    <h2>Учит тому, на чём построен сам</h2>
+    <div class="tagline" style="margin-top:28px;">ИИ-тренер, который обучает разработке от спецификации —<br>и сам написан по этой методологии.</div>
+    <div class="meta">LangGraph · GigaChat-3-Pro · FastAPI · MCP</div>
+  </div>
+  <div class="slide-number">1/16</div>
+</section>
+
+<!-- ================= SLIDE 2 : проблема ================= -->
+<section>
+  <div class="overlay"></div>
+  <div class="content">
+    <h2>Проблема: SDD трудно освоить в одиночку</h2>
+    <p class="muted">Spec-Driven Development: сначала описываем, что строим. Потом проектируем. Только потом код.<br>
+    Материалов много — но документация как стена.</p>
+    <div class="cards">
+      <div class="card">
+        <div class="card-title">Стена документации</div>
+        <p>Не ясно, с чего начать и в каком порядке читать.</p>
+      </div>
+      <div class="card">
+        <div class="card-title">Нет обратной связи</div>
+        <p>Спека написана — а правильная ли она, никто не скажет.</p>
+      </div>
+      <div class="card">
+        <div class="card-title">Учиться в одиночку</div>
+        <p>Нужен наставник, который поведёт по шагам.</p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-number">2/16</div>
+</section>
+
+<!-- ================= SLIDE 3 : идея (схема студент-тренер) ================= -->
+<section>
+  <div class="overlay"></div>
+  <div class="content">
+    <h2>Идея: персональный тренер (+хук цены)</h2>
+    <div class="diagram" style="margin-top:60px;">
+      <div class="node" style="padding:40px 50px;">Студент</div>
+      <div class="arrow" style="font-size:40px;">&#8594;</div>
+      <div class="node hl" style="padding:40px 50px;">ИИ-тренер<br><span class="muted small">оценивает · учит · спрашивает · помнит</span></div>
+      <div class="arrow" style="font-size:40px;">&#8594;</div>
+      <div class="node" style="padding:40px 50px;">Прогресс</div>
+    </div>
+    <div class="cards" style="margin-top:70px;">
+      <div class="card">
+        <div class="card-title gold">Обещание</div>
+        <p>Одно занятие стоит около рубля — докажу цифрами в конце.</p>
+      </div>
+      <div class="card">
+        <div class="card-title">Две задачи</div>
+        <p>Создать продукт и доказать методологию на себе.</p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-number">3/16</div>
+</section>
+
+<!-- ================= SLIDE 4 : метод, цикл ================= -->
+<section>
+  <div class="overlay"></div>
+  <div class="content">
+    <h2>Метод: спека — сначала</h2>
+    <p class="muted">Тренер написан по правилам, которым он учит.</p>
+    <div class="diagram" style="margin-top:50px;">
+      <div class="node hl">Спека<br><span class="muted small">что делает каждый узел</span></div>
+      <div class="arrow">&#8594;</div>
+      <div class="node">ADR<br><span class="muted small">что выбрал и почему</span></div>
+      <div class="arrow">&#8594;</div>
+      <div class="node">Код</div>
+      <div class="arrow">&#8594;</div>
+      <div class="node">Тесты</div>
+    </div>
+    <div class="cards" style="margin-top:60px;">
+      <div class="card">
+        <div class="card-title">Никакого кода без спеки</div>
+        <p>Звучит медленно. На деле наоборот.</p>
+      </div>
+      <div class="card">
+        <div class="card-title gold">Спека гасит споры до кода</div>
+        <p>Решения фиксируются раньше реализации.</p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-number">4/16</div>
+</section>
+
+<!-- ================= SLIDE 5 : OpenSpec + ADR ================= -->
+<section>
+  <div class="overlay"></div>
+  <div class="content">
+    <h2>OpenSpec и решения ADR</h2>
+    <div style="display:flex; gap:40px; margin-top:10px;">
+      <div style="flex:0 0 620px;">
+        <pre class="code"><span class="cm">openspec/</span>
+├── changes/
+│   ├── add-console-trainer/
+│   ├── add-mcp-integration/   <span class="cm">(архив)</span>
+│   └── pre-submission-alignment/
+└── specs/  <span class="cm">… спеки и предложения</span></pre>
+      </div>
+      <div style="flex:1;">
+        <div class="cards" style="flex-direction:column; gap:20px; margin-top:0;">
+          <div class="card" style="padding:22px 34px;">
+            <p><span class="accent" style="font-weight:700;">ADR-005</span> &nbsp;·&nbsp; structured output — ответы модели сразу объекты</p>
+          </div>
+          <div class="card" style="padding:22px 34px;">
+            <p><span class="accent" style="font-weight:700;">ADR-008</span> &nbsp;·&nbsp; SqliteSaver — память сессий в SQLite</p>
+          </div>
+          <div class="card" style="padding:22px 34px;">
+            <p><span class="accent" style="font-weight:700;">ADR-010</span> &nbsp;·&nbsp; MCP — тренер как инструмент для ИИ-клиентов</p>
+          </div>
+          <div class="card" style="padding:22px 34px;">
+            <p><span class="accent" style="font-weight:700;">ADR-001</span> &nbsp;·&nbsp; три входа: консоль, REST, MCP</p>
+          </div>
+        </div>
+        <p class="muted small" style="margin-top:26px;">Каждое решение записано. Ни одного «на потом».</p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-number">5/16</div>
+</section>
+
+<!-- ================= SLIDE 6 : граф LangGraph ================= -->
+<section>
+  <div class="overlay"></div>
+  <div class="content">
+    <h2>Мозг: граф и четыре маршрута</h2>
+    <div class="diagram" style="margin-top:20px;">
+      <div class="stack">
+        <div class="node hl">assess<br><span class="muted small">оценка уровня</span></div>
+      </div>
+      <div class="arrow">&#8594;</div>
+      <div class="stack">
+        <div class="node hl">route<br><span class="muted small">выбор маршрута</span></div>
+      </div>
+      <div class="arrow">&#8594;</div>
+      <div class="stack">
+        <div class="node gold">квиз<br><span class="muted small">уже знает</span></div>
+        <div class="node">короткий урок<br><span class="muted small">знает частично</span></div>
+        <div class="node">полный урок<br><span class="muted small">тема новая</span></div>
+        <div class="node">уточнение<br><span class="muted small">вопрос неясен</span></div>
+      </div>
+      <div class="arrow">&#8594;</div>
+      <div class="stack">
+        <div class="node hl">teach &#8594; quiz</div>
+      </div>
+    </div>
+    <p class="muted" style="margin-top:40px;">Каждый узел — функция с одной ответственностью.<br>
+    Тренер не гонит всех по одной колее — он подстраивается.</p>
+  </div>
+  <div class="slide-number">6/16</div>
+</section>
+
+<!-- ================= SLIDE 7 : HITL + код ================= -->
+<section>
+  <div class="overlay"></div>
+  <div class="content">
+    <h2>Человек в контуре (+код)</h2>
+    <div class="diagram" style="margin-top:10px;">
+      <div class="node">quiz</div>
+      <div class="arrow">&#8594;</div>
+      <div class="node gold">interrupt<br><span class="muted small">пауза</span></div>
+      <div class="arrow">&#8594;</div>
+      <div class="node">ответ ученика</div>
+      <div class="arrow">&#8594;</div>
+      <div class="node hl">resume</div>
+    </div>
+    <p class="muted" style="margin-top:26px;">Модель не продолжит, пока ученик не ответит. Весь код возобновления:</p>
+    <pre class="code" style="margin-top:20px;"><span class="fn">result</span> = graph.<span class="fn">invoke</span>(
+    <span class="fn">Command</span>(<span class="kw">resume</span>=student_answer),
+    config,
+)</pre>
+    <p class="muted small" style="margin-top:24px;">Тренер не может «проехать» мимо ученика. Обучение всегда диалоговое.</p>
+  </div>
+  <div class="slide-number">7/16</div>
+</section>
+
+<!-- ================= SLIDE 8 : три входа ================= -->
+<section>
+  <div class="overlay"></div>
+  <div class="content">
+    <h2>Один граф — три входа</h2>
+    <div class="diagram" style="margin-top:30px;">
+      <div class="stack">
+        <div class="node">Консоль<br><span class="muted small">локальные занятия</span></div>
+        <div class="node">FastAPI REST + SSE<br><span class="muted small">запросы и поток ответов</span></div>
+        <div class="node">MCP: stdio + HTTP<br><span class="muted small">7 инструментов, без состояния</span></div>
+      </div>
+      <div class="arrow" style="font-size:44px;">&#8594;</div>
+      <div class="node hl" style="padding:60px 70px; font-size:34px;">Граф тренера<br><span class="muted small">один и тот же процесс</span></div>
+    </div>
+    <p class="muted" style="margin-top:50px;">Любой ИИ-клиент может взять тренера как инструмент.</p>
+  </div>
+  <div class="slide-number">8/16</div>
+</section>
+
+<!-- ================= SLIDE 9 : модель и знания ================= -->
+<section>
+  <div class="overlay"></div>
+  <div class="content">
+    <h2>Модель и знания</h2>
+    <div class="cards" style="margin-top:30px;">
+      <div class="card">
+        <div class="card-title">GigaChat-3-Pro</div>
+        <p>Через cloud.ru. Есть запасная модель.</p>
+      </div>
+      <div class="card">
+        <div class="card-title">Structured output</div>
+        <p>Готовые объекты, без парсинга текста.</p>
+      </div>
+    </div>
+    <div class="cards" style="margin-top:36px;">
+      <div class="card">
+        <div class="card-title gold">Tavily</div>
+        <p>Свежая документация для уроков: опора на то, что написано сегодня.</p>
+      </div>
+      <div class="card">
+        <div class="card-title gold">Метрика F1</div>
+        <p>Взвешенная оценка квизов — как в датасете SQuAD.</p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-number">9/16</div>
+</section>
+
+<!-- ================= SLIDE 10 : курс не прошёл зря ================= -->
+<section>
+  <div class="overlay"></div>
+  <div class="content">
+    <h2>Курс не прошёл зря</h2>
+    <p class="muted">Выпускная работа курса по ИИ-агентам: восемь учебных ноутбуков переиспользованы в коде.</p>
+    <div class="diagram" style="margin-top:40px;">
+      <div class="node" style="padding:44px 50px;">8 ноутбуков<br><span class="muted small">курса</span></div>
+      <div class="arrow" style="font-size:40px;">&#8594;</div>
+      <div class="node hl" style="padding:44px 50px;">33 соответствия<br><span class="muted small">проверены поиском по коду</span></div>
+    </div>
+    <div class="cards" style="margin-top:50px;">
+      <div class="card">
+        <div class="card-title">Ноутбук про роутинг</div>
+        <p>Стал скелетом графа тренера.</p>
+      </div>
+      <div class="card">
+        <div class="card-title">Ноутбук про чекпоинтеры</div>
+        <p>Основа возобновления сессий.</p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-number">10/16</div>
+</section>
+
+<!-- ================= SLIDE 11 : DEMO placeholder ================= -->
+<section>
+  <div class="overlay"></div>
+  <div class="content">
+    <h2>Живой сеанс: оценка и вердикт</h2>
+    <div class="term" data-term='{"dur": 21.1}'><div class="term-bar"><span class="td r"></span><span class="td y"></span><span class="td g"></span><span class="term-title">sdd_trainer — консоль</span></div><div class="term-body"><div class="tl cmd" style="--d:0.2s">$ python -m sdd_trainer --session --student video_demo</div><div class="tl sys" style="--d:2.16s">SDD Trainer — сеанс на графе (T3+T4+T5+T6)</div><div class="tl sys" style="--d:4.12s">Модель: GigaChat/GigaChat-3-Pro · cloud.ru (ADR-005)</div><div class="tl sys" style="--d:6.08s">Чекпоинтер: data/checkpoints.sqlite (SqliteSaver, ADR-008)</div><div class="tl ok" style="--d:8.04s">[чекпоинт] Найден незавершённый сеанс — возобновляю (критерий 4)</div><div class="tl bot" style="--d:10.0s">[граф] Опиши своими словами, что такое OpenSpec: зачем папки specs/ и changes/?</div><div class="tl usr" style="--d:11.96s">Вы: Ну, OpenSpec это вроде как про спецификации... точно не уверен.</div><div class="tl ok" style="--d:13.92s">[граф] Оценка: partial (уверенность 0.70) — формулировки неуверенные, уровень частичный</div><div class="tl warn" style="--d:15.88s">[граф] Маршрут: partial — нужен структурированный разбор темы</div><div class="tl bot" style="--d:17.84s">[граф] Урок готов: скелет openspec-basics развёрнут под partial</div><span class="cursor">▊</span></div></div>
+  </div>
+  <div class="slide-number">11/16</div>
+</section>
+
+<!-- ================= SLIDE 12 : DEMO placeholder ================= -->
+<section>
+  <div class="overlay"></div>
+  <div class="content">
+    <h2>Урок и квиз</h2>
+    <div class="term" data-term='{"dur": 13.6}'><div class="term-bar"><span class="td r"></span><span class="td y"></span><span class="td g"></span><span class="term-title">sdd_trainer — урок и квиз</span></div><div class="term-body"><div class="tl bot" style="--d:0.2s">[граф] Урок: OpenSpec-основы (openspec-basics)</div><div class="tl dim" style="--d:1.54s">  · specs/ — источник истины; changes/ — предложения изменений</div><div class="tl dim" style="--d:2.89s">  · требование: SHALL · сценарий: WHEN/THEN</div><div class="tl dim" style="--d:4.23s">  · цикл: explore → propose → apply → archive</div><div class="tl bot" style="--d:5.58s">[граф] Что такое Spec-Driven Development? Что объявлено источником истины?</div><div class="tl usr" style="--d:6.92s">Вы: Спецификация — контракт: код сверяется с ней, а не наоборот.</div><div class="tl bot" style="--d:8.27s">[граф] Вопрос q1: F1 = 0.22 · q2: F1 = 0.29 · q3: F1 = 0.06</div><div class="tl bot" style="--d:9.61s">[граф] Вопрос q4: F1 = 0.16 · q5: F1 = 0.38</div><div class="tl warn" style="--d:10.96s">Квиз: итог 0.22 — не зачёт (порог 0.60)</div><span class="cursor">▊</span></div></div>
+  </div>
+  <div class="slide-number">12/16</div>
+</section>
+
+<!-- ================= SLIDE 13 : DEMO placeholder ================= -->
+<section>
+  <div class="overlay"></div>
+  <div class="content">
+    <h2>Убей сервер — сессия выживёт</h2>
+    <div class="term" data-term='{"dur": 28.0}'><div class="term-bar"><span class="td r"></span><span class="td y"></span><span class="td g"></span><span class="term-title">sdd_trainer — kill и рестарт</span></div><div class="term-body"><div class="tl cmd" style="--d:0.2s">$ python -m sdd_trainer --session --student video_demo</div><div class="tl bot" style="--d:2.61s">[граф] Из каких элементов состоит требование в спецификации?</div><div class="tl cmd" style="--d:5.02s">^C</div><div class="tl ok" style="--d:7.43s">[чекпоинт] Сеанс прерван — состояние сохранено в чекпоинте.</div><div class="tl cmd" style="--d:9.84s">$ ps aux | grep sdd_trainer | grep -v grep</div><div class="tl dim" style="--d:12.25s">(пусто — процесс мёртв)</div><div class="tl cmd" style="--d:14.65s">$ python -m sdd_trainer --session --student video_demo</div><div class="tl ok" style="--d:17.06s">[чекпоинт] Найден незавершённый сеанс — возобновляю с чекпоинта (критерий 4).</div><div class="tl bot" style="--d:19.47s">[граф] Из каких элементов состоит требование?  ← тот же вопрос</div><div class="tl usr" style="--d:21.88s">Вы: Requirement, SHALL, Scenario, WHEN/THEN.</div><div class="tl ok" style="--d:24.29s">[граф] Квиз продолжается с места остановки — сессия выжила.</div><span class="cursor">▊</span></div></div>
+  </div>
+  <div class="slide-number">13/16</div>
+</section>
+
+<!-- ================= SLIDE 14 : DEMO placeholder ================= -->
+<section>
+  <div class="overlay"></div>
+  <div class="content">
+    <h2>Тренер как инструмент: MCP</h2>
+    <div class="term" data-term='{"dur": 16.5}'><div class="term-bar"><span class="td r"></span><span class="td y"></span><span class="td g"></span><span class="term-title">mcp_demo — тренер как инструмент</span></div><div class="term-body"><div class="tl cmd" style="--d:0.2s">$ python scripts/mcp_demo.py --student video-mcp</div><div class="tl sys" style="--d:1.87s">Сервер: python -m sdd_trainer.mcp (stdio, ADR-010)</div><div class="tl sys" style="--d:3.53s">Инструменты (7): analyze_repo, answer_calibration, answer_clarification,</div><div class="tl sys" style="--d:5.2s">  answer_quiz_question, get_progress, search_docs, start_session</div><div class="tl ok" style="--d:6.87s">[тренер] Оценка: partial (уверенность 0.50)</div><div class="tl warn" style="--d:8.53s">[тренер] Маршрут: partial</div><div class="tl bot" style="--d:10.2s">[тренер] search_sdd_docs("OpenSpec apply workflow..."): 5 результат(ов) — живой Tavily</div><div class="tl bot" style="--d:11.87s">[тренер] Вопрос q1: F1 = 1.00 · q2: 1.00 · q3: 1.00 · q4: 1.00 · q5: 1.00</div><div class="tl ok" style="--d:13.53s">Счёт: 1.00 (порог 0.60) · Итог: зачтён</div><span class="cursor">▊</span></div></div>
+  </div>
+  <div class="slide-number">14/16</div>
+</section>
+
+<!-- ================= SLIDE 15 : цифры ================= -->
+<section>
+  <div class="overlay"></div>
+  <div class="content">
+    <h2>Цифры проекта</h2>
+    <div class="stats">
+      <div class="stat">
+        <div class="num">249</div>
+        <div class="cap">тестов<br>(2 из них живые)</div>
+      </div>
+      <div class="stat">
+        <div class="num gold">78.35%</div>
+        <div class="cap">покрытие кода<br>(гейт — 40%)</div>
+      </div>
+    </div>
+    <div class="stats" style="margin-top:36px;">
+      <div class="stat">
+        <div class="num">10</div>
+        <div class="cap">архитектурных<br>решений (ADR)</div>
+      </div>
+      <div class="stat">
+        <div class="num gold">17</div>
+        <div class="cap">рабочих сессий<br>разработки</div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-number">15/16</div>
+</section>
+
+<!-- ================= SLIDE 16 : экономика + CTA ================= -->
+<section>
+  <div class="overlay"></div>
+  <div class="content">
+    <h2>Экономика и призыв</h2>
+    <div class="stats">
+      <div class="stat">
+        <div class="num">900 &#8381;</div>
+        <div class="cap">стоимость<br>разработки</div>
+      </div>
+      <div class="stat">
+        <div class="num gold">1.2 &#8381;</div>
+        <div class="cap">один учебный<br>сеанс</div>
+      </div>
+      <div class="stat">
+        <div class="num">&#8776;750</div>
+        <div class="cap">сеансов обучения —<br>бюджет разработки</div>
+      </div>
+    </div>
+    <div class="cards" style="margin-top:44px;">
+      <div class="card">
+        <div class="card-title">Попробуйте сами</div>
+        <p>Клонируйте репозиторий и запустите одну команду.</p>
+      </div>
+      <div class="card">
+        <div class="card-title gold">Он знает, что преподаёт</div>
+        <p>Потому что сам на ней построен. Полный прогон — в скринкасте, ссылка в описании.</p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-number">16/16</div>
+</section>
+
+</div></div>
+
+<script src="reveal.js"></script>
+<script>
+  Reveal.initialize({
+    width: 1920,
+    height: 1080,
+    margin: 0,
+    center: false,
+    transition: 'none',
+    controls: false,
+    progress: false,
+    hash: false,
+    autoSlide: 0
+  });
+</script>
+
+<style>
+.term { width: 100%; max-width: 1520px; height: 700px; background: #0d1117;
+  border: 2px solid #30363d; border-radius: 14px; overflow: hidden;
+  display: flex; flex-direction: column; font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+.term-bar { display: flex; align-items: center; gap: 10px; padding: 14px 20px;
+  background: #161b22; border-bottom: 1px solid #30363d; }
+.td { width: 16px; height: 16px; border-radius: 50%; display: inline-block; }
+.td.r { background: #ff5f57; } .td.y { background: #febc2e; } .td.g { background: #28c840; }
+.term-title { color: #8b949e; font-size: 20px; margin-left: 12px; }
+.term-body { flex: 1; padding: 22px 28px; font-size: 22px; line-height: 1.55;
+  color: #c9d1d9; overflow: hidden; }
+.tl { opacity: 0; transform: translateY(6px); transition: opacity .35s, transform .35s;
+  white-space: pre-wrap; }
+.term.play .tl { opacity: 1; transform: none; transition-delay: var(--d); }
+.tl.cmd { color: #79c0ff; } .tl.ok { color: #7ee787; } .tl.warn { color: #ffa657; }
+.tl.usr { color: #d2a8ff; } .tl.dim { color: #8b949e; } .tl.sys { color: #c9d1d9; }
+.tl.bot { color: #c9d1d9; }
+.cursor { display: inline-block; color: #7ee787; animation: blink 1s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  function playTerm (section) {
+    document.querySelectorAll('.term').forEach(function (t) { t.classList.remove('play'); });
+    var term = section && section.querySelector('.term');
+    if (term) requestAnimationFrame(function () { requestAnimationFrame(function () {
+      term.classList.add('play'); }); });
+  }
+  // Reveal available (embedded) — hook slide change
+  function hook () {
+    if (window.Reveal && typeof window.Reveal.on === 'function') {
+      window.Reveal.on('slidechanged', function (e) { playTerm(e.currentSlide); });
+      playTerm(window.Reveal.getCurrentSlide && window.Reveal.getCurrentSlide());
+    } else { setTimeout(hook, 200); }
+  }
+  hook();
+});
+</script>
+</body>
+</html>
